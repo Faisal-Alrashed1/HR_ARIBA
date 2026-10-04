@@ -12,7 +12,7 @@ It replaces the V114 single-file HTML prototypes.
 The backend owns all state, rules and calculations behind a versioned JSON API (`/api/v1`).
 The browser never talks to the database or to Supabase directly.
 
-## Run it (no Docker)
+## Run it
 
 **Backend** (Python 3.12):
 
