@@ -1,5 +1,5 @@
 import { request, type Session, type TemporaryPassword, type User, type Role, type Uuid } from "./api";
-import { clearSession, saveSession, setMustChange } from "./session";
+import { clearSession, saveSession } from "./session";
 
 export async function login(username: string, password: string): Promise<User> {
   const s = await request<Session>("/auth/login", { method: "POST", body: { username, password }, anonymous: true });
@@ -19,12 +19,13 @@ export async function fetchMe(): Promise<User> {
   return (await request<{ user: User }>("/me")).user;
 }
 
+/** Changing the password signs out other devices; the backend returns a fresh session for this one. */
 export async function changePassword(oldPassword: string, newPassword: string): Promise<void> {
-  await request<void>("/auth/change-password", {
+  const s = await request<Session>("/auth/change-password", {
     method: "POST",
     body: { old_password: oldPassword, new_password: newPassword },
   });
-  setMustChange(false);
+  saveSession(s.access_token, s.refresh_token, s.expires_in, s.user.must_change_password);
 }
 
 export const createAccount = (employeeId: Uuid, role: Role = "employee") =>

@@ -1,6 +1,6 @@
 # Database
 
-Supabase Postgres in real environments, SQLite for quick local work and tests. **Alembic owns the schema.**
+Postgres on Railway in production, SQLite for quick local work and tests. **Alembic owns the schema.**
 
 ## Conventions
 - UUID primary keys; `created_at` / `updated_at` (timezone-aware) on every table.
@@ -8,13 +8,13 @@ Supabase Postgres in real environments, SQLite for quick local work and tests. *
 - Money `Numeric(12,2)`, rates `Numeric(6,3)`, day counts `Numeric(7,2)`. Never floats.
 - Enums are stored by value and created as native Postgres `ENUM` types (`postgresql.ENUM`) by the baseline migration.
 - One column per fact. The only JSON column is `audit_logs.details` (context for an audit entry).
-- Files: `documents.storage_path` points into a private Supabase Storage bucket. No base64 in the database.
+- Files: `documents.storage_path` is a path under `STORAGE_DIR` (a Railway Volume in production). No base64 in the database.
 
 ## Tables (25)
 | Group | Tables |
 |---|---|
 | Reference | `workplaces`, `departments`, `nationalities`, `holidays`, `gosi_rules`, `workflow_rules`, `company_settings`, `attendance_settings` |
-| People | `employees`, `users` (login: role, active, must-change; id = Supabase auth uid), `dependents`, `excluded_candidates` |
+| People | `employees`, `users` (login: role, active, must-change), `credentials` (Argon2 hash, token version), `dependents`, `excluded_candidates` |
 | Attendance | `locations` (geofence), `attendance_records` (one per employee per day) |
 | Requests | `requests`, `request_steps` (history) |
 | Leave | `leave_year_ledgers` (one per employee per year), `leave_adjustments` (HR overrides with reason) |
@@ -29,7 +29,7 @@ used by alerts, request status/stage, and attendance date.
 ## Migrations
 - Files: `backend/alembic/versions/NNNN_slug.py`, numbered, **never edited after merge**; add a new one instead.
 - `0001_baseline_schema`: all tables. On Postgres it also creates the enum types and enables RLS on every table
-  (no policies: Supabase's anon/authenticated roles see nothing).
+  (no policies: no role but the owner can read).
 - `0002_seed_reference_data`: workplaces, departments, nationalities, holidays, GOSI rules, settings, workflow rules.
 
 Make a new migration:
@@ -44,8 +44,8 @@ New enum values on Postgres need `ALTER TYPE ... ADD VALUE` in a migration.
 ## Guards (in `tests/test_migrations.py`)
 - upgrade → downgrade → upgrade on SQLite.
 - **Model drift**: autogenerate against a migrated database must find no differences from `models.py`.
-- Postgres variant (needs `TEST_DATABASE_URL` for the Supabase **test** project): same, plus RLS on every table.
+- Postgres variant (needs `TEST_DATABASE_URL` pointing at any Postgres test database): same, plus RLS on every table.
 
-## Connecting to Supabase
-Use the "Session pooler" connection string from the Supabase dashboard as `DATABASE_URL`
+## Connecting to Postgres
+On Railway set `DATABASE_URL=${{Postgres.DATABASE_URL}}`. Locally: `postgresql://localhost/ariba_hr_dev`
 (`postgresql://...` is converted to the psycopg 3 driver automatically). Use separate projects for dev and test.

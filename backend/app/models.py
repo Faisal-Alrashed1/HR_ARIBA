@@ -473,7 +473,7 @@ class Employee(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
 
 
 class User(IdMixin, TimestampMixin, Base):
-    """Login account. `id` equals the Supabase auth user id (JWT `sub`)."""
+    """Login account (username = employee number). The password lives in `credentials`."""
 
     __tablename__ = "users"
     username: Mapped[str] = mapped_column(String(60), unique=True)
@@ -484,6 +484,16 @@ class User(IdMixin, TimestampMixin, Base):
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     employee: Mapped[Employee | None] = relationship(lazy="joined")
+
+
+class Credential(TimestampMixin, Base):
+    """Argon2id password hash for a user. `token_version` is bumped on every password change,
+    which invalidates all previously issued session tokens."""
+
+    __tablename__ = "credentials"
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    token_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
 class Dependent(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
@@ -553,7 +563,7 @@ class AttendanceRecord(IdMixin, TimestampMixin, Base):
 
 
 class Document(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
-    """A file in private Supabase Storage. Only the storage path lives in the database."""
+    """An uploaded file on disk (STORAGE_DIR). Only the storage path lives in the database."""
 
     __tablename__ = "documents"
     employee_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("employees.id"), index=True)

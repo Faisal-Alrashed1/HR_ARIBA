@@ -1,64 +1,29 @@
-"""Bearer JWT (issued by Supabase Auth) -> current `User` row.
+"""Bearer access token -> current `User` row.
 
-Verification order:
-1. HS256 with SUPABASE_JWT_SECRET, when it is set (legacy Supabase projects, local dev, tests).
-2. Asymmetric keys from the project's JWKS endpoint (current Supabase projects).
-
-The role always comes from our `users` table, never from the token.
+Tokens are verified with JWT_SECRET (see core/identity.py). The role always comes from the
+`users` table, never from the token, and a token stops working as soon as the user's password
+changes (token_version) or the account is disabled.
 """
 
 import uuid
-from functools import lru_cache
 
-import jwt
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
 from app.core.errors import ApiError
+from app.core.identity import SESSION_EXPIRED, decode
 from app.database import get_db
-from app.models import User
+from app.models import Credential, User
 
 _bearer = HTTPBearer(auto_error=False)
-
 _UNAUTHORIZED = ApiError(401, "unauthorized", "Sign in required")
-
-
-@lru_cache
-def _jwks_client(url: str) -> jwt.PyJWKClient:
-    return jwt.PyJWKClient(url, cache_keys=True, lifespan=3600)
-
-
-def decode_token(token: str) -> dict:
-    s = get_settings()
-    try:
-        header = jwt.get_unverified_header(token)
-        alg = header.get("alg")
-        if alg == "HS256":
-            if not s.supabase_jwt_secret:
-                raise _UNAUTHORIZED
-            key = s.supabase_jwt_secret
-        elif alg in ("RS256", "ES256") and s.supabase_url:
-            key = _jwks_client(f"{s.supabase_url}/auth/v1/.well-known/jwks.json").get_signing_key_from_jwt(token).key
-        else:
-            raise _UNAUTHORIZED
-        claims = jwt.decode(
-            token, key, algorithms=[alg], audience=s.jwt_audience, options={"require": ["exp", "sub"]}
-        )
-    except jwt.ExpiredSignatureError:
-        raise ApiError(401, "session_expired", "Your session has expired. Please sign in again.")
-    except (jwt.PyJWTError, ValueError):
-        raise _UNAUTHORIZED
-    if claims.get("typ") == "refresh":
-        raise _UNAUTHORIZED
-    return claims
 
 
 def _load_user(request: Request, creds: HTTPAuthorizationCredentials | None, db: Session) -> User:
     if creds is None or creds.scheme.lower() != "bearer":
         raise _UNAUTHORIZED
-    claims = decode_token(creds.credentials)
+    claims = decode(creds.credentials, "access")
     try:
         user_id = uuid.UUID(claims["sub"])
     except ValueError:
@@ -66,6 +31,9 @@ def _load_user(request: Request, creds: HTTPAuthorizationCredentials | None, db:
     user = db.get(User, user_id)
     if user is None:
         raise _UNAUTHORIZED
+    cred = db.get(Credential, user.id)
+    if cred is None or cred.token_version != claims["ver"]:
+        raise SESSION_EXPIRED
     if not user.is_active:
         raise ApiError(403, "account_inactive", "This account is disabled")
     request.state.user = user

@@ -10,6 +10,7 @@ from app.config import get_settings
 from app.core.errors import install_error_handlers
 from app.core.security import SecurityHeadersMiddleware
 from app.migrations import run_migrations
+from app.services.seeds import bootstrap_admin
 from app.routers import auth, dashboard, dependents, documents, employees, health, me, settings
 
 API_PREFIX = "/api/v1"
@@ -20,6 +21,7 @@ async def lifespan(_app: FastAPI):
     s = get_settings()
     if s.run_migrations_on_startup:
         run_migrations()
+    bootstrap_admin()
     yield
 
 

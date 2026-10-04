@@ -4,11 +4,17 @@ _Last updated: 2026-10-04 · branch `feat/foundation`_
 
 Start here. This file says what exists, what has been checked, and what has **not** been checked.
 
+## Hosting: Railway (2026-10-04)
+Decision: everything on Railway (Postgres + backend + frontend), no Supabase. Sign-in is now built into the
+backend (Argon2id hashes in the `credentials` table, HS256 session tokens with a per-user token version that
+revokes old sessions on every password change). Files go to disk (a Railway Volume in production).
+Steps: [DEPLOY_RAILWAY.md](DEPLOY_RAILWAY.md). Verified on a local PostgreSQL 16 in production mode.
+
 ## Design match (2026-10-04)
 The frontend now reproduces the V114 prototypes' look exactly (prototype CSS, fonts, logo, wording, markup);
 see `frontend/DESIGN.md`. Backend additions for the built screens: GOSI and end-of-service calculations,
 salary figures on the employee record, live salary preview, full dashboard (KPIs, charts, expiry alerts),
-document/photo uploads (Supabase Storage, or local disk in development), dependents, duplicate checks and
+document/photo uploads (stored on disk; a Railway Volume in production), dependents, duplicate checks and
 automatic employee numbers. New endpoints: `GET /dashboard`, `POST /employees/salary-preview`,
 `GET|POST /employees/{id}/documents`, `GET /documents/{id}/file`, `DELETE /documents/{id}`,
 `GET|PUT|DELETE /employees/{id}/photo`, `GET|POST /employees/{id}/dependents`, `PATCH|DELETE /dependents/{id}`,
@@ -21,7 +27,7 @@ automatic employee numbers. New endpoints: `GET /dashboard`, `POST /employees/sa
 | Repo layout (backend / frontend / docs) | ✅ |
 | Baseline schema for every §3.3 entity (27 enums, 25 tables) | ✅ `0001_baseline_schema` |
 | Reference data (workplaces, departments, nationalities, holidays, GOSI rules, settings, workflow stages) | ✅ `0002_seed_reference_data` |
-| Supabase JWT auth (JWKS + HS256), username → internal email, refresh, logout | ✅ |
+| Built-in sign-in (Argon2 + HS256 tokens), refresh, logout | ✅ |
 | Forced password change, temporary passwords, password policy | ✅ |
 | Roles + data scope + salary/ID visibility | ✅ employees module |
 | Error format, security headers, CORS allowlist, login rate limit, audit log | ✅ |
@@ -39,14 +45,9 @@ automatic employee numbers. New endpoints: `GET /dashboard`, `POST /employees/sa
   Arabic RTL and English LTR; light and night themes.
 
 ### Not verified yet (be honest here)
-- **Nothing has run against Supabase yet.** Needs the dev/test project keys:
-  - Supabase Auth sign-in/refresh/admin calls (only tested against mocked HTTP with `respx`).
-  - JWKS (asymmetric) token verification.
-  - Alembic on Postgres, native ENUM creation, RLS enabled on every table
-    (`test_postgres_migrations_and_rls` is skipped until `TEST_DATABASE_URL` is set).
-- Storage (`core/storage.py`) is written but unused and untested.
-- Mobile layout of `/me` checked only by building, not on a phone.
-- The login rate limiter is in-memory: correct for one backend process only.
+- Not deployed to Railway yet (needs your Railway account; see DEPLOY_RAILWAY.md).
+- Mobile layout of the employee app checked only in a narrow browser window, not on a phone.
+- The login rate limiter is in-memory: correct for one backend instance only.
 
 ## Decisions taken (with the business owner)
 - EOS base = **basic + housing** everywhere.
@@ -58,7 +59,7 @@ automatic employee numbers. New endpoints: `GET /dashboard`, `POST /employees/sa
 Open questions found in the prototypes are listed at the end of [BUSINESS_RULES.md](BUSINESS_RULES.md).
 
 ## Next phases (proposed order)
-1. Supabase hookup + verification of everything above · dependents · documents (Storage)
+1. First Railway deploy (see DEPLOY_RAILWAY.md)
 2. Leave (ledger, balances, holidays) · requests + approval workflow
 3. Attendance (check-in, geofence, late, remote limit) · punch locations
 4. Payroll + GOSI · payslips

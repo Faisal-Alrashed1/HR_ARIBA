@@ -1,5 +1,5 @@
 // Session tokens live in first-party cookies so that `proxy.ts` can mirror routing on the server.
-// They are JS-readable (the same exposure as supabase-js's default storage); the backend verifies
+// They are JS-readable (needed by the client to send the bearer token); the backend verifies
 // the token on every request and never trusts anything the browser says about roles.
 
 export const ACCESS_COOKIE = "ariba_at";

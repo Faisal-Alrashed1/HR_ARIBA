@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.audit import audit
 from app.core.auth import get_current_user_allow_pending
 from app.core.errors import ApiError, not_found
-from app.core.identity import get_identity
+from app.core import identity
 from app.core.permissions import HR_ROLES, require_roles
 from app.core.security import check_login_rate, reset_login_rate
 from app.database import get_db
@@ -55,32 +55,30 @@ def login(body: LoginIn, request: Request, db: Session = Depends(get_db)):
 
 @router.post("/refresh", response_model=SessionOut)
 def refresh(body: RefreshIn, db: Session = Depends(get_db)):
-    session = get_identity().refresh(body.refresh_token)
-    user = db.get(User, session.user_id)
-    if user is None or not user.is_active:
-        raise ApiError(401, "session_expired", "Your session has expired. Please sign in again.")
+    session, user = identity.refresh(db, body.refresh_token)
     return _session_out(session, user)
 
 
 @router.post("/logout", status_code=204)
 def logout(request: Request, user: User = Depends(get_current_user_allow_pending), db: Session = Depends(get_db)):
-    token = request.headers.get("authorization", "")[7:]
-    get_identity().sign_out(token)
+    # Tokens are short-lived and the browser drops them; this records the event.
     audit(db, request, user, "logout", "user", user.id)
     db.commit()
 
 
-@router.post("/change-password", status_code=204)
+@router.post("/change-password", response_model=SessionOut)
 def change_password(
     body: ChangePasswordIn,
     request: Request,
     user: User = Depends(get_current_user_allow_pending),
     db: Session = Depends(get_db),
 ):
+    """Changing the password signs out every other device; the response is a new session."""
     check_login_rate(request, user.username)
-    accounts.change_password(db, user, body.old_password, body.new_password)
+    session = accounts.change_password(db, user, body.old_password, body.new_password)
     audit(db, request, user, "change_password", "user", user.id)
     db.commit()
+    return _session_out(session, user)
 
 
 @router.post("/users", response_model=TemporaryPasswordOut, status_code=201)

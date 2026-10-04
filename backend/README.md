@@ -17,8 +17,8 @@ Layout: `app/main.py` (setup) · `config.py` · `database.py` · `models.py` · 
 `core/` (auth, identity, permissions, security, errors, audit, storage, scheduling, language, pagination) ·
 `routers/` (thin HTTP) · `services/` (business logic). Tests: one file per feature in `tests/`.
 
-Environment variables are documented in `.env.example`. With `SUPABASE_URL` empty and `ENV=development`,
-sign-in uses the dev-only local provider (`.local_auth.json`), which needs `SUPABASE_JWT_SECRET`.
+Environment variables are documented in `.env.example`. Deployment: `docs/DEPLOY_RAILWAY.md` (`railway.json`
+runs `alembic upgrade head` before each deploy).
 
-`import_from_v114.py` (one-time import from the old Supabase project) is planned for a later phase; see
+`import_from_v114.py` (one-time import from the old V114 Supabase project) is planned for a later phase; see
 docs/PROJECT_STATUS.md.

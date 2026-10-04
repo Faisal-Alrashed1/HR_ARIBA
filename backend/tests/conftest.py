@@ -1,5 +1,5 @@
 """Test setup: SQLite database migrated with Alembic (copied fresh for every test), HS256 tokens
-for each role, and an in-memory identity provider."""
+for each role, and real Argon2 credentials."""
 
 import os
 import shutil
@@ -11,8 +11,7 @@ from pathlib import Path
 os.environ.update(
     ENV="test",
     DATABASE_URL="sqlite:///./.pytest-unused.db",
-    SUPABASE_URL="",
-    SUPABASE_JWT_SECRET="test-secret-0123456789-abcdefghijklmnop",
+    JWT_SECRET="test-secret-0123456789-abcdefghijklmnop",
     RUN_MIGRATIONS_ON_STARTUP="false",
     CORS_ORIGINS="http://localhost:3000",
 )
@@ -24,57 +23,22 @@ from sqlalchemy import select  # noqa: E402
 from sqlalchemy.orm import Session, sessionmaker  # noqa: E402
 
 from app.config import get_settings  # noqa: E402
-from app.core.errors import ApiError  # noqa: E402
-from app.core.identity import AuthSession, set_identity_provider  # noqa: E402
+from app.core.identity import set_password  # noqa: E402
 from app.core.security import login_limiter  # noqa: E402
 from app.database import get_db, make_engine  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.migrations import run_migrations  # noqa: E402
-from app.models import Employee, Nationality, Role, User, Workplace  # noqa: E402
+from app.models import Credential, Employee, Nationality, Role, User, Workplace  # noqa: E402
 
 
-class FakeIdentity:
-    """In-memory identity provider: {email: (user_id, password, role)}."""
-
-    def __init__(self):
-        self.users: dict[str, list] = {}
-
-    def sign_in(self, email, password):
-        rec = self.users.get(email)
-        if not rec or rec[1] != password:
-            raise ApiError(401, "invalid_credentials", "Invalid username or password")
-        return AuthSession(make_token(rec[0]), "refresh-" + str(rec[0]), 3600, rec[0])
-
-    def refresh(self, refresh_token):
-        for uid, _pw, _role in self.users.values():
-            if refresh_token == f"refresh-{uid}":
-                return AuthSession(make_token(uid), refresh_token, 3600, uid)
-        raise ApiError(401, "session_expired", "expired")
-
-    def sign_out(self, access_token):
-        pass
-
-    def create_user(self, email, password, role):
-        if email in self.users:
-            raise ApiError(409, "conflict", "exists")
-        uid = uuid.uuid4()
-        self.users[email] = [uid, password, role]
-        return uid
-
-    def _rec(self, user_id):
-        return next(r for r in self.users.values() if r[0] == user_id)
-
-    def set_password(self, user_id, password):
-        self._rec(user_id)[1] = password
-
-    def set_role(self, user_id, role):
-        self._rec(user_id)[2] = role
-
-
-def make_token(user_id, exp_in: int = 3600, secret: str | None = None, **extra) -> str:
+def make_token(user_id, exp_in: int = 3600, secret: str | None = None, ver: int = 0, typ: str = "access", **extra) -> str:
+    s = get_settings()
     now = int(time.time())
-    claims = {"sub": str(user_id), "aud": "authenticated", "iat": now, "exp": now + exp_in, **extra}
-    return jwt.encode(claims, secret or get_settings().supabase_jwt_secret, algorithm="HS256")
+    claims = {
+        "sub": str(user_id), "iss": s.jwt_issuer, "aud": s.jwt_audience, "iat": now,
+        "exp": now + exp_in, "typ": typ, "ver": ver, **extra,
+    }
+    return jwt.encode(claims, secret or s.jwt_secret, algorithm="HS256")
 
 
 @pytest.fixture(scope="session")
@@ -101,25 +65,17 @@ def db(engine) -> Session:
 
 
 @pytest.fixture
-def identity():
-    fake = FakeIdentity()
-    set_identity_provider(fake)
-    yield fake
-    set_identity_provider(None)
-
-
-@pytest.fixture
 def storage(tmp_path):
-    from app.core.storage import LocalStorage, set_storage
+    from app.core.storage import DiskStorage, set_storage
 
-    local = LocalStorage(root=str(tmp_path / "storage"))
+    local = DiskStorage(root=str(tmp_path / "storage"))
     set_storage(local)
     yield local
     set_storage(None)
 
 
 @pytest.fixture
-def client(engine, identity, storage) -> TestClient:
+def client(engine, storage) -> TestClient:
     app = create_app()
     SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
@@ -181,6 +137,7 @@ def make_employee(db, ref):
 def make_user(db, make_employee):
     def _make(role: Role = Role.employee, employee: Employee | None = None, **kw) -> User:
         emp = employee or make_employee()
+        password = kw.pop("password", DEFAULT_PASSWORD)
         user = User(
             id=uuid.uuid4(),
             username=emp.emp_no,
@@ -190,11 +147,25 @@ def make_user(db, make_employee):
             **kw,
         )
         db.add(user)
+        db.flush()
+        set_password(db, user, password)
         db.commit()
         return user
 
     return _make
 
 
+DEFAULT_PASSWORD = "secret123a"
+
+
 def auth(user: User) -> dict:
-    return {"Authorization": f"Bearer {make_token(user.id)}"}
+    """Bearer header for the user's current credential version."""
+    return {"Authorization": f"Bearer {make_token(user.id, ver=_version(user))}"}
+
+
+def _version(user: User) -> int:
+    session = Session.object_session(user)
+    cred = session.get(Credential, user.id) if session else None
+    if session is not None and cred is not None:
+        session.refresh(cred)
+    return cred.token_version if cred else 0

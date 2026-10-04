@@ -1,4 +1,4 @@
-"""Engine and session. Supabase Postgres in real environments, SQLite for quick local tests."""
+"""Engine and session. Postgres (Railway) in production, SQLite for quick local work and tests."""
 
 from collections.abc import Iterator
 
@@ -10,7 +10,7 @@ from app.config import get_settings
 
 
 def _normalize_url(url: str) -> str:
-    # Supabase hands out postgres:// / postgresql:// URLs; use the psycopg 3 driver.
+    # Railway hands out postgres:// / postgresql:// URLs; use the psycopg 3 driver.
     if url.startswith("postgres://"):
         url = "postgresql://" + url[len("postgres://") :]
     if url.startswith("postgresql://"):

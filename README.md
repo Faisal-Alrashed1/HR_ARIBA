@@ -6,11 +6,11 @@ It replaces the V114 single-file HTML prototypes.
 
 | Part | Stack |
 |---|---|
-| `backend/` | FastAPI · SQLAlchemy 2 · Alembic · Pydantic · Supabase (Postgres + Auth + Storage) |
-| `frontend/` | Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind 4 · zod |
+| `backend/` | FastAPI · SQLAlchemy 2 · Alembic · Pydantic · Postgres (SQLite locally) · Argon2 |
+| `frontend/` | Next.js 16 (App Router) · React 19 · TypeScript (strict) · prototype CSS · Chart.js |
 
 The backend owns all state, rules and calculations behind a versioned JSON API (`/api/v1`).
-The browser never talks to the database or to Supabase directly.
+The browser never talks to the database directly. Hosting: Railway ([docs/DEPLOY_RAILWAY.md](docs/DEPLOY_RAILWAY.md)).
 
 ## Run it
 
@@ -19,7 +19,7 @@ The browser never talks to the database or to Supabase directly.
 ```bash
 cd backend
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-cp .env.example .env          # set SUPABASE_JWT_SECRET to any long random string for local auth
+cp .env.example .env
 .venv/bin/uvicorn app.main:app --reload --port 8000
 ```
 
@@ -42,8 +42,7 @@ npm run dev                   # http://localhost:3000
 
 **Tests**: `cd backend && .venv/bin/pytest -q` · `cd frontend && npm run lint && npx tsc --noEmit && npm run build`
 
-Without Supabase keys the backend uses SQLite plus a **dev-only** local sign-in (refused in production).
-Put the Supabase dev project's keys in `backend/.env` to use real Supabase Auth and Postgres.
+Locally the backend uses SQLite; set `DATABASE_URL` to a Postgres URL to use Postgres.
 
 ## Read next
 

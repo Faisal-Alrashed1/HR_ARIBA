@@ -1,10 +1,11 @@
 # Architecture
 
 ```
-Browser ──HTTPS/JSON──▶ FastAPI (/api/v1) ──SQLAlchemy──▶ Supabase Postgres (RLS on, no policies)
+Browser ──HTTPS/JSON──▶ FastAPI (/api/v1) ──SQLAlchemy──▶ Postgres on Railway (RLS on, no policies)
    │                         │
-   │ Next.js pages           ├──httpx──▶ Supabase Auth (GoTrue): sign-in, refresh, admin
-   │ proxy.ts (route mirror) └──httpx──▶ Supabase Storage (private bucket, signed URLs)
+   │ Next.js pages           └── files ──▶ Railway Volume (/data), streamed after a scope check
+   │ proxy.ts (route mirror)
+Hosting: Railway — services `backend`, `frontend`, `Postgres` (docs/DEPLOY_RAILWAY.md)
 ```
 
 ## Principles
@@ -32,10 +33,8 @@ Browser ──HTTPS/JSON──▶ FastAPI (/api/v1) ──SQLAlchemy──▶ Su
 `get_current_user` verifies the JWT and loads the `users` row (active? must change password?) →
 `require_roles(...)` → service applies the data scope → audit entry added in the same transaction → commit.
 
-**Identity.** Supabase Auth stores credentials. Our `users` table stores role, status and the employee link,
-keyed by the Supabase user id (`sub`). Usernames are employee numbers mapped to internal emails
-(`emp084` → `emp084@users.ariba-hr.internal`). Login goes through the backend, so rate limiting and the
-inactive check happen on the server. `LocalDevIdentity` stands in for GoTrue in development only.
+**Identity.** Built into the backend: Argon2id password hashes in `credentials`, HS256 session tokens with a
+per-user token version (core/identity.py). Usernames are employee numbers.
 
 ## Frontend (`frontend/src`)
 | Path | Role |
@@ -51,6 +50,6 @@ inactive check happen on the server. `LocalDevIdentity` stands in for GoTrue in 
 Language and theme are cookies read in the root layout, so the first paint already has the right
 `lang`, `dir` and `data-theme`.
 
-**Deviation from the original brief:** the brief listed a `lib/supabase.ts` browser client "for sign-in only".
-Sign-in goes through the backend instead, so the browser has no Supabase client at all. That is stricter
-than the brief (the browser never contacts Supabase) and makes server-side rate limiting possible.
+**Changes from the original brief:** hosting moved from Supabase to Railway (decision 2026-10-04), so auth and
+storage are built in; the frontend never needed a Supabase client. The UI reproduces the V114 prototypes
+verbatim (see frontend/DESIGN.md), which is why Tailwind is not used.
