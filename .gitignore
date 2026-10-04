@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Local data and secrets
+*.db
+*.db-journal
+.env
+.env.*
+!.env.example
+.local_auth.json
+
+# Node / Next
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# OS / editors
+.DS_Store
+.idea/
