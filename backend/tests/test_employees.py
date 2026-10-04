@@ -61,7 +61,7 @@ def test_fixed_term_contract_end_is_calculated(client, ref, make_user):
     # 31 Jan 2026 + 1 month is clamped to the end of February
     assert r.json()["contract_end_date"] == "2026-02-28"
 
-    r = client.post("/api/v1/employees", headers=auth(hr), json=_payload(ref, emp_no="emp502", contract_nature="fixed"))
+    r = client.post("/api/v1/employees", headers=auth(hr), json=_payload(ref, emp_no="emp502", national_id="1099999999", contract_nature="fixed"))
     assert r.status_code == 422
     assert r.json()["error"]["details"][0]["field"] == "contract_duration_months"
 
@@ -176,3 +176,41 @@ def test_saudization_pct_hand_computed():
     assert saudization_pct(1, 3) == Decimal("33.3")
     assert saudization_pct(2, 3) == Decimal("66.7")
     assert saudization_pct(0, 0) == Decimal("0.0")
+
+
+def test_duplicates_rejected_and_auto_number(client, ref, make_user):
+    hr = make_user(Role.hr)
+    first = client.post("/api/v1/employees", headers=auth(hr), json=_payload(ref, email="a@ariba.sa"))
+    assert first.status_code == 201
+    for dup in ({"national_id": "1012345678"}, {"email": "A@ariba.sa", "national_id": "1000000001"}):
+        r = client.post("/api/v1/employees", headers=auth(hr), json=_payload(ref, emp_no="emp777", **dup))
+        assert r.status_code == 409, dup
+    body = _payload(ref, national_id="1000000002")
+    body.pop("emp_no")
+    r = client.post("/api/v1/employees", headers=auth(hr), json=body)
+    assert r.status_code == 201
+    # existing numbers: emp501 and the HR user's emp9xx -> next is one above the highest
+    assert r.json()["emp_no"].startswith("emp") and r.json()["emp_no"] != "emp501"
+
+
+def test_salary_figures_on_record(client, ref, make_user):
+    hr = make_user(Role.hr)
+    body = _payload(ref, birth_date="1986-01-01", other_deductions="100", extra_allowance="500")
+    emp = client.post("/api/v1/employees", headers=auth(hr), json=body).json()
+    s = emp["salary"]
+    # total = 12,000 + 3,000 + 1,000 + 500 extra; GOSI matching 10.75% of 15,000; net = total - GOSI - 100
+    assert s["total_salary"] == "16500.00"
+    assert (s["gosi_employee"], s["gosi_employer"]) == ("1612.50", "1912.50")
+    assert s["net_salary"] == "14787.50"
+    assert s["eos_award"] is not None
+
+    r = client.post(
+        "/api/v1/employees/salary-preview",
+        headers=auth(hr),
+        json={"basic_salary": "12000", "housing_allowance": "3000", "transport_allowance": "1000",
+              "nationality_id": str(ref.egyptian.id), "gosi_system": "matching"},
+    )
+    assert r.status_code == 200, r.text
+    p = r.json()
+    assert p["gosi_system"] == "non_saudi" and p["gosi_employee"] == "0.00" and p["gosi_employer"] == "300.00"
+    assert p["net_salary"] == "16000.00"

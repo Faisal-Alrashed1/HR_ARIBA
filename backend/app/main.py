@@ -10,7 +10,7 @@ from app.config import get_settings
 from app.core.errors import install_error_handlers
 from app.core.security import SecurityHeadersMiddleware
 from app.migrations import run_migrations
-from app.routers import auth, employees, health, me, settings
+from app.routers import auth, dashboard, dependents, documents, employees, health, me, settings
 
 API_PREFIX = "/api/v1"
 
@@ -49,7 +49,7 @@ def create_app() -> FastAPI:
     install_error_handlers(app)
 
     app.include_router(health.router)
-    for module in (auth, me, employees, settings):
+    for module in (auth, me, dashboard, employees, dependents, documents, settings):
         app.include_router(module.router, prefix=API_PREFIX)
     return app
 

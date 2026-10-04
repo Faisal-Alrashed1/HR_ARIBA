@@ -9,6 +9,7 @@ psycopg[binary]==3.2.*
 httpx==0.28.*
 pyjwt[crypto]==2.*
 python-dateutil==2.9.*
+python-multipart==0.0.*
 # tests
 pytest==8.*
 respx==0.22.*

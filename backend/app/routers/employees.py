@@ -16,6 +16,8 @@ from app.schemas import (
     EmployeeListItem,
     EmployeeOut,
     EmployeeUpdate,
+    SalaryPreviewIn,
+    SalaryPreviewOut,
     TerminateIn,
 )
 from app.services import employees as svc
@@ -46,6 +48,12 @@ def list_employees(
 @router.get("/counts", response_model=EmployeeCounts)
 def employee_counts(user: User = Depends(_READERS), db: Session = Depends(get_db)):
     return svc.counts(db, user)
+
+
+@router.post("/salary-preview", response_model=SalaryPreviewOut)
+def salary_preview(body: SalaryPreviewIn, _: User = Depends(_WRITERS), db: Session = Depends(get_db)):
+    """Live total / GOSI / net while HR edits the salary tab. Nothing is saved."""
+    return svc.preview(db, body)
 
 
 @router.post("", response_model=EmployeeOut, status_code=201)

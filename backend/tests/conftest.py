@@ -109,7 +109,17 @@ def identity():
 
 
 @pytest.fixture
-def client(engine, identity) -> TestClient:
+def storage(tmp_path):
+    from app.core.storage import LocalStorage, set_storage
+
+    local = LocalStorage(root=str(tmp_path / "storage"))
+    set_storage(local)
+    yield local
+    set_storage(None)
+
+
+@pytest.fixture
+def client(engine, identity, storage) -> TestClient:
     app = create_app()
     SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 

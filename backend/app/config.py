@@ -24,6 +24,8 @@ class Settings(BaseSettings):
 
     internal_email_domain: str = "users.ariba-hr.internal"
     storage_bucket: str = "hr-private"
+    # Development only: where files go when Supabase Storage is not configured.
+    local_storage_dir: str = ".storage"
 
     # Comma-separated list of allowed origins.
     cors_origins: str = "http://localhost:3000"

@@ -1,8 +1,9 @@
 """Employee business logic: create/update/terminate, list tabs, and role-aware response building."""
 
 import uuid
+from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Literal
 
 from sqlalchemy import Select, false, func, or_, select
@@ -22,6 +23,7 @@ from app.models import (
     GosiSystem,
     Nationality,
     PaymentMethod,
+    TerminationArticle,
     User,
     Workplace,
     WpsType,
@@ -37,10 +39,16 @@ from app.schemas import (
     LookupOut,
     NationalityOut,
     SalaryOut,
+    SalaryPreviewIn,
+    SalaryPreviewOut,
     TerminateIn,
 )
+from app.services import gosi
 from app.services.contracts import fixed_term_end
+from app.services.end_of_service import eos_award, service_years
 from app.services.saudization import saudization_pct
+
+CENT = Decimal("0.01")
 
 Tab = Literal["all", "active", "terminated", "tamheer", "training", "consultants", "saudi", "expat"]
 
@@ -114,7 +122,8 @@ def list_employees(
         )
     stmt = apply_sort(stmt, params.sort, _SORTABLE, default=(Employee.emp_no.asc(),))
     rows, total = paginate(db, stmt, params)
-    return [to_list_item(e) for e in rows], total
+    rules, today = gosi.load_rules(db), today_riyadh()
+    return [to_list_item(e, user, rules, today) for e in rows], total
 
 
 def counts(db: Session, user: User) -> EmployeeCounts:
@@ -202,10 +211,37 @@ def _apply_currency_rules(emp: Employee) -> None:
         emp.exchange_rate = Decimal("1")
 
 
+_DUPLICATE_MSG = "An employee with the same employee number, email, or ID already exists."
+
+
+def _check_unique(db: Session, values: dict, employee_id: uuid.UUID | None = None) -> None:
+    """Employee number, email and national ID must each be unique (as in the prototype)."""
+    for field, column in (("emp_no", Employee.emp_no), ("email", Employee.email), ("national_id", Employee.national_id)):
+        value = values.get(field)
+        if not value:
+            continue
+        stmt = select(Employee.id).where(func.lower(column) == str(value).lower())
+        if employee_id:
+            stmt = stmt.where(Employee.id != employee_id)
+        if db.scalar(stmt):
+            raise ApiError(409, "conflict", _DUPLICATE_MSG, [{"field": field, "message": "Already used"}])
+
+
+def next_emp_no(db: Session) -> str:
+    """Highest numeric suffix + 1, formatted like the existing numbers (emp085)."""
+    highest = 0
+    for (no,) in db.execute(select(Employee.emp_no)):
+        digits = "".join(ch for ch in no if ch.isdigit())
+        if digits:
+            highest = max(highest, int(digits))
+    return f"emp{highest + 1:03d}"
+
+
 def create_employee(db: Session, data: EmployeeCreate) -> Employee:
     values = data.model_dump(exclude_unset=True)
-    if db.scalar(select(Employee.id).where(func.lower(Employee.emp_no) == values["emp_no"])):
-        raise ApiError(409, "conflict", "Employee number already exists", [{"field": "emp_no", "message": "Already used"}])
+    if not values.get("emp_no"):
+        values["emp_no"] = next_emp_no(db)
+    _check_unique(db, values)
     _check_refs(db, values)
     emp = Employee(**values)
     return _finish(db, emp, values)
@@ -237,6 +273,7 @@ def update_employee(db: Session, emp: Employee, data: EmployeeUpdate) -> list[st
     for required in ("name_ar", "workplace_id", "join_date", "category", "contract_nature", "currency", "wps_type", "gosi_system", "payment_method", "annual_leave_days", "exchange_rate", "exclude_from_payroll", "exclude_from_eos"):
         if required in values and values[required] is None:
             raise ApiError(422, "validation_error", "Some fields are invalid", [{"field": required, "message": "Cannot be empty"}])
+    _check_unique(db, values, employee_id=emp.id)
     _check_refs(db, values, employee_id=emp.id)
     changed = [k for k, v in values.items() if getattr(emp, k) != v]
     for k, v in values.items():
@@ -265,6 +302,91 @@ def reactivate(db: Session, emp: Employee) -> None:
     db.flush()
 
 
+# --------------------------------------------------------------------------- salary figures
+
+
+@dataclass(frozen=True)
+class SalaryFigures:
+    total: Decimal
+    gosi_employee: Decimal
+    gosi_employer: Decimal
+    net: Decimal
+    net_sar: Decimal
+
+
+def _q(v: Decimal) -> Decimal:
+    return Decimal(v).quantize(CENT, ROUND_HALF_UP)
+
+
+def figures(
+    *,
+    rules: list,
+    basic: Decimal,
+    housing: Decimal,
+    transport: Decimal,
+    project: Decimal,
+    other: Decimal,
+    extra: Decimal,
+    deductions: Decimal,
+    exchange_rate: Decimal,
+    gosi_system: GosiSystem,
+    wps_type: WpsType,
+    category: EmployeeCategory,
+    birth_date: date | None,
+    on: date,
+) -> SalaryFigures:
+    """Monthly figures shown on the employee record (prototype `cSP` / `sEmp`):
+    total = basic + housing + transport + project + other + extra; net = total - GOSI(employee) - other deductions."""
+    total = _q(basic + housing + transport + project + other + extra)
+    g = gosi.calculate(
+        rules=rules, system=gosi_system, wps_type=wps_type, category=category,
+        basic=basic, housing=housing, birth_date=birth_date, on=on,
+    )
+    net = _q(total - g.employee - deductions)
+    return SalaryFigures(total, g.employee, g.employer, net, _q(net * exchange_rate))
+
+
+def employee_figures(emp: Employee, rules: list, on: date) -> SalaryFigures:
+    return figures(
+        rules=rules,
+        basic=emp.basic_salary, housing=emp.housing_allowance, transport=emp.transport_allowance,
+        project=emp.project_allowance, other=emp.other_allowances, extra=emp.extra_allowance,
+        deductions=emp.other_deductions, exchange_rate=emp.exchange_rate, gosi_system=emp.gosi_system,
+        wps_type=emp.wps_type, category=emp.category, birth_date=emp.birth_date, on=on,
+    )
+
+
+def preview(db: Session, data: SalaryPreviewIn) -> SalaryPreviewOut:
+    nat = db.get(Nationality, data.nationality_id) if data.nationality_id else None
+    system = data.gosi_system if nat and nat.is_saudi else GosiSystem.non_saudi
+    if system == GosiSystem.non_saudi and nat and nat.is_saudi:
+        system = GosiSystem.matching
+    rate = Decimal(1) if data.currency == Currency.SAR else data.exchange_rate
+    f = figures(
+        rules=gosi.load_rules(db),
+        basic=data.basic_salary, housing=data.housing_allowance, transport=data.transport_allowance,
+        project=data.project_allowance, other=data.other_allowances, extra=data.extra_allowance,
+        deductions=data.other_deductions, exchange_rate=rate, gosi_system=system,
+        wps_type=data.wps_type, category=data.category, birth_date=data.birth_date, on=today_riyadh(),
+    )
+    return SalaryPreviewOut(
+        total_salary=f.total, gosi_employee=f.gosi_employee, gosi_employer=f.gosi_employer,
+        net_salary=f.net, net_salary_sar=f.net_sar, gosi_system=system,
+    )
+
+
+def years_of_service(emp: Employee, today: date) -> Decimal:
+    return service_years(emp.join_date, emp.termination_date or today)
+
+
+def eos_for(emp: Employee, today: date) -> Decimal | None:
+    """End-of-service award as of today (or the termination date). Base = basic + housing."""
+    if emp.exclude_from_eos:
+        return None
+    article = emp.termination_article or TerminationArticle.art_84
+    return eos_award(emp.basic_salary + emp.housing_allowance, years_of_service(emp, today), article)
+
+
 # --------------------------------------------------------------------------- responses
 
 
@@ -276,14 +398,9 @@ def _days_left(d: date | None, today: date) -> int | None:
     return (d - today).days if d else None
 
 
-def total_salary(emp: Employee) -> Decimal:
-    """basic + housing + transport + project + other (the payroll 'total')."""
-    return (
-        emp.basic_salary + emp.housing_allowance + emp.transport_allowance + emp.project_allowance + emp.other_allowances
-    )
-
-
-def to_list_item(emp: Employee) -> EmployeeListItem:
+def to_list_item(emp: Employee, user: User, rules: list, today: date) -> EmployeeListItem:
+    salary_visible = can_view_salary(user, emp)
+    f = employee_figures(emp, rules, today) if salary_visible else None
     return EmployeeListItem(
         id=emp.id,
         emp_no=emp.emp_no,
@@ -300,6 +417,14 @@ def to_list_item(emp: Employee) -> EmployeeListItem:
         contract_end_date=emp.contract_end_date,
         termination_date=emp.termination_date,
         is_terminated=emp.is_terminated,
+        national_id_expiry=emp.national_id_expiry,
+        years_of_service=years_of_service(emp, today),
+        national_id_days_left=_days_left(emp.national_id_expiry, today),
+        contract_days_left=_days_left(emp.contract_end_date, today),
+        total_salary=f.total if f else None,
+        net_salary=f.net_sar if f else None,
+        currency=emp.currency if f else None,
+        has_photo=emp.photo_path is not None,
     )
 
 
@@ -308,14 +433,21 @@ def to_detail(db: Session, emp: Employee, user: User) -> EmployeeOut:
     full_ids = can_view_full_ids(user, emp)
     salary = None
     if can_view_salary(user, emp):
+        f = employee_figures(emp, gosi.load_rules(db), today)
         salary = SalaryOut(
             basic_salary=emp.basic_salary,
             housing_allowance=emp.housing_allowance,
             transport_allowance=emp.transport_allowance,
             project_allowance=emp.project_allowance,
             other_allowances=emp.other_allowances,
+            extra_allowance=emp.extra_allowance,
             other_deductions=emp.other_deductions,
-            total_salary=total_salary(emp),
+            total_salary=f.total,
+            gosi_employee=f.gosi_employee,
+            gosi_employer=f.gosi_employer,
+            net_salary=f.net,
+            net_salary_sar=f.net_sar,
+            eos_award=eos_for(emp, today),
             currency=emp.currency,
             exchange_rate=emp.exchange_rate,
             gosi_system=emp.gosi_system,
@@ -367,6 +499,8 @@ def to_detail(db: Session, emp: Employee, user: User) -> EmployeeOut:
         is_terminated=emp.is_terminated,
         notes=emp.notes if full_ids else None,
         salary=salary,
+        years_of_service=years_of_service(emp, today),
+        has_photo=emp.photo_path is not None,
         ids_masked=not full_ids,
         expiry_days=ExpiryOut(
             national_id=_days_left(emp.national_id_expiry, today),

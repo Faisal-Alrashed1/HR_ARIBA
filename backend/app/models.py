@@ -433,6 +433,8 @@ class Employee(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
     transport_allowance: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
     project_allowance: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
     other_allowances: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
+    # "إضافي" in the prototype: kept apart from the payroll total (see BUSINESS_RULES open question 4).
+    extra_allowance: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
     other_deductions: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
     currency: Mapped[Currency] = mapped_column(pg_enum(Currency, "currency"), default=Currency.SAR)
     exchange_rate: Mapped[Decimal] = mapped_column(Numeric(10, 4), default=1, server_default="1")

@@ -23,3 +23,6 @@ next-env.d.ts
 # OS / editors
 .DS_Store
 .idea/
+
+# Local dev file storage
+.storage/

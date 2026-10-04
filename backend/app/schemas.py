@@ -11,6 +11,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, 
 from app.models import (
     ContractNature,
     Currency,
+    DependentRelation,
+    DocumentType,
     EmployeeCategory,
     Gender,
     GosiSystem,
@@ -156,6 +158,7 @@ class EmployeeBase(BaseModel):
     transport_allowance: Money | None = None
     project_allowance: Money | None = None
     other_allowances: Money | None = None
+    extra_allowance: Money | None = None
     other_deductions: Money | None = None
     currency: Currency | None = None
     exchange_rate: Annotated[Decimal, Field(gt=0, max_digits=10, decimal_places=4)] | None = None
@@ -177,14 +180,17 @@ class EmployeeBase(BaseModel):
 
 
 class EmployeeCreate(EmployeeBase):
-    emp_no: Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True, max_length=20)]
+    # Blank -> the server assigns the next free number (empNNN), as the prototype did.
+    emp_no: Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True, max_length=20)] | None = None
     name_ar: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200)]
     workplace_id: uuid.UUID
     join_date: date
 
     @field_validator("emp_no")
     @classmethod
-    def _emp_no(cls, v: str) -> str:
+    def _emp_no(cls, v: str | None) -> str | None:
+        if not v:
+            return None
         if not _EMP_NO.match(v):
             raise ValueError("Employee number must look like emp084")
         return v
@@ -216,6 +222,15 @@ class EmployeeListItem(BaseModel):
     contract_end_date: date | None
     termination_date: date | None
     is_terminated: bool
+    national_id_expiry: date | None
+    years_of_service: Decimal
+    national_id_days_left: int | None
+    contract_days_left: int | None
+    # Only for roles that may see salaries (finance/hr/admin); null otherwise.
+    total_salary: Decimal | None = None
+    net_salary: Decimal | None = None
+    currency: Currency | None = None
+    has_photo: bool
 
 
 class SalaryOut(BaseModel):
@@ -226,8 +241,14 @@ class SalaryOut(BaseModel):
     transport_allowance: Decimal
     project_allowance: Decimal
     other_allowances: Decimal
+    extra_allowance: Decimal
     other_deductions: Decimal
     total_salary: Decimal
+    gosi_employee: Decimal
+    gosi_employer: Decimal
+    net_salary: Decimal
+    net_salary_sar: Decimal
+    eos_award: Decimal | None
     currency: Currency
     exchange_rate: Decimal
     gosi_system: GosiSystem
@@ -237,10 +258,11 @@ class SalaryOut(BaseModel):
 
     @field_serializer(
         "basic_salary", "housing_allowance", "transport_allowance", "project_allowance",
-        "other_allowances", "other_deductions", "total_salary",
+        "other_allowances", "extra_allowance", "other_deductions", "total_salary",
+        "gosi_employee", "gosi_employer", "net_salary", "net_salary_sar", "eos_award",
     )
-    def _money(self, v: Decimal) -> str:
-        return str(Decimal(v).quantize(Decimal("0.01")))
+    def _money(self, v: Decimal | None) -> str | None:
+        return None if v is None else str(Decimal(v).quantize(Decimal("0.01")))
 
     @field_serializer("exchange_rate")
     def _rate(self, v: Decimal) -> str:
@@ -304,6 +326,8 @@ class EmployeeOut(BaseModel):
     notes: str | None
 
     salary: SalaryOut | None = Field(None, description="Only for finance/hr/admin, or the employee themselves")
+    years_of_service: Decimal
+    has_photo: bool
     ids_masked: bool
     expiry_days: ExpiryOut
     has_account: bool
@@ -321,3 +345,132 @@ class EmployeeCounts(BaseModel):
     saudi: int
     expat: int
     saudization_pct: Decimal
+
+
+class SalaryPreviewIn(BaseModel):
+    """Live salary preview while HR types (the prototype's salary box under the salary tab)."""
+
+    basic_salary: Money = Decimal(0)
+    housing_allowance: Money = Decimal(0)
+    transport_allowance: Money = Decimal(0)
+    project_allowance: Money = Decimal(0)
+    other_allowances: Money = Decimal(0)
+    extra_allowance: Money = Decimal(0)
+    other_deductions: Money = Decimal(0)
+    currency: Currency = Currency.SAR
+    exchange_rate: Annotated[Decimal, Field(gt=0, max_digits=10, decimal_places=4)] = Decimal(1)
+    gosi_system: GosiSystem = GosiSystem.matching
+    nationality_id: uuid.UUID | None = None
+    wps_type: WpsType = WpsType.wps
+    category: EmployeeCategory = EmployeeCategory.active
+    birth_date: date | None = None
+
+
+class SalaryPreviewOut(BaseModel):
+    total_salary: Decimal
+    gosi_employee: Decimal
+    gosi_employer: Decimal
+    net_salary: Decimal
+    net_salary_sar: Decimal
+    gosi_system: GosiSystem
+
+
+# --------------------------------------------------------------------------- dashboard
+
+
+class CountItem(BaseModel):
+    name_ar: str
+    name_en: str
+    count: int
+
+
+class WorkplaceItem(CountItem):
+    salary_total: Decimal | None = Field(None, description="SAR per month; finance/hr/admin only")
+
+
+class AlertOut(BaseModel):
+    employee: EmployeeBrief
+    kind: str  # iqama | passport | insurance | contract
+    expires_on: date
+    days_left: int
+    level: str  # expired | urgent | soon
+
+
+class PayrollSummary(BaseModel):
+    year: int
+    month: int
+
+
+class DashboardOut(BaseModel):
+    current: int
+    saudi: int
+    expat: int
+    saudization_pct: Decimal
+    payroll_total: Decimal | None = Field(None, description="SAR per month; finance/hr/admin only")
+    male: int
+    female: int
+    gender_unspecified: int
+    terminated: int
+    tamheer: int
+    pending_requests: int
+    departments: list[CountItem]
+    nationalities: list[CountItem]
+    workplaces: list[WorkplaceItem]
+    alerts: list[AlertOut]
+    payroll_summary: PayrollSummary | None
+
+
+# --------------------------------------------------------------------------- documents & dependents
+
+
+class DocumentOut(ORM):
+    id: uuid.UUID
+    employee_id: uuid.UUID | None
+    dependent_id: uuid.UUID | None
+    type: DocumentType
+    title: str | None
+    file_name: str
+    mime_type: str
+    size_bytes: int
+    created_at: datetime
+
+
+_Text = lambda n: Annotated[str, StringConstraints(strip_whitespace=True, max_length=n)] | None  # noqa: E731
+
+
+class DependentIn(BaseModel):
+    relation: DependentRelation | None = None
+    name_ar: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200)] | None = None
+    name_en: _Text(200) = None
+    birth_date: date | None = None
+    national_id: Annotated[str, StringConstraints(strip_whitespace=True, pattern=r"^\d{10}$")] | None = None
+    national_id_expiry: date | None = None
+    passport_no: _Text(30) = None
+    passport_expiry: date | None = None
+    insurance_company: _Text(120) = None
+    insurance_card_no: _Text(60) = None
+    insurance_expiry: date | None = None
+    mobile: Annotated[str, StringConstraints(strip_whitespace=True, pattern=r"^\+?[0-9 ]{7,20}$")] | None = None
+
+
+class DependentCreate(DependentIn):
+    relation: DependentRelation
+    name_ar: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200)]
+
+
+class DependentOut(BaseModel):
+    id: uuid.UUID
+    employee_id: uuid.UUID
+    relation: DependentRelation
+    name_ar: str
+    name_en: str | None
+    birth_date: date | None
+    national_id: str | None
+    national_id_expiry: date | None
+    passport_no: str | None
+    passport_expiry: date | None
+    insurance_company: str | None
+    insurance_card_no: str | None
+    insurance_expiry: date | None
+    mobile: str | None
+    documents: list[DocumentOut]
