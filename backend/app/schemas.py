@@ -320,3 +320,4 @@ class EmployeeCounts(BaseModel):
     consultants: int
     saudi: int
     expat: int
+    saudization_pct: Decimal

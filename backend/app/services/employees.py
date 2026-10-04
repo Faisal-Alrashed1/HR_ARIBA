@@ -40,6 +40,7 @@ from app.schemas import (
     TerminateIn,
 )
 from app.services.contracts import fixed_term_end
+from app.services.saudization import saudization_pct
 
 Tab = Literal["all", "active", "terminated", "tamheer", "training", "consultants", "saudi", "expat"]
 
@@ -121,6 +122,7 @@ def counts(db: Session, user: User) -> EmployeeCounts:
         stmt = scope_employees(_tab_filter(_base(), tab), user)
         return db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
 
+    saudi, expat = n("saudi"), n("expat")
     return EmployeeCounts(
         all=n("all"),
         active=n("active"),
@@ -128,8 +130,9 @@ def counts(db: Session, user: User) -> EmployeeCounts:
         tamheer=n("tamheer"),
         training=n("training"),
         consultants=n("consultants"),
-        saudi=n("saudi"),
-        expat=n("expat"),
+        saudi=saudi,
+        expat=expat,
+        saudization_pct=saudization_pct(saudi, saudi + expat),
     )
 
 

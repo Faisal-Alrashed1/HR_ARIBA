@@ -115,7 +115,7 @@ def test_tabs_and_counts(client, ref, make_user, make_employee):
     assert emp_nos("expat") == 3
 
     counts = client.get("/api/v1/employees/counts", headers=auth(hr)).json()
-    assert counts == {"all": 6, "active": 2, "terminated": 1, "tamheer": 1, "training": 1, "consultants": 1, "saudi": 2, "expat": 3}
+    assert counts == {"all": 6, "active": 2, "terminated": 1, "tamheer": 1, "training": 1, "consultants": 1, "saudi": 2, "expat": 3, "saudization_pct": "40.0"}
 
 
 def test_pagination_search_and_sort(client, make_user, make_employee):
@@ -165,3 +165,14 @@ def test_lookups(client, make_user):
     body = r.json()
     assert len(body["workplaces"]) == 5 and len(body["departments"]) == 8 and len(body["nationalities"]) == 10
     assert [n["is_saudi"] for n in body["nationalities"]].count(True) == 1
+
+
+def test_saudization_pct_hand_computed():
+    from decimal import Decimal
+
+    from app.services.saudization import saudization_pct
+
+    assert saudization_pct(2, 5) == Decimal("40.0")
+    assert saudization_pct(1, 3) == Decimal("33.3")
+    assert saudization_pct(2, 3) == Decimal("66.7")
+    assert saudization_pct(0, 0) == Decimal("0.0")
