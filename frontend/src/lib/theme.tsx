@@ -1,30 +1,43 @@
 "use client";
 
 import { createContext, useCallback, useContext, useState } from "react";
-import { THEME_COOKIE } from "./prefs";
 
 export type Theme = "light" | "dark";
 
 interface ThemeContextValue {
   theme: Theme;
-  setTheme: (theme: Theme) => void;
   toggle: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({ initial, children }: { initial: Theme; children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(initial);
+/** Sets `data-ariba-theme` on <html> (both prototypes) and, for the employee app,
+ *  `ariba-light` / `ariba-dark` on <body> (its prototype's palette classes). */
+export function ThemeProvider({
+  initial,
+  cookie,
+  bodyClass,
+  children,
+}: {
+  initial: Theme;
+  cookie: string;
+  bodyClass: boolean;
+  children: React.ReactNode;
+}) {
+  const [theme, setTheme] = useState<Theme>(initial);
 
-  const setTheme = useCallback((next: Theme) => {
-    setThemeState(next);
-    document.documentElement.dataset.theme = next;
-    document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
-  }, []);
+  const toggle = useCallback(() => {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.dataset.aribaTheme = next;
+    if (bodyClass) {
+      document.body.classList.remove("ariba-light", "ariba-dark");
+      document.body.classList.add(`ariba-${next}`);
+    }
+    document.cookie = `${cookie}=${next}; path=/; max-age=31536000; samesite=lax`;
+  }, [theme, cookie, bodyClass]);
 
-  const toggle = useCallback(() => setTheme(theme === "dark" ? "light" : "dark"), [theme, setTheme]);
-
-  return <ThemeContext.Provider value={{ theme, setTheme, toggle }}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): ThemeContextValue {

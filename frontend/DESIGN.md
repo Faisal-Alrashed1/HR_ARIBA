@@ -1,37 +1,23 @@
 # Design
 
-Brand from the V114 prototypes: deep green **#014D3D**, bright green **#29B35E**, beige **#E4E4BC**, ink **#231F20**.
+The UI reproduces the V114 prototypes **exactly**: same CSS, class names, ids, wording, field order and colours.
 
-## Tokens (`src/app/globals.css`)
-Semantic CSS variables, mapped into Tailwind as `bg-surface`, `text-muted`, `border-border`, `bg-accent`, etc.
-Components never use raw hex colours.
+- `src/styles/hr.css` and `src/styles/employee.css` are the prototypes' style blocks, copied verbatim in the
+  order the browser applied them (plus the few rules the prototypes injected at runtime). Do not tidy them:
+  the components emit the prototype's markup (`.sb`, `.ni`, `.topbar`, `.card`, `.tbar/.tab`, `.mw/.modal`,
+  `.hdr`, `.bnav/.bni`, `#KR`, `#ET` …) so the original cascade renders unchanged.
+- Two root layouts keep the two stylesheets apart: `app/(hr)` (HR portal) and `app/(employee)` (employee app).
+  Moving between them is a full page load.
+- Font: ARIBA Two (Light/Medium/Bold), extracted from the HR prototype into `public/fonts`, also mapped to the
+  face names the prototype used (`ARIBA Two Medium` …) so it renders without a local install.
+- Icons: Tabler icons webfont 3.19.0 (as the prototype). Charts: Chart.js 4.4.0 with the prototype's colours.
+- Theme: `data-ariba-theme` on `<html>` (both apps) and `ariba-light/ariba-dark` on `<body>` (employee app).
+  Defaults as in the prototypes: HR portal night, employee app day.
+- Language: Arabic/English wording from the prototypes' own dictionaries. The HR portal stays RTL in English
+  (as the prototype); the employee app turns LTR.
+- Tailwind was removed: the verbatim prototype CSS (unlayered, with `*{margin:0;padding:0}`) would override
+  any layered utility classes.
 
-| Token | Light (نهاري) | Night (ليلي) |
-|---|---|---|
-| `--bg` | #F4F0E4 | #071813 |
-| `--surface` | #FFFFFF | #0E2A22 |
-| `--text` | #231F20 | #EEF8F3 |
-| `--accent` | #014D3D | #29B35E |
-
-Theme: `data-theme="dark"` on `<html>`, stored in the `ariba_theme` cookie and read on the server (no flash).
-Language: `ariba_lang` cookie → `lang` + `dir` on `<html>`.
-
-## Type
-IBM Plex Sans Arabic (Google Fonts via `next/font`) stands in for the brand font **ARIBA Two**. Drop the TTF
-files into `src/app/fonts/` and switch `layout.tsx` to `next/font/local` when available.
-Numbers, IDs, IBANs and dates use `.ltr-nums` so they read correctly inside Arabic text.
-Dates are shown as DD/MM/YYYY (built by hand: Intl's Arabic output adds RTL marks that scramble the order).
-
-## Layout
-- HR portal: sidebar (collapses to a drawer below `lg`) + top bar with language/theme toggles and sign-out.
-- Employee app: mobile-first column (max 42rem), sticky header, 6-item bottom navigation.
-- Every data view has loading, error (with retry) and empty states (`components/ui/states.tsx`).
-
-## Components (`src/components/ui`)
-`Button` · `Input`/`Select`/`Textarea`/`Checkbox`/`ReadField` (labelled, with error/hint) · `Card`/`PageHeader`/`StatCard` ·
-`Badge` (+ `expiryTone`: ≤30 days red, ≤90 amber) · `Tabs` · `Table` + `Pagination` · `Dialog` (native `<dialog>`) ·
-`LoadingState`/`ErrorState`/`EmptyState`/`NotBuilt`/`Notice` · `Icons` (inline SVG).
-
-## Print
-A4, 16 mm margins; `.no-print` hides navigation and actions. Official letters (templates phase) will use the
-company letterhead images on `.print-surface` pages.
+Known intentional differences from the prototype: no AI assistant (out of scope); the empty duplicate
+language button in the employee header and the garbled login subtitle were not copied; leave-balance cards
+and other figures from unbuilt modules are omitted rather than shown with placeholder numbers.

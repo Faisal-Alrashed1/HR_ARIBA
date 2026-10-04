@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     await logout();
     setUser(null);
-    router.replace("/login");
+    router.replace(window.location.pathname.startsWith("/me") ? "/me/login" : "/login");
     router.refresh();
   }, [router]);
 

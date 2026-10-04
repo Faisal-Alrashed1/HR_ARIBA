@@ -19,17 +19,25 @@ export const HR_ROUTES = [
 const HR_READERS: Role[] = ["hr", "ceo", "admin"];
 const FINANCE_READERS: Role[] = ["finance", "hr", "admin"];
 
+export const HR_LOGIN = "/login";
+export const EMP_LOGIN = "/me/login";
+
 function under(path: string, prefix: string): boolean {
   return path === prefix || path.startsWith(prefix + "/");
 }
 
+export function isEmployeeApp(path: string): boolean {
+  return under(path, "/me");
+}
+
 export function canAccess(path: string, role: Role): boolean {
-  if (under(path, "/me")) return true;
+  if (isEmployeeApp(path)) return true;
   if (FINANCE_ROUTES.some((p) => under(path, p))) return FINANCE_READERS.includes(role);
   if (HR_ROUTES.some((p) => under(path, p))) return HR_READERS.includes(role);
   return true;
 }
 
+/** Where a role lands after signing in: employees and managers use the employee app. */
 export function homeFor(role: Role): string {
   if (role === "employee" || role === "manager") return "/me";
   if (role === "finance") return "/payroll";

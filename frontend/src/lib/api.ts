@@ -96,6 +96,15 @@ export interface EmployeeListItem {
   contract_end_date: IsoDate | null;
   termination_date: IsoDate | null;
   is_terminated: boolean;
+  national_id_expiry: IsoDate | null;
+  years_of_service: Decimal;
+  national_id_days_left: number | null;
+  contract_days_left: number | null;
+  /** null unless the caller may see salaries */
+  total_salary: Decimal | null;
+  net_salary: Decimal | null;
+  currency: Currency | null;
+  has_photo: boolean;
 }
 
 export interface EmployeeCounts {
@@ -116,8 +125,14 @@ export interface Salary {
   transport_allowance: Decimal;
   project_allowance: Decimal;
   other_allowances: Decimal;
+  extra_allowance: Decimal;
   other_deductions: Decimal;
   total_salary: Decimal;
+  gosi_employee: Decimal;
+  gosi_employer: Decimal;
+  net_salary: Decimal;
+  net_salary_sar: Decimal;
+  eos_award: Decimal | null;
   currency: Currency;
   exchange_rate: Decimal;
   gosi_system: GosiSystem;
@@ -168,6 +183,8 @@ export interface Employee {
   is_terminated: boolean;
   notes: string | null;
   salary: Salary | null;
+  years_of_service: Decimal;
+  has_photo: boolean;
   ids_masked: boolean;
   expiry_days: { national_id: number | null; passport: number | null; insurance: number | null; contract: number | null };
   has_account: boolean;
@@ -214,6 +231,7 @@ export interface EmployeeInput {
   transport_allowance?: Decimal;
   project_allowance?: Decimal;
   other_allowances?: Decimal;
+  extra_allowance?: Decimal;
   other_deductions?: Decimal;
   currency?: Currency;
   exchange_rate?: Decimal;
@@ -222,6 +240,102 @@ export interface EmployeeInput {
   exclude_from_payroll?: boolean;
   exclude_from_eos?: boolean;
   notes?: string | null;
+}
+
+export interface SalaryPreviewInput {
+  basic_salary: Decimal;
+  housing_allowance: Decimal;
+  transport_allowance: Decimal;
+  project_allowance: Decimal;
+  other_allowances: Decimal;
+  extra_allowance: Decimal;
+  other_deductions: Decimal;
+  currency: Currency;
+  exchange_rate: Decimal;
+  gosi_system: GosiSystem;
+  nationality_id: Uuid | null;
+  wps_type: WpsType;
+  category: EmployeeCategory;
+  birth_date: IsoDate | null;
+}
+
+export interface SalaryPreview {
+  total_salary: Decimal;
+  gosi_employee: Decimal;
+  gosi_employer: Decimal;
+  net_salary: Decimal;
+  net_salary_sar: Decimal;
+  gosi_system: GosiSystem;
+}
+
+export interface CountItem {
+  name_ar: string;
+  name_en: string;
+  count: number;
+}
+
+export interface Dashboard {
+  current: number;
+  saudi: number;
+  expat: number;
+  saudization_pct: Decimal;
+  payroll_total: Decimal | null;
+  male: number;
+  female: number;
+  gender_unspecified: number;
+  terminated: number;
+  tamheer: number;
+  pending_requests: number;
+  departments: CountItem[];
+  nationalities: CountItem[];
+  workplaces: (CountItem & { salary_total: Decimal | null })[];
+  alerts: {
+    employee: EmployeeBrief;
+    kind: "iqama" | "passport" | "insurance" | "contract";
+    expires_on: IsoDate;
+    days_left: number;
+    level: "expired" | "urgent" | "soon";
+  }[];
+  payroll_summary: { year: number; month: number } | null;
+}
+
+export type DocumentType =
+  | "iqama" | "passport" | "insurance" | "contract" | "graduation_certificate" | "experience_certificate"
+  | "gosi_certificate" | "cv" | "national_address" | "photo" | "letter" | "other";
+
+export interface DocumentFile {
+  id: Uuid;
+  employee_id: Uuid | null;
+  dependent_id: Uuid | null;
+  type: DocumentType;
+  title: string | null;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  created_at: string;
+}
+
+export type DependentRelation = "wife" | "husband" | "son" | "daughter" | "father" | "mother";
+
+export interface DependentInput {
+  relation?: DependentRelation;
+  name_ar?: string;
+  name_en?: string | null;
+  birth_date?: IsoDate | null;
+  national_id?: string | null;
+  national_id_expiry?: IsoDate | null;
+  passport_no?: string | null;
+  passport_expiry?: IsoDate | null;
+  insurance_company?: string | null;
+  insurance_card_no?: string | null;
+  insurance_expiry?: IsoDate | null;
+  mobile?: string | null;
+}
+
+export interface Dependent extends Required<DependentInput> {
+  id: Uuid;
+  employee_id: Uuid;
+  documents: DocumentFile[];
 }
 
 export interface TerminateInput {
@@ -312,6 +426,39 @@ async function parseError(res: Response): Promise<ApiError> {
   }
 }
 
+/** multipart/form-data upload (documents, photo). */
+export async function upload<T>(path: string, form: FormData, method: "POST" | "PUT" = "POST", retried = false): Promise<T> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  const token = getAccessToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(path), { method, headers, body: form, cache: "no-store" });
+  } catch {
+    throw new ApiError(0, "network_error", "Cannot reach the server");
+  }
+  if (res.status === 401 && !retried && (await refreshSession())) return upload<T>(path, form, method, true);
+  if (!res.ok) throw await parseError(res);
+  if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
+}
+
+/** Fetch a protected file (photo, document) as a Blob, with the bearer token. */
+export async function fetchBlob(path: string, retried = false): Promise<Blob> {
+  const headers: Record<string, string> = {};
+  const token = getAccessToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(path), { headers, cache: "no-store" });
+  } catch {
+    throw new ApiError(0, "network_error", "Cannot reach the server");
+  }
+  if (res.status === 401 && !retried && (await refreshSession())) return fetchBlob(path, true);
+  if (!res.ok) throw await parseError(res);
+  return res.blob();
+}
+
 export async function request<T>(path: string, opts: RequestOptions = {}, retried = false): Promise<T> {
   const headers: Record<string, string> = {
     Accept: "application/json",
@@ -338,10 +485,11 @@ export async function request<T>(path: string, opts: RequestOptions = {}, retrie
   if (res.status === 401 && !opts.anonymous && !retried) {
     if (await refreshSession()) return request<T>(path, opts, true);
     clearSession();
-    if (typeof window !== "undefined" && !location.pathname.startsWith("/login")) {
+    if (typeof window !== "undefined" && !/\/login$/.test(location.pathname)) {
       // Full reload on purpose: the session is gone, so drop all in-memory app state too.
+      const login = location.pathname.startsWith("/me") ? "/me/login" : "/login";
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      location.assign(`/login?next=${encodeURIComponent(location.pathname)}`);
+      location.assign(`${login}?next=${encodeURIComponent(location.pathname)}`);
     }
   }
   if (!res.ok) throw await parseError(res);

@@ -3,14 +3,15 @@
 // This is an optimistic check that only MIRRORS the backend: it reads the role claim from the
 // access-token cookie without verifying the signature, so it must never be the thing that
 // protects data. The backend verifies the token and checks the role on every API call.
+// A forced password change is handled by a blocking dialog in each app (as in the prototypes),
+// and the backend refuses every other endpoint until it is done.
 
 import { NextResponse, type NextRequest } from "next/server";
 import type { Role } from "@/lib/api";
-import { canAccess, homeFor } from "@/lib/routes";
-import { ACCESS_COOKIE, MUST_CHANGE_COOKIE, REFRESH_COOKIE } from "@/lib/session";
+import { EMP_LOGIN, HR_LOGIN, canAccess, homeFor, isEmployeeApp } from "@/lib/routes";
+import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/session";
 
 const ROLES: Role[] = ["employee", "manager", "finance", "hr", "ceo", "admin"];
-const FORCE_PASSWORD_PATH = "/me/settings";
 
 function roleFromToken(token: string | undefined): Role | null {
   if (!token) return null;
@@ -28,27 +29,20 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const access = request.cookies.get(ACCESS_COOKIE)?.value;
   const hasSession = !!access || !!request.cookies.get(REFRESH_COOKIE)?.value;
+  const role = roleFromToken(access);
 
-  if (pathname === "/login") {
-    const role = roleFromToken(access);
+  if (pathname === HR_LOGIN || pathname === EMP_LOGIN) {
     return role ? NextResponse.redirect(new URL(homeFor(role), request.url)) : NextResponse.next();
   }
 
   if (!hasSession) {
-    const url = new URL("/login", request.url);
-    if (pathname !== "/") url.searchParams.set("next", pathname + search);
+    const url = new URL(isEmployeeApp(pathname) ? EMP_LOGIN : HR_LOGIN, request.url);
+    if (pathname !== "/" && pathname !== "/me") url.searchParams.set("next", pathname + search);
     return NextResponse.redirect(url);
   }
 
   // Access token expired but refresh token present: let the page load; the client refreshes.
-  const role = roleFromToken(access);
   if (!role) return NextResponse.next();
-
-  if (request.cookies.get(MUST_CHANGE_COOKIE)?.value === "1" && pathname !== FORCE_PASSWORD_PATH) {
-    const url = new URL(FORCE_PASSWORD_PATH, request.url);
-    url.searchParams.set("force", "1");
-    return NextResponse.redirect(url);
-  }
 
   if (pathname === "/" || !canAccess(pathname, role)) {
     return NextResponse.redirect(new URL(homeFor(role), request.url));
@@ -58,5 +52,5 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // Everything except Next internals and static files.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|ico|webp|woff2?)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|fonts/|brand/|.*\\.(?:png|jpg|jpeg|svg|ico|webp|ttf|woff2?)$).*)"],
 };

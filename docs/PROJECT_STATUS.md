@@ -4,6 +4,16 @@ _Last updated: 2026-10-04 · branch `feat/foundation`_
 
 Start here. This file says what exists, what has been checked, and what has **not** been checked.
 
+## Design match (2026-10-04)
+The frontend now reproduces the V114 prototypes' look exactly (prototype CSS, fonts, logo, wording, markup);
+see `frontend/DESIGN.md`. Backend additions for the built screens: GOSI and end-of-service calculations,
+salary figures on the employee record, live salary preview, full dashboard (KPIs, charts, expiry alerts),
+document/photo uploads (Supabase Storage, or local disk in development), dependents, duplicate checks and
+automatic employee numbers. New endpoints: `GET /dashboard`, `POST /employees/salary-preview`,
+`GET|POST /employees/{id}/documents`, `GET /documents/{id}/file`, `DELETE /documents/{id}`,
+`GET|PUT|DELETE /employees/{id}/photo`, `GET|POST /employees/{id}/dependents`, `PATCH|DELETE /dependents/{id}`,
+`POST /dependents/{id}/documents`. The employee app has its own login at `/me/login`.
+
 ## Phase 1 — Foundation + Employees (done)
 
 | Area | State |

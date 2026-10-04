@@ -2,11 +2,11 @@
 
 import { createContext, useCallback, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { LANG_COOKIE } from "../prefs";
 import { ar, type MessageKey } from "./ar";
 import { en } from "./en";
 
 export type Lang = "ar" | "en";
-import { LANG_COOKIE } from "../prefs";
 
 const dictionaries: Record<Lang, Record<MessageKey, string>> = { ar, en };
 
@@ -14,7 +14,6 @@ type Translate = (key: MessageKey, vars?: Record<string, string | number>) => st
 
 interface LocaleContextValue {
   lang: Lang;
-  dir: "rtl" | "ltr";
   t: Translate;
   /** Translate an enum value, e.g. tEnum("category", "tamheer"). Falls back to the raw value. */
   tEnum: (group: string, value: string | null | undefined) => string;
@@ -25,23 +24,25 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 export function translate(lang: Lang, key: MessageKey, vars?: Record<string, string | number>): string {
   let text: string = dictionaries[lang][key] ?? key;
-  if (vars) {
-    for (const [k, v] of Object.entries(vars)) text = text.replaceAll(`{${k}}`, String(v));
-  }
+  if (vars) for (const [k, v] of Object.entries(vars)) text = text.replaceAll(`{${k}}`, String(v));
   return text;
 }
 
-export function LocaleProvider({ lang, children }: { lang: Lang; children: React.ReactNode }) {
+/**
+ * @param flipDir  The employee app switches to left-to-right in English (as its prototype did);
+ *                 the HR portal stays right-to-left and only swaps its labels (as its prototype did).
+ */
+export function LocaleProvider({ lang, flipDir, children }: { lang: Lang; flipDir: boolean; children: React.ReactNode }) {
   const router = useRouter();
 
   const setLang = useCallback(
     (next: Lang) => {
       document.cookie = `${LANG_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
       document.documentElement.lang = next;
-      document.documentElement.dir = next === "ar" ? "rtl" : "ltr";
+      if (flipDir) document.documentElement.dir = next === "ar" ? "rtl" : "ltr";
       router.refresh();
     },
-    [router],
+    [router, flipDir],
   );
 
   const value = useMemo<LocaleContextValue>(() => {
@@ -51,7 +52,7 @@ export function LocaleProvider({ lang, children }: { lang: Lang; children: React
       const key = `enum.${group}.${v}` as MessageKey;
       return key in dictionaries[lang] ? translate(lang, key) : v;
     };
-    return { lang, dir: lang === "ar" ? "rtl" : "ltr", t, tEnum, setLang };
+    return { lang, t, tEnum, setLang };
   }, [lang, setLang]);
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
