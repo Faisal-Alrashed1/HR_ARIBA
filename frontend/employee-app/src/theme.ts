@@ -1,4 +1,4 @@
-// Colours of the V114 employee app (legacy/employee-portal/css/08-ariba-employee-theme-v12.css).
+// Colours of the V114 employee app (frontend/legacy/employee-portal/css/08-ariba-employee-theme-v12.css).
 // Same variable names as the prototype so screens can be compared side by side.
 import { useColorScheme } from "react-native";
 

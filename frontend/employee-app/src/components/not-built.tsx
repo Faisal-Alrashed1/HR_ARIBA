@@ -1,7 +1,7 @@
 import { Card, Screen, Txt } from "./ui";
 
 // Placeholder for screens whose backend module is not built yet. The reference behaviour is in
-// legacy/employee-portal and docs/ARIBA_HR_System_Documentation.md.
+// frontend/legacy/employee-portal and docs/ARIBA_HR_System_Documentation.md.
 export function NotBuilt({ title, items }: { title: string; items: string[] }) {
   return (
     <Screen>

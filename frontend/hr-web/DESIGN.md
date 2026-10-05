@@ -4,7 +4,7 @@ The UI reproduces the V114 prototypes **exactly**: same CSS, class names, ids, w
 
 - `src/styles/hr.css` and `src/styles/employee.css` only `@import` the files in `src/styles/hr/` and
   `src/styles/employee/`: one file per prototype style block, named after the split files in
-  `legacy/*/css`, copied verbatim in the order the browser applied them (plus the few rules the prototypes injected at runtime). Do not tidy them:
+  `frontend/legacy/*/css`, copied verbatim in the order the browser applied them (plus the few rules the prototypes injected at runtime). Do not tidy them:
   the components emit the prototype's markup (`.sb`, `.ni`, `.topbar`, `.card`, `.tbar/.tab`, `.mw/.modal`,
   `.hdr`, `.bnav/.bni`, `#KR`, `#ET` …) so the original cascade renders unchanged.
 - Two root layouts keep the two stylesheets apart: `app/(hr)` (HR portal) and `app/(employee)` (employee app).

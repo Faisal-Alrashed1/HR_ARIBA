@@ -7,7 +7,7 @@
 | `backend/` | FastAPI · SQLAlchemy · Alembic · PostgreSQL | Railway |
 | `frontend/hr-web/` | Next.js (React + TypeScript) — موقع الموارد البشرية | Railway |
 | `frontend/employee-app/` | React Native + Expo (TypeScript) — تطبيق الموظف | App Store · Google Play |
-| `legacy/` | النظام القديم V114 مفصولاً لملفات (CSS / JS / المعادلات) — **مرجع فقط** | — |
+| `frontend/legacy/` | النظام القديم V114 مفصولاً لملفات (CSS / JS / المعادلات) — **مرجع فقط** | — |
 | `docs/` | التوثيق: المعادلات، سير الطلبات، التصميم، الأسئلة المفتوحة، النشر | — |
 
 الخادم يملك كل البيانات والحسابات والصلاحيات (`/api/v1`). الموقع والتطبيق يعرضان فقط.

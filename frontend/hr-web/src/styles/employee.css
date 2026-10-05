@@ -1,5 +1,5 @@
 /* employee styles — one file per style block of the V114 prototype, named after the split files in
-   legacy/employee-portal/css. Order matters: it is the order the browser applied them. */
+   frontend/legacy/employee-portal/css. Order matters: it is the order the browser applied them. */
 @import "./employee/00-app-fonts-and-header.css";
 @import "./employee/02-styles.css";
 @import "./employee/03-ariba-pwa-ui.css";

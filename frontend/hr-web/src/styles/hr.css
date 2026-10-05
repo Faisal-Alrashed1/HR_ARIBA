@@ -1,5 +1,5 @@
 /* hr styles — one file per style block of the V114 prototype, named after the split files in
-   legacy/hr-portal/css. Order matters: it is the order the browser applied them. */
+   frontend/legacy/hr-portal/css. Order matters: it is the order the browser applied them. */
 @import "./hr/00-app-fonts-and-header.css";
 @import "./hr/02-ariba-fonts.css";
 @import "./hr/03-ariba-photo-css.css";

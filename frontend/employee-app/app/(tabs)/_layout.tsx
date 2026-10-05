@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { fonts, useTheme } from "@/theme";
 
-// Bottom navigation of the V114 employee app (legacy/employee-portal): الرئيسية، الحضور، الإجازات، الراتب، فريقي، ملفي.
+// Bottom navigation of the V114 employee app (frontend/legacy/employee-portal): الرئيسية، الحضور، الإجازات، الراتب، فريقي، ملفي.
 export default function TabsLayout() {
   const t = useTheme();
   return (
