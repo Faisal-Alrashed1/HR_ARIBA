@@ -33,6 +33,18 @@ export interface EmployeeQuery {
 export const listEmployees = (query: EmployeeQuery = {}) =>
   request<Page<EmployeeListItem>>("/employees", { query: { ...query } });
 
+/** Every page of the list (the API caps page_size at 100). Returns the same Page shape with all items. */
+export async function listAllEmployees(query: Omit<EmployeeQuery, "page" | "page_size"> = {}): Promise<Page<EmployeeListItem>> {
+  const first = await listEmployees({ ...query, page: 1, page_size: 100 });
+  const items = [...first.items];
+  for (let page = 2; items.length < first.total; page++) {
+    const next = await listEmployees({ ...query, page, page_size: 100 });
+    if (!next.items.length) break;
+    items.push(...next.items);
+  }
+  return { ...first, items, page: 1, page_size: items.length };
+}
+
 export const employeeCounts = () => request<EmployeeCounts>("/employees/counts");
 
 export const getEmployee = (id: Uuid) => request<Employee>(`/employees/${id}`);

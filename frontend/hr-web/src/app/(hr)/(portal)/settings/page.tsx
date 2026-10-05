@@ -9,7 +9,7 @@ import { PasswordDialog } from "@/components/common/password-dialog";
 import { PasswordReveal } from "@/components/hr/password-reveal";
 import { useToast } from "@/components/common/toast";
 import { accountForEmployee, createAccount, issueTemporaryPassword } from "@/lib/auth";
-import { getLookups, listEmployees } from "@/lib/employees";
+import { getLookups, listAllEmployees } from "@/lib/employees";
 import type { EmployeeListItem, Lookups } from "@/lib/api";
 import { getSalaryBasis, type SalaryBasisRow } from "@/lib/salary";
 import {
@@ -94,7 +94,7 @@ export default function Page() {
       getAttendanceSettings(),
       getGosi(),
       getLookups(),
-      listEmployees({ tab: "active", page_size: 300, sort: "name_ar" }),
+      listAllEmployees({ tab: "active", sort: "name_ar" }),
       getSalaryBasis(),
       listAccounts(),
       getSheet<string>("company_logo").catch(() => ({ data: null })),

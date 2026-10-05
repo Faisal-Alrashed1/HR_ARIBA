@@ -5,7 +5,7 @@
 // letterhead and can be sent to the employee to approve or object in their app.
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/components/common/toast";
-import { getEmployee, listEmployees } from "@/lib/employees";
+import { getEmployee, listAllEmployees } from "@/lib/employees";
 import type { Employee, EmployeeListItem } from "@/lib/api";
 import { request } from "@/lib/api";
 import { getSheet } from "@/lib/settings";
@@ -131,7 +131,7 @@ export default function Page() {
   useEffect(() => {
     let alive = true;
     Promise.all([
-      listEmployees({ page_size: 300, sort: "name_ar" }),
+      listAllEmployees({ sort: "name_ar" }),
       getSheet<Signer>("hr_signer").catch(() => ({ data: null })),
       request<LetterRow[]>("/letters").catch(() => []),
     ]).then(([p, s, l]) => {

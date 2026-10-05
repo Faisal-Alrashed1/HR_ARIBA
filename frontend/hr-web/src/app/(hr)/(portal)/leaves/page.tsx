@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/hr/modal";
 import { PageState } from "@/components/hr/not-built";
 import { useToast } from "@/components/common/toast";
-import { listEmployees } from "@/lib/employees";
+import { listAllEmployees } from "@/lib/employees";
 import { ddmmyyyy, todayIso } from "@/lib/format";
 import type { EmployeeListItem } from "@/lib/api";
 import {
@@ -63,7 +63,7 @@ export default function Page() {
 
   useEffect(() => {
     let alive = true;
-    Promise.all([listEmployees({ tab: "active", page_size: 300, sort: "name_ar" }), listRequests(), listHolidays(), listBalances()])
+    Promise.all([listAllEmployees({ tab: "active", sort: "name_ar" }), listRequests(), listHolidays(), listBalances()])
       .then(([p, r, h, b]) => {
         if (!alive) return;
         setEmps(p.items);

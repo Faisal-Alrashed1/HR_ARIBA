@@ -3,7 +3,7 @@
 // Settlement calculator (حاسبة المخالصة) — same markup and behaviour as #pg-eoscalc in
 // frontend/legacy/hr-portal/index.html; the arithmetic is in lib/calc/settlement.ts.
 import { useEffect, useMemo, useState } from "react";
-import { listEmployees } from "@/lib/employees";
+import { listAllEmployees } from "@/lib/employees";
 import type { EmployeeListItem } from "@/lib/api";
 import { LAW_NAME, REASONS, runSettlement, sDt, sNum, type SettlementReason } from "@/lib/calc/settlement";
 
@@ -39,7 +39,7 @@ export default function Page() {
   const [seq, setSeq] = useState(1);
 
   useEffect(() => {
-    listEmployees({ page_size: 100, sort: "name_ar" })
+    listAllEmployees({ sort: "name_ar" })
       .then((p) => setEmps(p.items.filter((e) => e.category !== "hourly")))
       .catch(() => setEmps([]));
   }, []);
