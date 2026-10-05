@@ -8,6 +8,7 @@ from sqlalchemy import select
 from app.models import EmployeeCategory, GosiRule, GosiSystem, TerminationArticle as A, WpsType
 from app.services import gosi
 from app.services.end_of_service import eos_award, service_years
+from tests.conftest import auth
 
 
 def _rules(db):
@@ -95,3 +96,21 @@ def test_gosi_v130_exemption_by_words():
     assert k(workplace="برنامج تمهير") == "tamheer"
     assert exempt_kind(wps_type=WpsType.no_wps, category=EmployeeCategory.active) == "no_wps"
     assert exempt_kind(wps_type=WpsType.wps, category=EmployeeCategory.tamheer) == "tamheer"
+
+
+def test_gosi_rates_endpoint(client, make_user):
+    from app.models import Role
+
+    fin = make_user(Role.finance)
+    r = client.get("/api/v1/settings/gosi-rates", params={"on": "2026-10-01"}, headers=auth(fin))
+    assert r.status_code == 200
+    body = r.json()
+    assert body["match_emp"] == 0.1075
+    assert body["match_er"] == 0.1275
+    assert body["no_match_emp"] == 0.0975
+    assert body["non_saudi_er"] == 0.02
+    assert body["cap"] == 45000
+    assert body["age_thr"] == 55
+
+    r = client.get("/api/v1/settings/gosi-rates", params={"on": "2027-07-01"}, headers=auth(fin))
+    assert r.json()["match_emp"] == 0.1125
