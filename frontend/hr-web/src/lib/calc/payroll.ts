@@ -206,6 +206,49 @@ export function defaultInsDays(r: PayRow, _e: SalaryBasisRow | undefined, m: Mon
   return Math.max(0, Math.min(days, en - st + 1));
 }
 
+function ageOn(birth: string | null, on: string): number {
+  if (!birth) return 30; // prototype default when the birth date is missing
+  const [by, bm, bd] = birth.slice(0, 10).split("-").map(Number);
+  const [oy, om, od] = on.slice(0, 10).split("-").map(Number);
+  let age = oy - by;
+  if (om < bm || (om === bm && od < bd)) age--;
+  return age;
+}
+
+/** GOSI for a full month (31/31), mirroring the legacy `calcIns(e, 31, 31)` for the payslip fallback. */
+export function calcEmployeeGosi(
+  e: SalaryBasisRow,
+  rates: GosiRates,
+  on: string,
+): { base: number; employee: number; employer: number } {
+  if (exemptKind(e)) return { base: 0, employee: 0, employer: 0 };
+  const cap = rates.cap;
+  const basic = num(e.basic_salary);
+  const housing = num(e.housing_allowance);
+  const base = Math.min((cap / 31) * 31, basic + housing);
+  const r2 = (x: number) => Math.round((x + Number.EPSILON) * 100) / 100;
+  if (e.gosi_system === "non_saudi") {
+    return { base: r2(base), employee: 0, employer: r2(base * rates.nonSaudiEr) };
+  }
+  const senior = ageOn(e.birth_date, on) >= rates.ageThr;
+  const matching = e.gosi_system === "matching";
+  const empRate = matching
+    ? senior
+      ? rates.matchEmp55
+      : rates.matchEmp
+    : senior
+      ? rates.noMatchEmp55
+      : rates.noMatchEmp;
+  const erRate = matching
+    ? senior
+      ? rates.matchEr55
+      : rates.matchEr
+    : senior
+      ? rates.noMatchEr55
+      : rates.noMatchEr;
+  return { base: r2(base), employee: r2(base * empRate), employer: r2(base * erRate) };
+}
+
 export function baseRow(e: SalaryBasisRow, days: number): PayRow {
   const sal = num(e.basic_salary);
   const hou = num(e.housing_allowance);
