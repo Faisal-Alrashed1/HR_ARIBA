@@ -43,6 +43,8 @@ export interface BalanceRow {
   used_since_join: number;
   remaining_since_join: number;
   eos: number;
+  annual: number;
+  override_used: Record<string, number>;
 }
 
 export interface LedgerYear {

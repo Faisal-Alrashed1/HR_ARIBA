@@ -36,6 +36,11 @@ export interface SalaryBasisRow {
   termination_date: string | null;
   termination_article: string | null;
   termination_reason: string | null;
+  total_salary: string;
+  gosi_employee: string;
+  net_salary: string;
+  years_of_service: string;
+  eos_basic: string;
 }
 
 export const getSalaryBasis = () => request<SalaryBasisRow[]>("/salary/basis");

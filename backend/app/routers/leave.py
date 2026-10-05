@@ -269,6 +269,9 @@ class BalanceRow(BaseModel):
     used_since_join: float
     remaining_since_join: float
     eos: float
+    annual: float = 21
+    # Legacy rptLv columns 2023..2026 = the year override's `used` (0 when none).
+    override_used: dict[str, float] = {}
 
 
 class LedgerYear(BaseModel):
@@ -293,7 +296,11 @@ class BalanceDetail(BaseModel):
 def balances(_: User = Depends(_READ), db: Session = Depends(get_db)):
     book = lv.load_book(db, today_riyadh())
     emps = db.scalars(select(Employee).where(Employee.deleted_at.is_(None)).order_by(Employee.name_ar)).unique()
-    return [BalanceRow(name_ar=e.name_ar, **book.summary(e)) for e in emps if not e.is_terminated]
+    def row(e: Employee) -> BalanceRow:
+        ou = {str(y): float((book.override(e, y) or {}).get("used") or 0) for y in range(2023, book.today.year + 1)}
+        return BalanceRow(name_ar=e.name_ar, annual=book.annual(e), override_used=ou, **book.summary(e))
+
+    return [row(e) for e in emps if not e.is_terminated]
 
 
 @router.get("/leave/employees/{employee_id}", response_model=BalanceDetail)

@@ -15,7 +15,10 @@ from sqlalchemy.orm import Session
 
 from app.core.permissions import SALARY_ROLES, require_roles
 from app.database import get_db
+from app.core.scheduling import today_riyadh
 from app.models import Employee, User
+from app.services import employees as emp_svc
+from app.services import gosi
 
 router = APIRouter(prefix="/salary", tags=["salary"])
 
@@ -55,11 +58,26 @@ class SalaryBasisRow(BaseModel):
     termination_date: date | None
     termination_article: str | None
     termination_reason: str | None
+    # Figures used by the reports (legacy rptPay / rptEOS): calcIns(e,31,31) and calcEOS(basic, years, housing).
+    total_salary: Decimal
+    gosi_employee: Decimal
+    net_salary: Decimal
+    years_of_service: Decimal
+    eos_basic: Decimal
 
 
 @router.get("/basis", response_model=list[SalaryBasisRow])
 def salary_basis(_: User = Depends(require_roles(*SALARY_ROLES)), db: Session = Depends(get_db)):
     emps = db.scalars(select(Employee).where(Employee.deleted_at.is_(None)).order_by(Employee.name_ar)).unique()
+    today, rules = today_riyadh(), gosi.load_rules(db)
+
+    def extra(e: Employee) -> dict:
+        f = emp_svc.employee_figures(e, rules, today)
+        y = emp_svc.years_of_service(e, today)
+        base = e.basic_salary + e.housing_allowance
+        eos = (base / 2 * min(y, Decimal(5)) + base * max(Decimal(0), y - 5)).quantize(Decimal("0.01"))
+        return {"total_salary": f.total, "gosi_employee": f.gosi_employee, "net_salary": f.net, "years_of_service": y, "eos_basic": eos}
+
     return [
         SalaryBasisRow(
             id=e.id,
@@ -96,6 +114,7 @@ def salary_basis(_: User = Depends(require_roles(*SALARY_ROLES)), db: Session = 
             termination_date=e.termination_date,
             termination_article=e.termination_article.value if e.termination_article else None,
             termination_reason=e.termination_reason,
+            **extra(e),
         )
         for e in emps
     ]
