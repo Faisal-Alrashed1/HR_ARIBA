@@ -777,3 +777,20 @@ class Sheet(IdMixin, TimestampMixin, Base):
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     approved_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     updated_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+
+
+class SentLetter(IdMixin, TimestampMixin, Base):
+    """A form/letter HR sends to an employee to approve or object (legacy V71/V114 ariba_hr_send_template).
+
+    `type` keeps the legacy keys: onboarding, custody, extension, termination, clearance, experience, evaluation,
+    contract_end, salary_cert. `html` is the printed document (Arabic, optionally followed by <!--ARIBA_EN--> + English)."""
+
+    __tablename__ = "sent_letters"
+    employee_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("employees.id"), index=True)
+    type: Mapped[str] = mapped_column(String(40))
+    title: Mapped[str] = mapped_column(String(200))
+    html: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="pending", server_default="pending")
+    rejection_reason: Mapped[str | None] = mapped_column(Text)
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    sent_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
