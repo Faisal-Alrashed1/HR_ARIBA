@@ -27,9 +27,11 @@ export default function Page() {
   const [employer, setEmployer] = useState("");
 
   const load = () => {
-    setError(null);
     getSalaryBasis()
-      .then(setRows)
+      .then((r) => {
+        setRows(r);
+        setError(null);
+      })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));
   };
   useEffect(load, []);
@@ -39,41 +41,46 @@ export default function Page() {
     () => [...new Set(all.filter((e) => !e.exclude_from_eos).map((e) => e.workplace ?? ""))].sort(),
     [all],
   );
-  const endD = new Date(endDate || new Date().toISOString().slice(0, 10));
   const emps = all.filter((e) => (employer ? e.workplace === employer : true));
 
-  let totBase = 0;
-  let totEOS = 0;
-  const body = emps.map((e, i) => {
-    const yrs = eosYears(e.join_date, endD);
-    const sal = Number(e.basic_salary) || 0;
-    const hou = Number(e.housing_allowance) || 0;
-    const base = sal + hou;
-    const eos = calcByLaw(sal, hou, yrs, law);
-    totBase += base;
-    totEOS += eos;
-    const durText = e.join_date ? durationText(e.join_date, endD) : `${yrs.toFixed(2)} سنة`;
-    const ec = eos === 0 ? "var(--dm)" : law === "m77" ? "var(--rd)" : "var(--bl)";
-    return (
-      <tr key={e.id}>
-        <td style={{ ...tds, color: "var(--dm)" }}>{i + 1}</td>
-        <td style={{ ...tds, fontWeight: 600 }}>{e.name_ar.split(" ").slice(0, 3).join(" ")}</td>
-        <td style={tds}>
-          <span className="b bb" style={{ fontSize: 10 }}>
-            {e.workplace}
-          </span>
-        </td>
-        <td style={tds}>{dmy(e.join_date)}</td>
-        <td style={{ ...tds, color: "var(--pu)", fontWeight: 600 }}>{durText}</td>
-        <td style={{ ...tds, color: "var(--gr)" }}>{fN(sal)}</td>
-        <td style={tds}>{fN(hou)}</td>
-        <td style={{ ...tds, color: "var(--cy)", fontWeight: 600 }}>{fN(base)}</td>
-        <td style={{ ...tds, color: ec, fontWeight: eos > 0 ? 700 : 400, textAlign: "center" }}>{eos > 0 ? fN(eos) + " ر.س" : "—"}</td>
-      </tr>
-    );
-  });
+  const { body, totBase, totEOS } = useMemo(() => {
+    const endD = new Date(endDate || new Date().toISOString().slice(0, 10));
+    const items = emps.map((e, i) => {
+      const yrs = eosYears(e.join_date, endD);
+      const sal = Number(e.basic_salary) || 0;
+      const hou = Number(e.housing_allowance) || 0;
+      const base = sal + hou;
+      const eos = calcByLaw(sal, hou, yrs, law);
+      return { e, i, sal, hou, base, eos, yrs };
+    });
+    const totBase = items.reduce((s, x) => s + x.base, 0);
+    const totEOS = items.reduce((s, x) => s + x.eos, 0);
+    const body = items.map(({ e, i, sal, hou, base, eos, yrs }) => {
+      const durText = e.join_date ? durationText(e.join_date, endD) : `${yrs.toFixed(2)} سنة`;
+      const ec = eos === 0 ? "var(--dm)" : law === "m77" ? "var(--rd)" : "var(--bl)";
+      return (
+        <tr key={e.id}>
+          <td style={{ ...tds, color: "var(--dm)" }}>{i + 1}</td>
+          <td style={{ ...tds, fontWeight: 600 }}>{e.name_ar.split(" ").slice(0, 3).join(" ")}</td>
+          <td style={tds}>
+            <span className="b bb" style={{ fontSize: 10 }}>
+              {e.workplace}
+            </span>
+          </td>
+          <td style={tds}>{dmy(e.join_date)}</td>
+          <td style={{ ...tds, color: "var(--pu)", fontWeight: 600 }}>{durText}</td>
+          <td style={{ ...tds, color: "var(--gr)" }}>{fN(sal)}</td>
+          <td style={tds}>{fN(hou)}</td>
+          <td style={{ ...tds, color: "var(--cy)", fontWeight: 600 }}>{fN(base)}</td>
+          <td style={{ ...tds, color: ec, fontWeight: eos > 0 ? 700 : 400, textAlign: "center" }}>{eos > 0 ? fN(eos) + " ر.س" : "—"}</td>
+        </tr>
+      );
+    });
+    return { body, totBase, totEOS };
+  }, [emps, law, endDate]);
 
   function exportEOS() {
+    const endD = new Date(endDate || new Date().toISOString().slice(0, 10));
     const head = ["م", "الموظف", "جهة العمل", "تاريخ المباشرة", "مدة الخدمة", "الأساسي", "السكن", "الوعاء", `المكافأة (${law})`];
     const lines = emps.map((e, i) => {
       const yrs = eosYears(e.join_date, endD);
