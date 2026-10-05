@@ -763,3 +763,17 @@ class AuditLog(IdMixin, Base):
     details: Mapped[dict | None] = mapped_column(JSON)
     ip: Mapped[str | None] = mapped_column(String(64))
     request_id: Mapped[str | None] = mapped_column(String(64))
+
+
+class Sheet(IdMixin, TimestampMixin, Base):
+    """A saved working sheet keyed like the V114 HTML's storage (e.g. `pay_2026_09` = September payroll rows).
+
+    `data` holds the rows exactly as the screen edits them; `approved` freezes the sheet (payroll approval)."""
+
+    __tablename__ = "sheets"
+    key: Mapped[str] = mapped_column(String(80), unique=True)
+    data: Mapped[dict | list | None] = mapped_column(JSON)
+    approved: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    updated_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
