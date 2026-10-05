@@ -80,3 +80,18 @@ def test_eos_by_article():
     assert eos_award(base, D("1.9"), A.art_75) == D("0.00")
     assert eos_award(base, D("3"), A.art_85) == D("7500.00")  # 1/3 of 22,500
     assert eos_award(base, D("12"), A.art_85) == D("142500.00")  # full: 37,500 + 105,000
+
+
+def test_gosi_v130_exemption_by_words():
+    from app.models import EmployeeCategory, WpsType
+    from app.services.gosi import exempt_kind
+
+    k = lambda **kw: exempt_kind(wps_type=WpsType.wps, category=EmployeeCategory.active, **kw)
+    assert k(job_title="محاسب") == ""
+    assert k(job_title="مستشار قانوني") == "consultant"
+    assert k(job_title="متدرب مبيعات") == "trainee"
+    assert k(department="تدريب") == "trainee"
+    assert k(department="إدارة التدريب") == ""
+    assert k(workplace="برنامج تمهير") == "tamheer"
+    assert exempt_kind(wps_type=WpsType.no_wps, category=EmployeeCategory.active) == "no_wps"
+    assert exempt_kind(wps_type=WpsType.wps, category=EmployeeCategory.tamheer) == "tamheer"

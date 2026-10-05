@@ -4,9 +4,11 @@
     employee = base x employee_rate%   (55+ uses the senior rate)
     employer = base x employer_rate%
 
-Consultants and anyone not on WPS pay no GOSI (as in the V114 prototype, see BUSINESS_RULES).
+Exempt (V130, see `exempt_kind`): consultants, tamheer, trainees (by WPS type, category, or words in the
+job title / department / workplace) and anyone not on WPS pay no GOSI.
 """
 
+import re
 from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
@@ -49,6 +51,39 @@ def rule_for(rules: list[GosiRule], system: GosiSystem, on: date) -> GosiRule | 
     return max(candidates, key=lambda r: r.effective_from) if candidates else None
 
 
+_EXEMPT_WPS = {WpsType.consultant: "consultant", WpsType.tamheer: "tamheer", WpsType.trainee: "trainee"}
+
+
+def exempt_kind(
+    *,
+    wps_type: WpsType,
+    category: EmployeeCategory,
+    job_title: str | None = None,
+    department: str | None = None,
+    workplace: str | None = None,
+) -> str:
+    """V130 (legacy js/payroll/114-ariba-v130-insurance-exempt.js `kindOf`): '' when the employee pays GOSI,
+    otherwise why not. Explicit WPS type first, then words in the job title / department / workplace."""
+    if wps_type in _EXEMPT_WPS:
+        return _EXEMPT_WPS[wps_type]
+    if wps_type != WpsType.wps:
+        return wps_type.value  # external / no_wps / remote: not subject either (prototype rule)
+    if category == EmployeeCategory.consultant:
+        return "consultant"
+    if category == EmployeeCategory.tamheer:
+        return "tamheer"
+    if category == EmployeeCategory.training:
+        return "trainee"
+    job, dep, emp = job_title or "", department or "", workplace or ""
+    if "تمهير" in emp or "تمهير" in job or "تمهير" in dep:
+        return "tamheer"
+    if re.search("استشاري|مستشار|استشاريه|استشارية", job):
+        return "consultant"
+    if re.search("متدرب|تدريب|trainee|intern", job, re.I) or dep.strip() == "تدريب" or "تدريب" in emp:
+        return "trainee"
+    return ""
+
+
 def calculate(
     *,
     rules: list[GosiRule],
@@ -61,8 +96,11 @@ def calculate(
     on: date,
     month_days: int = 30,
     work_days: Decimal | int = 30,
+    job_title: str | None = None,
+    department: str | None = None,
+    workplace: str | None = None,
 ) -> GosiResult:
-    if category == EmployeeCategory.consultant or wps_type != WpsType.wps:
+    if exempt_kind(wps_type=wps_type, category=category, job_title=job_title, department=department, workplace=workplace):
         return GosiResult.zero()
     rule = rule_for(rules, system, on)
     if rule is None:

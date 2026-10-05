@@ -334,6 +334,9 @@ def figures(
     category: EmployeeCategory,
     birth_date: date | None,
     on: date,
+    job_title: str | None = None,
+    department: str | None = None,
+    workplace: str | None = None,
 ) -> SalaryFigures:
     """Monthly figures shown on the employee record (prototype `cSP` / `sEmp`):
     total = basic + housing + transport + project + other + extra; net = total - GOSI(employee) - other deductions."""
@@ -341,6 +344,7 @@ def figures(
     g = gosi.calculate(
         rules=rules, system=gosi_system, wps_type=wps_type, category=category,
         basic=basic, housing=housing, birth_date=birth_date, on=on,
+        job_title=job_title, department=department, workplace=workplace,
     )
     net = _q(total - g.employee - deductions)
     return SalaryFigures(total, g.employee, g.employer, net, _q(net * exchange_rate))
@@ -353,6 +357,9 @@ def employee_figures(emp: Employee, rules: list, on: date) -> SalaryFigures:
         project=emp.project_allowance, other=emp.other_allowances, extra=emp.extra_allowance,
         deductions=emp.other_deductions, exchange_rate=emp.exchange_rate, gosi_system=emp.gosi_system,
         wps_type=emp.wps_type, category=emp.category, birth_date=emp.birth_date, on=on,
+        job_title=emp.job_title,
+        department=emp.department.name_ar if emp.department else None,
+        workplace=emp.workplace.name_ar if emp.workplace else None,
     )
 
 
