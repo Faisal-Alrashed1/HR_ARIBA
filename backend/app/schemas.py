@@ -14,6 +14,8 @@ from app.models import (
     DependentRelation,
     DocumentType,
     EmployeeCategory,
+    AttendanceSource,
+    AttendanceStatus,
     Gender,
     GosiSystem,
     LocationType,
@@ -512,3 +514,51 @@ class LocationOut(BaseModel):
     latitude: Decimal
     longitude: Decimal
     is_active: bool
+
+
+# --------------------------------------------------------------------------- attendance
+
+
+class AttendanceCreate(BaseModel):
+    employee_id: uuid.UUID
+    work_date: date
+    time_in: Annotated[str, StringConstraints(pattern=r"^\d{1,2}:\d{2}$")] | None = None
+    time_out: Annotated[str, StringConstraints(pattern=r"^\d{1,2}:\d{2}$")] | None = None
+    location_id: uuid.UUID | None = None
+    status: AttendanceStatus = AttendanceStatus.present
+    notes: str | None = None
+
+
+class AttendanceUpdate(BaseModel):
+    time_in: Annotated[str, StringConstraints(pattern=r"^\d{1,2}:\d{2}$")] | None = None
+    time_out: Annotated[str, StringConstraints(pattern=r"^\d{1,2}:\d{2}$")] | None = None
+    location_id: uuid.UUID | None = None
+    status: AttendanceStatus | None = None
+    notes: str | None = None
+
+
+class AttendanceOut(BaseModel):
+    id: uuid.UUID
+    employee_id: uuid.UUID
+    employee_name: str
+    workplace: str | None
+    work_date: date
+    time_in: str | None
+    time_out: str | None
+    location_id: uuid.UUID | None
+    location_name: str | None
+    status: AttendanceStatus
+    late_minutes: int
+    early_minutes: int
+    source: AttendanceSource
+    notes: str | None
+
+
+class AttendanceSummaryOut(BaseModel):
+    employee_id: uuid.UUID
+    employee_name: str
+    present: int
+    late: int
+    absent: int
+    leave: int
+    remote: int
