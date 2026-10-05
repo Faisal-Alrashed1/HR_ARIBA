@@ -16,6 +16,7 @@ from app.models import (
     EmployeeCategory,
     Gender,
     GosiSystem,
+    LocationType,
     MaritalStatus,
     PaymentMethod,
     Religion,
@@ -474,3 +475,40 @@ class DependentOut(BaseModel):
     insurance_expiry: date | None
     mobile: str | None
     documents: list[DocumentOut]
+
+
+# --------------------------------------------------------------------------- locations
+
+
+class LocationCreate(BaseModel):
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200)]
+    name_en: str | None = None
+    workplace_id: uuid.UUID | None = None
+    type: LocationType = LocationType.hq
+    radius_m: int = Field(default=200, ge=50, le=5000)
+    latitude: Decimal = Decimal("0")
+    longitude: Decimal = Decimal("0")
+
+
+class LocationUpdate(BaseModel):
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200)] | None = None
+    name_en: str | None = None
+    workplace_id: uuid.UUID | None = None
+    type: LocationType | None = None
+    radius_m: int | None = Field(default=None, ge=50, le=5000)
+    latitude: Decimal | None = None
+    longitude: Decimal | None = None
+    is_active: bool | None = None
+
+
+class LocationOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    name_en: str | None
+    workplace_id: uuid.UUID | None
+    workplace: str | None
+    type: LocationType
+    radius_m: int
+    latitude: Decimal
+    longitude: Decimal
+    is_active: bool
