@@ -46,3 +46,45 @@ export const fN = (n: number | string | null | undefined) =>
 
 /** Legacy `aEmps()`: current (not terminated) employees. */
 export const current = (rows: SalaryBasisRow[]) => rows.filter((e) => !e.is_terminated);
+
+/** Effective GOSI rates as fractions (percentage / 100), legacy payroll-engine shape. */
+export interface GosiRates {
+  matchEmp: number;
+  matchEmp55: number;
+  matchEr: number;
+  matchEr55: number;
+  noMatchEmp: number;
+  noMatchEmp55: number;
+  noMatchEr: number;
+  noMatchEr55: number;
+  nonSaudiEr: number;
+  cap: number;
+  ageThr: number;
+}
+
+export const getGosiRates = (on: string) =>
+  request<{
+    match_emp: number;
+    match_emp_55: number;
+    match_er: number;
+    match_er_55: number;
+    no_match_emp: number;
+    no_match_emp_55: number;
+    no_match_er: number;
+    no_match_er_55: number;
+    non_saudi_er: number;
+    cap: number;
+    age_thr: number;
+  }>("/settings/gosi-rates", { query: { on } }).then((r) => ({
+    matchEmp: r.match_emp,
+    matchEmp55: r.match_emp_55,
+    matchEr: r.match_er,
+    matchEr55: r.match_er_55,
+    noMatchEmp: r.no_match_emp,
+    noMatchEmp55: r.no_match_emp_55,
+    noMatchEr: r.no_match_er,
+    noMatchEr55: r.no_match_er_55,
+    nonSaudiEr: r.non_saudi_er,
+    cap: r.cap,
+    ageThr: r.age_thr,
+  }));
