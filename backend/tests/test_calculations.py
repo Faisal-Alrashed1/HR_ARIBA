@@ -67,15 +67,15 @@ def test_age():
 
 
 def test_service_years():
-    assert service_years(date(2019, 1, 1), date(2026, 7, 1)) == D("7.5014")  # 2,738 days
+    assert service_years(date(2019, 1, 1), date(2026, 7, 1)) == D("7.50")  # 2,738 days / 365.25, rounded to 2 places (legacy rEOS)
     assert service_years(None, date(2026, 1, 1)) == D("0")
 
 
 def test_eos_by_article():
-    base, y = D("15000"), D("7.5014")
-    assert eos_award(base, y, A.art_84) == D("75021.00")
-    assert eos_award(base, y, A.art_85) == D("50014.00")
-    assert eos_award(base, y, A.art_77) == D("131281.50")  # 75,021 + 500 x 15 x 7.5014
+    base, y = D("15000"), D("7.50")
+    assert eos_award(base, y, A.art_84) == D("75000.00")
+    assert eos_award(base, y, A.art_85) == D("50000.00")
+    assert eos_award(base, y, A.art_77) == D("131250.00")  # 75,000 + round(500 x 15 x 7.5)
     assert eos_award(base, y, A.art_80) == D("0.00")
     assert eos_award(base, D("1.9"), A.art_75) == D("0.00")
     assert eos_award(base, D("3"), A.art_85) == D("7500.00")  # 1/3 of 22,500
