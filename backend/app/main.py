@@ -51,6 +51,7 @@ def create_app() -> FastAPI:
     install_error_handlers(app)
 
     app.include_router(health.router)
+    app.include_router(sheets.archive, prefix=API_PREFIX)
     for module in (auth, me, dashboard, employees, dependents, documents, salary, settings, sheets, locations, attendance, leave, registry, letters):
         app.include_router(module.router, prefix=API_PREFIX)
     return app

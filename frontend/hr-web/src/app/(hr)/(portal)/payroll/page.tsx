@@ -119,6 +119,8 @@ export default function Page() {
   const [approved, setApproved] = useState(false);
   const [approvedAt, setApprovedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [archive, setArchive] = useState<{ year: number; month: number; approved_at: string | null; employees: number; total: number; net_sar: number }[] | null>(null);
+  const loadArchive = () => request<typeof archive>("/payroll-archive").then(setArchive).catch(() => setArchive([]));
   const [error, setError] = useState<string | null>(null);
   const [reloadTick, setReloadTick] = useState(0);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -673,6 +675,32 @@ export default function Page() {
           </div>
         </>
       )}
+      {/* V53 سجل المسيرات المعتمدة */}
+      <div className="card" style={{ marginTop: 12 }}>
+        <div className="ch">
+          <div className="ct"><i className="ti ti-archive" /> سجل المسيرات المعتمدة</div>
+          <button type="button" className="btn bsm" onClick={loadArchive}><i className="ti ti-refresh" /> تحديث</button>
+        </div>
+        <div id="ARIBA_PAYROLL_ARCHIVE">
+          {archive === null ? (
+            <div style={{ padding: 18, textAlign: "center", color: "var(--mu)" }}>اضغط «تحديث» لعرض المسيرات المعتمدة</div>
+          ) : archive.length === 0 ? (
+            <div style={{ padding: 22, textAlign: "center", color: "var(--mu)" }}>لا توجد مسيرات رواتب معتمدة محفوظة حتى الآن.</div>
+          ) : (
+            archive.map((x) => (
+              <div key={`${x.year}-${x.month}`} style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "11px 12px", borderBottom: "1px solid var(--bd)" }}>
+                <div style={{ minWidth: 150, flex: 1 }}>
+                  <strong>{MONTHS_AR[x.month]} {x.year}</strong>
+                  <div style={{ fontSize: 10, color: "var(--mu)", marginTop: 3 }}>معتمد — {x.approved_at ? new Date(x.approved_at).toLocaleString("ar-SA-u-ca-gregory-nu-latn") : ""} | {x.employees} موظف</div>
+                </div>
+                <div className="b bgr" style={{ padding: "5px 9px" }}>{x.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} إجمالي</div>
+                <div className="b ba" style={{ padding: "5px 9px" }}>{x.net_sar.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SAR صافي</div>
+                <button type="button" className="btn bsm bpl" onClick={() => { setYear(x.year); setMonth(x.month); window.scrollTo({ top: 0, behavior: "smooth" }); }}>مراجعة</button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

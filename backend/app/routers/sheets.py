@@ -21,6 +21,7 @@ from app.database import get_db
 from app.models import Employee, PayrollRow, PayrollRun, Role, Sheet, User
 
 router = APIRouter(prefix="/sheets", tags=["sheets"])
+archive = APIRouter(tags=["payroll"])
 
 _KEY = re.compile(r"^[a-z0-9_]{2,80}$")
 
@@ -185,3 +186,28 @@ def unapprove_sheet(key: str, request: Request, user: User = Depends(get_current
     db.commit()
     db.refresh(s)
     return _out(s, key)
+
+
+class ArchiveRow(BaseModel):
+    year: int
+    month: int
+    approved_at: datetime | None
+    employees: int
+    total: float
+    net_sar: float
+
+
+@archive.get("/payroll-archive", response_model=list[ArchiveRow], tags=["payroll"])
+def payroll_archive(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Legacy V53 «سجل المسيرات المعتمدة»: every approved month with its totals."""
+    _check("pay_x", user, write=False)
+    from sqlalchemy import func
+
+    q = (
+        select(PayrollRun.year, PayrollRun.month, PayrollRun.approved_at, func.count(PayrollRow.id), func.coalesce(func.sum(PayrollRow.total_due), 0), func.coalesce(func.sum(PayrollRow.net_sar), 0))
+        .join(PayrollRow, PayrollRow.run_id == PayrollRun.id, isouter=True)
+        .where(PayrollRun.status == "approved")
+        .group_by(PayrollRun.id)
+        .order_by(PayrollRun.year.desc(), PayrollRun.month.desc())
+    )
+    return [ArchiveRow(year=y, month=m, approved_at=at, employees=n, total=float(t), net_sar=float(ns)) for y, m, at, n, t, ns in db.execute(q)]
