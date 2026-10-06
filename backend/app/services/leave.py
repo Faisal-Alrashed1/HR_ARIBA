@@ -269,6 +269,17 @@ class LeaveBook:
     def cumulative_manual(self, emp: Employee) -> float:
         return self._cumulative(emp, "adjustment", self.manual_net)
 
+    def used_through(self, emp: Employee, end: date) -> float:
+        """Legacy payroll `usedThrough`: annual leave taken from the start of service up to `end`."""
+        total = 0.0
+        for y in range(self.start_year(emp), end.year + 1):
+            o = self.override(emp, y)
+            if o and o.get("used") is not None and y < end.year:
+                total += max(0.0, float(o["used"] or 0))
+            else:
+                total += self.default_used(emp, y, end if y == end.year else date(y, 12, 31))
+        return round(total, 2)
+
     def summary(self, emp: Employee) -> dict:
         """One row of the legacy balances table (rLvBal)."""
         y = self.today.year

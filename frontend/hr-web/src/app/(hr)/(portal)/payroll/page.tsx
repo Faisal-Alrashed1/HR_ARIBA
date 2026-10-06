@@ -7,6 +7,8 @@ import { useToast } from "@/components/common/toast";
 import { PageState } from "@/components/hr/not-built";
 import { PAYX } from "@/lib/calc/payx";
 import {
+  USED_CACHE,
+  usedQueries,
   autoWork,
   baseRow,
   blankRow,
@@ -32,6 +34,7 @@ import {
 } from "@/lib/calc/payroll";
 import { getGosiRates, getSalaryBasis, type SalaryBasisRow } from "@/lib/salary";
 import { approveSheet, getSheet, putSheet, unapproveSheet } from "@/lib/sheets";
+import { request } from "@/lib/api";
 
 const REASON_OPTS: [string, string][] = [["", "—"], ...PAYX.REASONS.map((r) => [r.k, r.ar] as [string, string])];
 const ST_OPTS: [string, string][] = [
@@ -129,6 +132,25 @@ export default function Page() {
   const employers = useMemo(() => [...new Set(rows.map((r) => r.employer || "").filter(Boolean))].sort(), [rows]);
 
   const recalcRow = (r: PayRow) => recalc(r, empMap.get(String(r.id)), m, rates!);
+
+  // «ما تم استحقاقه»: fetch the leave taken up to each terminated row's end date, then recalculate (legacy usedThrough).
+  useEffect(() => {
+    if (approved || !rates || !rows.length) return;
+    const q = usedQueries(rows, m);
+    if (!q.length) return;
+    let alive = true;
+    request<Record<string, number>>("/leave/used-through", { method: "POST", body: q })
+      .then((res) => {
+        if (!alive) return;
+        Object.entries(res).forEach(([k, v]) => USED_CACHE.set(k, v));
+        q.forEach((x) => !USED_CACHE.has(`${x.employee_id}|${x.end}`) && USED_CACHE.set(`${x.employee_id}|${x.end}`, 0));
+        setRows((cur) => cur.map((r) => recalc(cloneRow(r), empMap.get(String(r.id)), m, rates)));
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [rows, approved, rates, m, empMap]);
 
   function scheduleSave(next: PayRow[]) {
     if (saveTimer.current) clearTimeout(saveTimer.current);

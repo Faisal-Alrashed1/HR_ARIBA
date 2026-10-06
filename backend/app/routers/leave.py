@@ -20,6 +20,7 @@ from app.core.scheduling import today_riyadh
 from app.database import get_db
 from app.models import (
     Employee,
+    Role,
     Holiday,
     Request as Req,
     RequestStatus,
@@ -376,3 +377,20 @@ def save_balance(employee_id: uuid.UUID, body: BalanceEdit, request: Request, us
     audit(db, request, user, "update", "leave_balance", emp.id, {"years": sorted(overrides)})
     db.commit()
     return balance_detail(employee_id, user, db)
+
+
+class UsedThroughIn(BaseModel):
+    employee_id: uuid.UUID
+    end: date
+
+
+@router.post("/leave/used-through", response_model=dict[str, float])
+def used_through(body: list[UsedThroughIn], _: User = Depends(require_roles(*HR_READ_ROLES, Role.finance)), db: Session = Depends(get_db)):
+    """For the payroll «ما تم استحقاقه» column: days of annual leave taken up to each end date. Key = "<id>|<end>"."""
+    book = lv.load_book(db, today_riyadh())
+    out: dict[str, float] = {}
+    for it in body[:500]:
+        emp = db.get(Employee, it.employee_id)
+        if emp is not None:
+            out[f"{it.employee_id}|{it.end.isoformat()}"] = book.used_through(emp, it.end)
+    return out

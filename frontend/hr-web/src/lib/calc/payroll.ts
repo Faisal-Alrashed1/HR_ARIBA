@@ -471,6 +471,30 @@ export function autoWork(r: PayRow, m: MonthCtx): void {
   }
 }
 
+/** "<employee id>|<yyyy-mm-dd>" → days used (legacy `usedThrough`). */
+export const USED_CACHE = new Map<string, number>();
+
+function reasonKey(r: PayRow): string {
+  return (PAYX.findReason(r.reason) || {}).k || "";
+}
+
+/** Legacy endForUsed: last day, else EDATE(join, contract months), else the month end. */
+export function usedEnd(r: PayRow, m: MonthCtx): string {
+  if (r.lastDay) return String(r.lastDay).slice(0, 10);
+  const jn = r.join ? new Date(r.join + "T00:00:00") : null;
+  const d = jn && r.contractMonths != null && (r.contractMonths as unknown) !== "" ? PAYX.edate(jn, Number(r.contractMonths)) : m.end;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export const usedKey = (r: PayRow, m: MonthCtx) => `${r.id}|${usedEnd(r, m)}`;
+
+/** Rows whose «ما تم استحقاقه» still needs the backend figure. */
+export function usedQueries(rows: PayRow[], m: MonthCtx): { employee_id: string; end: string }[] {
+  return rows
+    .filter((r) => r.id && reasonKey(r) && !USED_CACHE.has(usedKey(r, m)))
+    .map((r) => ({ employee_id: String(r.id), end: usedEnd(r, m) }));
+}
+
 export function recalc(r: PayRow, e: SalaryBasisRow | undefined, m: MonthCtx, rates: GosiRates): PayRow {
   const days = m.days;
   r.days = days;
@@ -486,7 +510,9 @@ export function recalc(r: PayRow, e: SalaryBasisRow | undefined, m: MonthCtx, ra
   if (!manualIns || r.insDays === undefined || r.insDays === null || (r.insDays as any) === "")
     r.insDays = defaultInsDays(r, e, m);
   r.insDays = Math.max(0, Math.min(days, num(r.insDays)));
-  const usedAuto = 0; // leave ledger not built yet — legacy `usedThrough` returns 0 for now
+  // Legacy usedThrough: annual leave taken up to the last day (or the contract end / month end), from the backend
+  // leave engine (filled into USED_CACHE by the payroll page before recalculating).
+  const usedAuto = reasonKey(r) ? USED_CACHE.get(usedKey(r, m)) ?? 0 : 0;
   r.usedAuto = usedAuto;
   const exempt = !!exemptKind(e);
   const manInsStatus = !!(r.manualEdits?.insStatus);
