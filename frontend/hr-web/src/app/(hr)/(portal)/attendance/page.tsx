@@ -4,6 +4,7 @@
 // per-day record list with manual add/edit, and the monthly summary.
 import { useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/hr/modal";
+import { AttendanceReports } from "@/components/hr/attendance-reports";
 import { PageState } from "@/components/hr/not-built";
 import { useToast } from "@/components/common/toast";
 import { listAllEmployees } from "@/lib/employees";
@@ -233,6 +234,7 @@ export default function Page() {
           </div>
         </Modal>
       )}
+      <AttendanceReports emps={emps} />
     </div>
   );
 }

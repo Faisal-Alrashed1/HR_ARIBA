@@ -50,3 +50,6 @@ export const updateAttendance = (id: string, body: Partial<AttendanceInput>) =>
   request<AttendanceRecord>(`/attendance/${id}`, { method: "PATCH", body });
 
 export const deleteAttendance = (id: string) => request<void>(`/attendance/${id}`, { method: "DELETE" });
+
+export const listAttendanceRange = (date_from: string, date_to: string) =>
+  request<AttendanceRecord[]>("/attendance/range", { query: { date_from, date_to } });

@@ -35,6 +35,16 @@ def list_attendance(date: date, user: User = Depends(_READERS), db: Session = De
     return [svc.to_out(db, r, emps.get(r.employee_id), locs.get(r.location_id)) for r in recs]
 
 
+@router.get("/attendance/range", response_model=list[AttendanceOut])
+def attendance_range(date_from: date, date_to: date, user: User = Depends(_READERS), db: Session = Depends(get_db)):
+    """Every session between two dates (legacy ariba_hr_attendance_range) for the V117 attendance reports."""
+    from app.models import AttendanceRecord
+
+    recs = list(db.scalars(select(AttendanceRecord).where(AttendanceRecord.work_date >= date_from, AttendanceRecord.work_date <= date_to)))
+    emps, locs = _maps(db, recs)
+    return [svc.to_out(db, r, emps.get(r.employee_id), locs.get(r.location_id)) for r in recs]
+
+
 @router.get("/attendance/summary", response_model=list[AttendanceSummaryOut])
 def attendance_summary(month: str, user: User = Depends(_READERS), db: Session = Depends(get_db)):
     year, mon = (int(x) for x in month.split("-"))
