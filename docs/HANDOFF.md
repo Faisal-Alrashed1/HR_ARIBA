@@ -134,6 +134,11 @@ HR_ARIBA/
 - كشوف رواتبي من المسيرات المعتمدة: `GET /me/payslips`.
 - الإشعارات.
 
+**تم (2026-10-06):**
+- ✅ 1. التطبيق مربوط افتراضياً بالخادم المنشور (`src/lib/api.ts`، و`.env.example`).
+- ✅ 2. البصمة بالـ GPS: `services/geofence.py` (Haversine) + `services/punch.py` + `GET /me/attendance` و `POST /me/attendance/punch {action in|out, lat, lng}`. الأخطاء: `outside_geofence` (مع أقرب موقع ومسافته)، `too_early_for_flexible_window`، `too_late_for_flexible_window`، `remote_limit_reached`، `already_checked_in`، `not_checked_in`. التأخير من أول جلسة فقط؛ الساعة المرنة: لا تأخير والانصراف المتوقع = أول دخول + الساعات. شاشة الحضور في التطبيق (ساعة الرياض، حالة الموقع، رجوع للعمل، جلسات اليوم، سجل 31 يوم). + إصلاح: أوقات الحضور تُعرض بتوقيت الرياض (`attendance.local`) بدل UTC من Postgres.
+- ملاحظة: منطق `ariba_attendance` القديم كان في Supabase وغير موجود في الملفات؛ بُني من وصف التوثيق (3.2.4، 4.11، 4.12).
+
 **خطة التطبيق بالترتيب:**
 1. ربطه بالخادم المنشور (`EXPO_PUBLIC_API_URL=https://hrariba-production.up.railway.app`).
 2. البصمة بالـ GPS (الأهم).

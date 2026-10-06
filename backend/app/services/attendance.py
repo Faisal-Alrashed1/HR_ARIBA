@@ -35,8 +35,15 @@ def _dt(d: date, hm: tuple[int, int] | None) -> datetime | None:
     return datetime(d.year, d.month, d.day, hm[0], hm[1], tzinfo=RIYADH)
 
 
+def local(dt: datetime | None) -> datetime | None:
+    """Riyadh wall time. Postgres hands timestamptz back in the session zone (UTC); SQLite hands it back naive."""
+    if dt is None:
+        return None
+    return dt.replace(tzinfo=RIYADH) if dt.tzinfo is None else dt.astimezone(RIYADH)
+
+
 def fmt(dt: datetime | None) -> str | None:
-    return dt.strftime("%H:%M") if dt else None
+    return local(dt).strftime("%H:%M") if dt else None
 
 
 def late_early(db: Session, tin: datetime | None, tout: datetime | None) -> tuple[int, int]:

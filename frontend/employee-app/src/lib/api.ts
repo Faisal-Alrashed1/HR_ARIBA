@@ -2,7 +2,8 @@
 // Tokens live in the device's secure store (Keychain / Keystore), never in plain storage.
 import * as SecureStore from "expo-secure-store";
 
-export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+// Defaults to the deployed backend (Railway) so Expo Go on a phone works without any setup.
+export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "https://hrariba-production.up.railway.app").replace(/\/$/, "");
 const BASE = `${API_URL}/api/v1`;
 
 const ACCESS = "ariba.access_token";
@@ -153,4 +154,49 @@ export type Employee = {
 
 export const me = {
   employee: () => api<Employee>("/me/employee"),
+};
+
+export type AttendanceStatus = "present" | "late" | "absent" | "leave" | "remote";
+
+export type MySession = {
+  id: string;
+  work_date: string;
+  time_in: string | null;
+  time_out: string | null;
+  status: AttendanceStatus;
+  late_minutes: number;
+  early_minutes: number;
+  location_name: string | null;
+  notes: string | null;
+};
+
+export type WorkLocation = {
+  id: string;
+  name: string;
+  name_en: string | null;
+  type: "hq" | "project" | "remote";
+  radius_m: number;
+  latitude: number;
+  longitude: number;
+};
+
+export type MyAttendance = {
+  today: MySession[];
+  history: MySession[];
+  locations: WorkLocation[];
+  flexible_enabled: boolean;
+  shift_hours: number | null;
+  window_start: string | null;
+  window_end: string | null;
+  work_start: string | null;
+  tolerance_minutes: number | null;
+  expected_checkout: string | null;
+  remote_limit: number;
+  remote_used: number;
+};
+
+export const attendance = {
+  mine: () => api<MyAttendance>("/me/attendance"),
+  punch: (action: "in" | "out", lat: number, lng: number) =>
+    api<MySession>("/me/attendance/punch", { method: "POST", body: JSON.stringify({ action, lat, lng }) }),
 };
