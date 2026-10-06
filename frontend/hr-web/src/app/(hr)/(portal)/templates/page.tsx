@@ -107,6 +107,44 @@ function Card({ title, icon, children }: { title: string; icon: string; children
   );
 }
 
+function BulkCard({ emps, onSend }: { emps: EmployeeListItem[]; onSend: (k: string, ids: string[], setStat: (s: string) => void) => Promise<void> }) {
+  const [k, setK] = useState("onboarding");
+  const [q, setQ] = useState("");
+  const [dep, setDep] = useState("");
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [stat, setStat] = useState("");
+  const [busy, setBusy] = useState(false);
+  const deps = [...new Set(emps.map((e) => e.department?.name_ar).filter(Boolean))] as string[];
+  const list = emps.filter((e) => (!dep || e.department?.name_ar === dep) && (!q || `${e.name_ar} ${e.name_en ?? ""} ${e.emp_no}`.toLowerCase().includes(q.toLowerCase())));
+  return (
+    <div className="card" style={{ marginTop: 12, padding: 12 }}>
+      <div className="ct" style={{ marginBottom: 8 }}><i className="ti ti-users-group" /> إرسال نموذج لعدة موظفين دفعة واحدة</div>
+      <div style={{ fontSize: 11, color: "var(--mu)", marginBottom: 8 }}>كل موظف بياناته من ملفه، والحقول العامة (مثل التواريخ والجهة) من كروت النماذج فوق.</div>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+        <select value={k} onChange={(e) => setK(e.target.value)}>{Object.entries(TYPE_AR).filter(([t]) => t !== "evaluation").map(([t, l]) => <option key={t} value={t}>{l}</option>)}</select>
+        <input placeholder="بحث بالاسم أو الرقم الوظيفي" value={q} onChange={(e) => setQ(e.target.value)} style={{ flex: 1, minWidth: 160 }} />
+        <select value={dep} onChange={(e) => setDep(e.target.value)}><option value="">كل الأقسام</option>{deps.map((d) => <option key={d}>{d}</option>)}</select>
+        <button type="button" className="btn bgr bsm" onClick={() => setSel(new Set([...sel, ...list.map((e) => e.id)]))}>تحديد الظاهر</button>
+        <button type="button" className="btn bgr bsm" onClick={() => setSel(new Set())}>إلغاء الكل</button>
+      </div>
+      <div style={{ maxHeight: 200, overflow: "auto", display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))", gap: "2px 10px", border: "1px solid var(--bd)", borderRadius: 8, padding: 8 }}>
+        {list.map((e) => (
+          <label key={e.id} style={{ display: "flex", gap: 5, alignItems: "center", fontSize: 12 }}>
+            <input type="checkbox" checked={sel.has(e.id)} onChange={(ev) => { const s2 = new Set(sel); if (ev.target.checked) s2.add(e.id); else s2.delete(e.id); setSel(s2); }} /> {e.name_ar}
+          </label>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+        <button type="button" className="btn bsm" disabled={busy} style={{ background: "#0a5c9e", color: "#fff" }} onClick={async () => { setBusy(true); await onSend(k, [...sel], setStat); setBusy(false); }}>
+          <i className="ti ti-send" /> إرسال للمحدّدين
+        </button>
+        <span style={{ fontSize: 11, color: "var(--mu)" }}>{sel.size} موظف محدد</span>
+        {stat && <span style={{ fontSize: 11 }}>{stat}</span>}
+      </div>
+    </div>
+  );
+}
+
 export default function Page() {
   const toast = useToast();
   const [emps, setEmps] = useState<EmployeeListItem[]>([]);
@@ -242,6 +280,48 @@ export default function Page() {
       return buildSalaryCert(d, signer);
     },
   };
+
+  function buildFor(k: string, e: FormEmp): Built | string | null {
+    switch (k) {
+      case "onboarding": return buildOnboarding(e, { ...f1, join: "" }, signer);
+      case "custody": return buildCustody(e, custody);
+      case "extension": return buildExtension(e, { ...f3, join: "" }, signer);
+      case "termination": return buildTermination(e, { ...f4, join: "" }, signer);
+      case "clearance": return buildClearance(e, f5, signer);
+      case "experience": return buildExperience(e, f6, signer);
+      case "contract_end": return buildContractEnd(e, { ...ce, join: "" }, signer);
+      case "salary_cert": {
+        const d = { to: sc.to, nameAr: e.nameAr, empNo: e.empNo, join: e.contractJoin, natAr: e.nationality, jobAr: e.jobTitle, id: e.iqamaNo, placeAr: sc.place,
+          basic: e.salary, housing: e.housingAllowance, transport: e.transportAllowance, other: e.otherAllowance, bankOn: sc.bankOn, iban: e.iban, bank: e.bank,
+          acct: acctFromIban(e.iban), ref: nextRef(), seal: sc.seal };
+        const m = salaryCertMissing(d);
+        return m.length ? "بيانات ناقصة: " + m.join("، ") : buildSalaryCert(d, signer);
+      }
+    }
+    return null;
+  }
+
+  async function bulkSend(k: string, ids: string[], setStat: (s: string) => void) {
+    if (!ids.length) return toast("اختر موظفًا واحدًا على الأقل", "err");
+    if (!window.confirm(`هيتبعت "${TYPE_AR[k]}" لـ ${ids.length} موظف دفعة واحدة. متأكد؟`)) return;
+    let ok = 0;
+    const fail: string[] = [];
+    for (const id of ids) {
+      try {
+        const e = toFormEmp(await getEmployee(id));
+        const b = buildFor(k, e);
+        if (!b || typeof b === "string") throw new Error(typeof b === "string" ? b : "تعذر بناء النموذج");
+        await request("/letters", { method: "POST", body: { employee_id: id, type: b.type, title: b.title, html: b.html } });
+        if (b.type === "salary_cert") consumeRef();
+        ok++;
+      } catch (x) {
+        fail.push((emps.find((y) => y.id === id)?.name_ar ?? id) + ": " + (x instanceof Error ? x.message : String(x)));
+      }
+      setStat(`تم ${ok} من ${ids.length}`);
+    }
+    setStat(`✅ اتبعت لـ ${ok} موظف` + (fail.length ? ` — ⚠️ تعذر ${fail.length}: ${fail.join(" | ")}` : ""));
+    refresh();
+  }
 
   return (
     <div className="pg on" id="pg-forms">
@@ -392,6 +472,8 @@ export default function Page() {
           <Buttons label="طباعة خطاب الراتب" onPrint={() => out(builders.salary_cert(), "print")} onSend={() => out(builders.salary_cert(), "send")} />
         </Card>
       </div>
+
+      <BulkCard emps={emps} onSend={bulkSend} />
 
       <div className="card" style={{ marginTop: 12 }} id="TF_STATUS_BOX">
         <div className="ch">
