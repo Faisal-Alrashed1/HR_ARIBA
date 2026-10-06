@@ -3,7 +3,9 @@
 // Settlement calculator (حاسبة المخالصة) — same markup and behaviour as #pg-eoscalc in
 // frontend/legacy/hr-portal/index.html; the arithmetic is in lib/calc/settlement.ts.
 import { useEffect, useMemo, useState } from "react";
-import { listAllEmployees } from "@/lib/employees";
+import { getEmployee, listAllEmployees } from "@/lib/employees";
+import { printDoc } from "@/lib/calc/forms";
+import { settlementDocHtml } from "@/lib/calc/settlement-doc";
 import type { EmployeeListItem } from "@/lib/api";
 import { LAW_NAME, REASONS, runSettlement, sDt, sNum, type SettlementReason } from "@/lib/calc/settlement";
 
@@ -73,6 +75,22 @@ export default function Page() {
       }),
     [start, end, sal, reason, leaveD, leaveTaken, wd, ad, extras, deds],
   );
+
+  async function printOfficial() {
+    if (!empId || !res) return alert("اختر الموظف أولاً");
+    const e = await getEmployee(empId);
+    const html = settlementDocHtml({
+      emp: {
+        nameAr: e.name_ar, nationality: e.nationality?.name_ar ?? "", iqamaNo: e.national_id ?? "", empNo: e.emp_no,
+        jobTitle: e.job_title ?? "", employer: e.workplace?.name_ar ?? "", bank: e.salary?.bank_name ?? "", iban: e.salary?.iban ?? "",
+      },
+      start, end, salary: parseFloat(sal) || 0, monthDays: parseInt(wd) || 30, lawLabel: LAW_NAME[reason], res,
+      extras: extras.map((x) => ({ label: x.label, amount: parseFloat(x.value) || 0 })),
+      deductions: deds.map((d) => ({ label: d.label, value: parseFloat(d.value) || 0, type: d.type })),
+      leaveTaken: parseInt(leaveTaken) || 0,
+    });
+    printDoc("مخالصة نهاية خدمة — " + e.name_ar, html);
+  }
 
   function reset() {
     setEmpId("");
@@ -302,6 +320,9 @@ export default function Page() {
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
               <button type="button" className="btn bgr bsm" onClick={() => window.print()}>
                 <i className="ti ti-printer" /> طباعة
+              </button>
+              <button type="button" className="btn bsm" style={{ background: "#014D3D", color: "#fff" }} onClick={printOfficial}>
+                <i className="ti ti-file-certificate" /> طباعة مخالصة رسمية
               </button>
               <button type="button" className="btn bsm" style={{ background: "var(--am)", color: "#fff" }} onClick={reset}>
                 <i className="ti ti-refresh" /> تصفير
