@@ -24,7 +24,20 @@ def _total_sar(e: Employee) -> Decimal:
     return total * e.exchange_rate
 
 
+# Legacy loadDash: female = gender field, or (when empty) a name starting with one of these first names.
+_FEMALE_NAMES = ("منى", "زينب", "ريم", "بدريه", "ساره", "نوره", "كادي", "منيرة", "دعاء", "غدي", "لينا", "نهى", "سجى", "روان", "أثير", "هيا", "نورة", "فاطمة", "عائشة", "أفنان")
+
+
+def _female(e: Employee) -> bool:
+    if e.gender is not None:
+        return e.gender == Gender.female
+    return (e.name_ar or "").strip().startswith(_FEMALE_NAMES)
+
+
 def build(db: Session, user: User) -> DashboardOut:
+    from app.services.contracts import apply_auto_terminations
+
+    apply_auto_terminations(db, today_riyadh())
     today = today_riyadh()
     all_emps = list(db.scalars(select(Employee).where(Employee.deleted_at.is_(None))).unique())
     current = [e for e in all_emps if e.termination_date is None]
@@ -78,9 +91,9 @@ def build(db: Session, user: User) -> DashboardOut:
         expat=len(current) - saudis,
         saudization_pct=saudization_pct(saudis, len(current)),
         payroll_total=sum((_total_sar(e) for e in current), Decimal(0)).quantize(CENT) if show_pay else None,
-        male=sum(1 for e in current if e.gender == Gender.male),
-        female=sum(1 for e in current if e.gender == Gender.female),
-        gender_unspecified=sum(1 for e in current if e.gender is None),
+        male=len(current) - sum(1 for e in current if _female(e)),
+        female=sum(1 for e in current if _female(e)),
+        gender_unspecified=0,
         terminated=len(all_emps) - len(current),
         tamheer=sum(1 for e in current if e.category == EmployeeCategory.tamheer),
         pending_requests=pending,

@@ -111,7 +111,16 @@ export function EmployeeForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewKey, salaryVisible, canEdit]);
 
-  const set = (k: string, x: string | boolean) => setV((p) => ({ ...p, [k]: x }));
+  const set = (k: string, x: string | boolean) =>
+    setV((p) => {
+      const next = { ...p, [k]: x };
+      // Legacy defaultExchangeRate: USD → 3.755, SAR → 1 (only when the rate was not typed by hand).
+      if (k === "currency") {
+        if (x === "USD" && (!p.exchange_rate || String(p.exchange_rate) === "1")) next.exchange_rate = "3.755";
+        if (x === "SAR") next.exchange_rate = "1";
+      }
+      return next;
+    });
   const err = (k: string) => errors[k] && <div style={{ color: "var(--rd)", fontSize: 10, marginTop: 2 }}>{errors[k]}</div>;
   const field = (k: string, label: MessageKey, type = "text", extra: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
     <div>

@@ -105,6 +105,9 @@ def list_employees(
     workplace_id: uuid.UUID | None = None,
     department_id: uuid.UUID | None = None,
 ) -> tuple[list[EmployeeListItem], int]:
+    from app.services.contracts import apply_auto_terminations
+
+    apply_auto_terminations(db, today_riyadh())
     stmt = scope_employees(_tab_filter(_base(), tab), user)
     if workplace_id:
         stmt = stmt.where(Employee.workplace_id == workplace_id)
