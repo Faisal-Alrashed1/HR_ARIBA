@@ -24,7 +24,6 @@ from app.models import (
     Request as Req,
     RequestStatus,
     RequestType,
-    Sheet,
     User,
     WorkflowStage,
 )
@@ -339,14 +338,6 @@ class BalanceEdit(BaseModel):
     years: list[YearEdit]
 
 
-def _sheet(db: Session, key: str) -> Sheet:
-    s = db.scalar(select(Sheet).where(Sheet.key == key))
-    if s is None:
-        s = Sheet(key=key, data=None)
-        db.add(s)
-    return s
-
-
 @router.put("/leave/employees/{employee_id}", response_model=BalanceDetail)
 def save_balance(employee_id: uuid.UUID, body: BalanceEdit, request: Request, user: User = Depends(_WRITE), db: Session = Depends(get_db)):
     """Legacy saveLeaveBalanceAdjustment: replace every year's figures for the employee (same normalisation)."""
@@ -371,19 +362,17 @@ def save_balance(employee_id: uuid.UUID, body: BalanceEdit, request: Request, us
         o["updatedAt"] = datetime.now().isoformat()
         overrides[str(row.year)] = o
 
-    data_sheet = _sheet(db, lv.LEAVE_DATA)
-    data = dict(data_sheet.data or {})
-    entry = dict(data.get(str(emp.id)) or {})
-    entry["years"] = overrides
-    data[str(emp.id)] = entry
-    data_sheet.data = data
+    from app.models import LeaveAdjustment, LeaveYearOverride
 
-    adj_sheet = _sheet(db, lv.ADJUSTMENTS)
-    adj = [a for a in (adj_sheet.data or []) if str(a.get("employee_id")) != str(emp.id)]
+    db.query(LeaveYearOverride).filter(LeaveYearOverride.employee_id == emp.id).delete()
+    db.query(LeaveAdjustment).filter(LeaveAdjustment.employee_id == emp.id).delete()
+    cols = {"carry": "carry", "entitlement": "entitlement", "used": "used", "adjustment": "adjustment", "yearEnd": "year_end",
+            "carryNext": "carry_next", "current": "current_balance", "eos": "eos"}
     for y, o in overrides.items():
-        adj.append({"employee_id": str(emp.id), "year": int(y), "action": "replace_year", "date": body.date.isoformat(),
-                    "note": o["note"], **{f"new_{k}": o.get(k) for k in ("carry", "entitlement", "used", "adjustment", "current", "yearEnd", "carryNext", "eos")}})
-    adj_sheet.data = adj
+        db.add(LeaveYearOverride(employee_id=emp.id, year=int(y), note=o["note"] or None, updated_by=user.id,
+                                 **{col: o.get(k) for k, col in cols.items()}))
+        db.add(LeaveAdjustment(employee_id=emp.id, year=int(y), entry_date=body.date, action="replace_year",
+                               note=o["note"] or None, created_by=user.id, snapshot={k: o.get(k) for k in cols}))
     audit(db, request, user, "update", "leave_balance", emp.id, {"years": sorted(overrides)})
     db.commit()
     return balance_detail(employee_id, user, db)

@@ -4,6 +4,7 @@ Keys follow the V114 HTML storage names: `pay_YYYY_MM` is the payroll of that mo
 """
 
 import re
+import uuid
 from datetime import datetime, timezone
 from typing import Any
 
@@ -17,7 +18,7 @@ from app.core.auth import get_current_user
 from app.core.errors import ApiError, forbidden, not_found
 from app.core.permissions import HR_ROLES, SALARY_ROLES
 from app.database import get_db
-from app.models import Role, Sheet, User
+from app.models import Employee, PayrollRow, PayrollRun, Role, Sheet, User
 
 router = APIRouter(prefix="/sheets", tags=["sheets"])
 
@@ -46,6 +47,49 @@ def _check(key: str, user: User, write: bool) -> None:
         raise forbidden()
 
 
+# Payroll months (`pay_YYYY_MM`) live in payroll_runs / payroll_rows; the screen keeps the same sheet contract.
+_PAY = re.compile(r"^pay_(\d{4})_(\d{2})$")
+
+
+def _num(v) -> float:
+    try:
+        return round(float(v or 0), 2)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _run(db: Session, key: str) -> PayrollRun | None:
+    m = _PAY.match(key)
+    return db.scalar(select(PayrollRun).where(PayrollRun.year == int(m.group(1)), PayrollRun.month == int(m.group(2)))) if m else None
+
+
+def _run_out(db: Session, run: PayrollRun | None, key: str, with_rows: bool = True) -> SheetOut:
+    if run is None:
+        return SheetOut(key=key)
+    data = None
+    if with_rows:
+        rows = db.scalars(select(PayrollRow).where(PayrollRow.run_id == run.id).order_by(PayrollRow.position))
+        data = [r.data for r in rows]
+    return SheetOut(key=key, data=data, approved=run.status == "approved", approved_at=run.approved_at, updated_at=run.updated_at)
+
+
+def _save_rows(db: Session, run: PayrollRun, rows: list, user: User) -> None:
+    db.query(PayrollRow).filter(PayrollRow.run_id == run.id).delete()
+    known = {str(e) for e in db.scalars(select(Employee.id))}
+    for i, r in enumerate(rows if isinstance(rows, list) else []):
+        if not isinstance(r, dict):
+            continue
+        eid = str(r.get("id") or "")
+        db.add(PayrollRow(
+            run_id=run.id, position=i, employee_id=uuid.UUID(eid) if eid in known else None,
+            emp_no=str(r.get("empNo") or "")[:40] or None, name_ar=str(r.get("name") or "")[:200] or None,
+            total_due=_num(r.get("totalDue")), total_deductions=_num(r.get("totalDeduct")),
+            gosi_employee=_num(r.get("insEmp")), gosi_employer=_num(r.get("insEr")),
+            net=_num(r.get("net")), net_sar=_num(r.get("netSAR")), data=r,
+        ))
+    run.updated_by = user.id
+
+
 def _out(s: Sheet | None, key: str) -> SheetOut:
     if s is None:
         return SheetOut(key=key)
@@ -56,6 +100,9 @@ def _out(s: Sheet | None, key: str) -> SheetOut:
 def list_sheets(prefix: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Sheets whose key starts with `prefix` (e.g. `pay_` for the payroll archive), without their rows."""
     _check(prefix.rstrip("_") + "_x", user, write=False)
+    if prefix.startswith("pay"):
+        runs = db.scalars(select(PayrollRun).order_by(PayrollRun.year.desc(), PayrollRun.month.desc()))
+        return [_run_out(db, r, f"pay_{r.year}_{r.month:02d}", with_rows=False) for r in runs]
     rows = db.scalars(select(Sheet).where(Sheet.key.startswith(prefix)).order_by(Sheet.key.desc()))
     return [SheetOut(key=s.key, approved=s.approved, approved_at=s.approved_at, updated_at=s.updated_at) for s in rows]
 
@@ -63,12 +110,26 @@ def list_sheets(prefix: str, user: User = Depends(get_current_user), db: Session
 @router.get("/{key}", response_model=SheetOut)
 def get_sheet(key: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     _check(key, user, write=False)
+    if _PAY.match(key):
+        return _run_out(db, _run(db, key), key)
     return _out(db.scalar(select(Sheet).where(Sheet.key == key)), key)
 
 
 @router.put("/{key}", response_model=SheetOut)
 def put_sheet(key: str, body: SheetIn, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     _check(key, user, write=True)
+    if (m := _PAY.match(key)) is not None:
+        run = _run(db, key)
+        if run is not None and run.status == "approved":
+            raise ApiError(409, "approved", "This sheet is approved and can no longer be edited")
+        if run is None:
+            run = PayrollRun(year=int(m.group(1)), month=int(m.group(2)), status="draft")
+            db.add(run)
+            db.flush()
+        _save_rows(db, run, body.data, user)
+        audit(db, request, user, "save", "payroll", key)
+        db.commit()
+        return _run_out(db, run, key)
     s = db.scalar(select(Sheet).where(Sheet.key == key))
     if s is not None and s.approved:
         raise ApiError(409, "approved", "This sheet is approved and can no longer be edited")
@@ -86,6 +147,14 @@ def put_sheet(key: str, body: SheetIn, request: Request, user: User = Depends(ge
 @router.post("/{key}/approve", response_model=SheetOut)
 def approve_sheet(key: str, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     _check(key, user, write=True)
+    if _PAY.match(key):
+        run = _run(db, key)
+        if run is None:
+            raise not_found("Payroll")
+        run.status, run.approved_at, run.approved_by = "approved", datetime.now(timezone.utc), user.id
+        audit(db, request, user, "approve", "payroll", key)
+        db.commit()
+        return _run_out(db, run, key)
     s = db.scalar(select(Sheet).where(Sheet.key == key))
     if s is None:
         raise not_found("Sheet")
@@ -100,6 +169,14 @@ def approve_sheet(key: str, request: Request, user: User = Depends(get_current_u
 def unapprove_sheet(key: str, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role not in HR_ROLES:
         raise forbidden()
+    if _PAY.match(key):
+        run = _run(db, key)
+        if run is None:
+            raise not_found("Payroll")
+        run.status, run.approved_at, run.approved_by = "draft", None, None
+        audit(db, request, user, "unapprove", "payroll", key)
+        db.commit()
+        return _run_out(db, run, key)
     s = db.scalar(select(Sheet).where(Sheet.key == key))
     if s is None:
         raise not_found("Sheet")

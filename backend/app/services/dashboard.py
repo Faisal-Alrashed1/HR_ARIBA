@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.permissions import SALARY_ROLES
 from app.core.scheduling import today_riyadh
-from app.models import Employee, EmployeeCategory, Gender, PayrollRun, PayrollStatus, Request, RequestStatus, User
+from app.models import Employee, EmployeeCategory, Gender, PayrollRun, Request, RequestStatus, User
 from app.schemas import AlertOut, CountItem, DashboardOut, EmployeeBrief, PayrollSummary, WorkplaceItem
 from app.services import alerts as alert_svc
 from app.services.saudization import saudization_pct
@@ -69,7 +69,7 @@ def build(db: Session, user: User) -> DashboardOut:
     alerts = alert_svc.collect(current, today)
     pending = db.scalar(select(func.count()).select_from(Request).where(Request.status == RequestStatus.pending)) or 0
     run = db.scalars(
-        select(PayrollRun).where(PayrollRun.status == PayrollStatus.approved).order_by(PayrollRun.year.desc(), PayrollRun.month.desc())
+        select(PayrollRun).where(PayrollRun.status == "approved").order_by(PayrollRun.year.desc(), PayrollRun.month.desc())
     ).first()
 
     return DashboardOut(

@@ -13,6 +13,7 @@ from datetime import date, datetime, time
 from decimal import Decimal
 
 from sqlalchemy import (
+    CheckConstraint,
     JSON,
     Boolean,
     Date,
@@ -226,24 +227,6 @@ class PunchKind(str, enum.Enum):
     both = "both"
 
 
-class LeaveField(str, enum.Enum):
-    entitlement = "entitlement"
-    used = "used"
-    adjustment = "adjustment"
-    year_end = "year_end"
-    carry = "carry"
-
-
-class PayrollStatus(str, enum.Enum):
-    draft = "draft"
-    approved = "approved"
-
-
-class SettlementItemKind(str, enum.Enum):
-    addition = "addition"
-    deduction = "deduction"
-
-
 class DocumentType(str, enum.Enum):
     iqama = "iqama"
     passport = "passport"
@@ -257,22 +240,6 @@ class DocumentType(str, enum.Enum):
     photo = "photo"
     letter = "letter"
     other = "other"
-
-
-class TemplateType(str, enum.Enum):
-    commencement = "commencement"
-    custody = "custody"
-    probation_extension = "probation_extension"
-    probation_end = "probation_end"
-    clearance = "clearance"
-    experience_certificate = "experience_certificate"
-    probation_evaluation = "probation_evaluation"
-
-
-class TemplateStatus(str, enum.Enum):
-    sent = "sent"
-    acknowledged = "acknowledged"
-    rejected = "rejected"
 
 
 class ExclusionReason(str, enum.Enum):
@@ -448,6 +415,8 @@ class Employee(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
     # Flags
     exclude_from_payroll: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     exclude_from_eos: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    # Leave days above the 10-day carry from before the system (legacy leaveEosExcess); added to the EOS leave bank.
+    leave_eos_excess: Mapped[Decimal] = mapped_column(DAYS, default=0, server_default="0")
 
     # Termination
     termination_date: Mapped[date | None] = mapped_column(Date, index=True)
@@ -541,7 +510,8 @@ class Location(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
 
 class AttendanceRecord(IdMixin, TimestampMixin, Base):
     __tablename__ = "attendance_records"
-    __table_args__ = (UniqueConstraint("employee_id", "work_date", name="uq_attendance_employee_date"),)
+    # Several sessions a day are allowed (legacy V117 groups them: first check-in, last check-out).
+    __table_args__ = (Index("ix_attendance_employee_date", "employee_id", "work_date"),)
     employee_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("employees.id"), index=True)
     work_date: Mapped[date] = mapped_column(Date, index=True)
     time_in: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -609,7 +579,7 @@ class RequestStep(IdMixin, TimestampMixin, Base):
     """History of every action on a request."""
 
     __tablename__ = "request_steps"
-    request_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("requests.id"), index=True)
+    request_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("requests.id", ondelete="CASCADE"), index=True)
     stage: Mapped[WorkflowStage] = mapped_column(pg_enum(WorkflowStage, "workflow_stage"))
     action: Mapped[StepAction] = mapped_column(pg_enum(StepAction, "step_action"))
     actor_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
@@ -619,31 +589,41 @@ class RequestStep(IdMixin, TimestampMixin, Base):
 # --------------------------------------------------------------------------- leave
 
 
-class LeaveYearLedger(IdMixin, TimestampMixin, Base):
-    __tablename__ = "leave_year_ledgers"
-    __table_args__ = (UniqueConstraint("employee_id", "year", name="uq_leave_ledger_employee_year"),)
+class LeaveYearOverride(IdMixin, TimestampMixin, Base):
+    """HR's figures for one employee and year (legacy e.leaveYearOverrides[year], saved by the year-by-year editor).
+
+    Any column left NULL is computed by the leave engine (app/services/leave.py)."""
+
+    __tablename__ = "leave_year_overrides"
+    __table_args__ = (UniqueConstraint("employee_id", "year", name="uq_leave_override_employee_year"),)
     employee_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("employees.id"), index=True)
     year: Mapped[int] = mapped_column(Integer)
-    opening: Mapped[Decimal] = mapped_column(DAYS, default=0, server_default="0")
-    entitlement: Mapped[Decimal] = mapped_column(DAYS, default=0, server_default="0")
-    used: Mapped[Decimal] = mapped_column(DAYS, default=0, server_default="0")
-    adjustment: Mapped[Decimal] = mapped_column(DAYS, default=0, server_default="0")
-    closing: Mapped[Decimal] = mapped_column(DAYS, default=0, server_default="0")
-    carry: Mapped[Decimal] = mapped_column(DAYS, default=0, server_default="0")
-    eos_bank: Mapped[Decimal] = mapped_column(DAYS, default=0, server_default="0")
-    is_closed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    carry: Mapped[Decimal | None] = mapped_column(DAYS)
+    entitlement: Mapped[Decimal | None] = mapped_column(DAYS)
+    used: Mapped[Decimal | None] = mapped_column(DAYS)
+    adjustment: Mapped[Decimal | None] = mapped_column(DAYS)
+    year_end: Mapped[Decimal | None] = mapped_column(DAYS)
+    carry_next: Mapped[Decimal | None] = mapped_column(DAYS)
+    current_balance: Mapped[Decimal | None] = mapped_column(DAYS)
+    eos: Mapped[Decimal | None] = mapped_column(DAYS)
+    # Imported usage for the year (legacy leaveUsed<year> / leaveHistoryByYear) and the date it was taken at.
+    used_history: Mapped[Decimal | None] = mapped_column(DAYS)
+    as_of: Mapped[date | None] = mapped_column(Date)
+    note: Mapped[str | None] = mapped_column(Text)
+    updated_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
 
 
 class LeaveAdjustment(IdMixin, TimestampMixin, Base):
-    """HR override of one ledger field for one year, with a reason."""
+    """Leave balance history (legacy leave_balance_adjustments): a +/- delta, or a `replace_year` snapshot."""
 
     __tablename__ = "leave_adjustments"
     employee_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("employees.id"), index=True)
     year: Mapped[int] = mapped_column(Integer)
-    field: Mapped[LeaveField] = mapped_column(pg_enum(LeaveField, "leave_field"))
-    value: Mapped[Decimal] = mapped_column(DAYS)
-    effective_date: Mapped[date] = mapped_column(Date)
-    reason: Mapped[str] = mapped_column(Text)
+    entry_date: Mapped[date] = mapped_column(Date)
+    action: Mapped[str] = mapped_column(String(20), default="delta", server_default="delta")
+    delta: Mapped[Decimal | None] = mapped_column(DAYS)
+    snapshot: Mapped[dict | None] = mapped_column(JSON)
+    note: Mapped[str | None] = mapped_column(Text)
     created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
 
 
@@ -651,100 +631,40 @@ class LeaveAdjustment(IdMixin, TimestampMixin, Base):
 
 
 class PayrollRun(IdMixin, TimestampMixin, Base):
-    """A month's payroll. Once approved it is immutable and archived."""
+    """A month's payroll (legacy hr7_pay_YYYY_MM). Once approved it is frozen."""
 
     __tablename__ = "payroll_runs"
-    __table_args__ = (UniqueConstraint("year", "month", "workplace_id", name="uq_payroll_run_period"),)
+    __table_args__ = (
+        UniqueConstraint("year", "month", name="uq_payroll_run_period"),
+        CheckConstraint("status IN ('draft', 'approved')", name="ck_payroll_run_status"),
+    )
     year: Mapped[int] = mapped_column(Integer)
     month: Mapped[int] = mapped_column(Integer)
-    days_in_month: Mapped[int] = mapped_column(Integer)
-    workplace_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("workplaces.id"))
-    status: Mapped[PayrollStatus] = mapped_column(
-        pg_enum(PayrollStatus, "payroll_status"), default=PayrollStatus.draft
-    )
+    status: Mapped[str] = mapped_column(String(10), default="draft", server_default="draft")
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     approved_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    updated_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
 
 
 class PayrollRow(IdMixin, TimestampMixin, Base):
+    """One payroll line. `data` is the full Excel-column row exactly as the payroll screen computed it
+    (frontend/hr-web/src/lib/calc/payx.ts); the main totals are copied to columns for reports and payslips.
+    `employee_id` is NULL only for a manual row added with «إضافة صف»."""
+
     __tablename__ = "payroll_rows"
-    __table_args__ = (UniqueConstraint("run_id", "employee_id", name="uq_payroll_row_run_employee"),)
-    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("payroll_runs.id"), index=True)
-    employee_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("employees.id"), index=True)
-    basic_salary: Mapped[Decimal] = mapped_column(MONEY)
-    housing_allowance: Mapped[Decimal] = mapped_column(MONEY)
-    transport_allowance: Mapped[Decimal] = mapped_column(MONEY)
-    project_allowance: Mapped[Decimal] = mapped_column(MONEY)
-    other_allowances: Mapped[Decimal] = mapped_column(MONEY)
-    total_salary: Mapped[Decimal] = mapped_column(MONEY)
-    work_days: Mapped[Decimal] = mapped_column(DAYS)
-    gosi_days: Mapped[Decimal] = mapped_column(DAYS)
-    salary_by_days: Mapped[Decimal] = mapped_column(MONEY)
-    overtime: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
-    leave_compensation: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
-    extra_allowances: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
-    total_due: Mapped[Decimal] = mapped_column(MONEY)
-    gosi_base: Mapped[Decimal] = mapped_column(MONEY)
-    gosi_employee: Mapped[Decimal] = mapped_column(MONEY)
-    gosi_employer: Mapped[Decimal] = mapped_column(MONEY)
-    loan_deduction: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
-    other_deductions: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
-    total_deductions: Mapped[Decimal] = mapped_column(MONEY)
-    net: Mapped[Decimal] = mapped_column(MONEY)
-    currency: Mapped[Currency] = mapped_column(pg_enum(Currency, "currency"))
-    exchange_rate: Mapped[Decimal] = mapped_column(Numeric(10, 4))
-    net_sar: Mapped[Decimal] = mapped_column(MONEY)
-    payment_method: Mapped[PaymentMethod] = mapped_column(pg_enum(PaymentMethod, "payment_method"))
-    iban: Mapped[str | None] = mapped_column(String(34))
-    notes: Mapped[str | None] = mapped_column(Text)
-
-
-# --------------------------------------------------------------------------- end of service
-
-
-class Settlement(IdMixin, TimestampMixin, Base):
-    __tablename__ = "settlements"
-    employee_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("employees.id"), index=True)
-    end_date: Mapped[date] = mapped_column(Date)
-    article: Mapped[TerminationArticle] = mapped_column(pg_enum(TerminationArticle, "termination_article"))
-    service_years: Mapped[Decimal] = mapped_column(Numeric(8, 4))
-    eos_base: Mapped[Decimal] = mapped_column(MONEY)
-    eos_amount: Mapped[Decimal] = mapped_column(MONEY)
-    leave_remaining_days: Mapped[Decimal] = mapped_column(DAYS)
-    leave_compensation: Mapped[Decimal] = mapped_column(MONEY)
-    excess_leave_deduction: Mapped[Decimal] = mapped_column(MONEY)
-    final_period_days: Mapped[Decimal] = mapped_column(DAYS)
-    final_period_salary: Mapped[Decimal] = mapped_column(MONEY)
-    total: Mapped[Decimal] = mapped_column(MONEY)
-    document_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("documents.id"))
-    created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
-
-
-class SettlementItem(IdMixin, TimestampMixin, Base):
-    __tablename__ = "settlement_items"
-    settlement_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("settlements.id"), index=True)
-    kind: Mapped[SettlementItemKind] = mapped_column(pg_enum(SettlementItemKind, "settlement_item_kind"))
-    label: Mapped[str] = mapped_column(String(200))
-    amount: Mapped[Decimal | None] = mapped_column(MONEY)
-    days: Mapped[Decimal | None] = mapped_column(DAYS)
-    daily_rate: Mapped[Decimal | None] = mapped_column(MONEY)
-
-
-# --------------------------------------------------------------------------- templates
-
-
-class TemplateLetter(IdMixin, TimestampMixin, Base):
-    __tablename__ = "template_letters"
-    employee_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("employees.id"), index=True)
-    type: Mapped[TemplateType] = mapped_column(pg_enum(TemplateType, "template_type"))
-    title: Mapped[str] = mapped_column(String(200))
-    document_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("documents.id"))
-    status: Mapped[TemplateStatus] = mapped_column(
-        pg_enum(TemplateStatus, "template_status"), default=TemplateStatus.sent
-    )
-    sent_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
-    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    rejection_reason: Mapped[str | None] = mapped_column(Text)
+    __table_args__ = (Index("ix_payroll_rows_run_position", "run_id", "position"),)
+    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("payroll_runs.id", ondelete="CASCADE"), index=True)
+    position: Mapped[int] = mapped_column(Integer)
+    employee_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("employees.id"), index=True)
+    emp_no: Mapped[str | None] = mapped_column(String(40))
+    name_ar: Mapped[str | None] = mapped_column(String(200))
+    total_due: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
+    total_deductions: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
+    gosi_employee: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
+    gosi_employer: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
+    net: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
+    net_sar: Mapped[Decimal] = mapped_column(MONEY, default=0, server_default="0")
+    data: Mapped[dict] = mapped_column(JSON)
 
 
 # --------------------------------------------------------------------------- audit
@@ -786,6 +706,14 @@ class SentLetter(IdMixin, TimestampMixin, Base):
     contract_end, salary_cert. `html` is the printed document (Arabic, optionally followed by <!--ARIBA_EN--> + English)."""
 
     __tablename__ = "sent_letters"
+    __table_args__ = (
+        CheckConstraint(
+            "type IN ('onboarding', 'custody', 'extension', 'termination', 'clearance', 'experience', "
+            "'evaluation', 'contract_end', 'salary_cert')",
+            name="ck_sent_letters_type",
+        ),
+        CheckConstraint("status IN ('pending', 'approved', 'rejected')", name="ck_sent_letters_status"),
+    )
     employee_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("employees.id"), index=True)
     type: Mapped[str] = mapped_column(String(40))
     title: Mapped[str] = mapped_column(String(200))

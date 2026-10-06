@@ -13,10 +13,8 @@ Rules (as in the legacy code):
 
 Floats are used on purpose: the legacy code used JS numbers, and results are rounded only for display.
 
-Storage (sheets table, like the legacy localStorage keys):
-- `leave_data`: {employee_id: {"years": {"2024": {entitlement, used, adjustment, yearEnd, carry, carryNext, current, asOf}},
-                               "used_history": {"2023": n}, "eos_excess": n}}
-- `leave_balance_adjustments`: [{"employee_id", "date": "YYYY-MM-DD", "delta": n, "note"}]
+Storage: leave_year_overrides (HR's figures per employee/year, NULL = computed), leave_adjustments (+/- deltas and
+replace_year snapshots), employees.leave_eos_excess. load_book() turns them into the legacy shapes the engine reads.
 
 Not replicated on purpose: the legacy approveLv also added the days to `leaveUsed<year>` while the approved request was
 counted again by leaveDefaultUsed (double counting). Here an approved request is counted once.
@@ -30,10 +28,8 @@ from datetime import date, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Employee, Holiday, Request, RequestStatus, RequestType, Sheet
+from app.models import Employee, Holiday, LeaveAdjustment, LeaveYearOverride, Request, RequestStatus, RequestType
 
-LEAVE_DATA = "leave_data"
-ADJUSTMENTS = "leave_balance_adjustments"
 CARRY_CAP = 10
 
 
@@ -306,9 +302,8 @@ class LeaveBook:
         return out
 
 
-def _sheet(db: Session, key: str):
-    s = db.scalar(select(Sheet).where(Sheet.key == key))
-    return s.data if s else None
+_OV = {"carry": "carry", "entitlement": "entitlement", "used": "used", "adjustment": "adjustment", "year_end": "yearEnd",
+       "carry_next": "carryNext", "current_balance": "current", "eos": "eos"}
 
 
 def load_book(db: Session, today: date) -> LeaveBook:
@@ -318,13 +313,22 @@ def load_book(db: Session, today: date) -> LeaveBook:
     for r in db.scalars(q):
         if r.from_date:
             approved.setdefault(str(r.employee_id), []).append((r.from_date, r.to_date or r.from_date))
-    return LeaveBook(
-        holidays=hol,
-        data=_sheet(db, LEAVE_DATA) or {},
-        adjustments=_sheet(db, ADJUSTMENTS) or [],
-        approved_annual=approved,
-        today=today,
-    )
+    data: dict = {}
+    for e_id, eos in db.execute(select(Employee.id, Employee.leave_eos_excess).where(Employee.leave_eos_excess != 0)):
+        data.setdefault(str(e_id), {})["eos_excess"] = float(eos)
+    for o in db.scalars(select(LeaveYearOverride)):
+        entry = data.setdefault(str(o.employee_id), {})
+        y = {legacy: float(getattr(o, col)) for col, legacy in _OV.items() if getattr(o, col) is not None}
+        if o.as_of:
+            y["asOf"] = o.as_of.isoformat()
+        entry.setdefault("years", {})[str(o.year)] = y
+        if o.used_history is not None:
+            entry.setdefault("used_history", {})[str(o.year)] = float(o.used_history)
+    adjustments = [
+        {"employee_id": str(a.employee_id), "date": a.entry_date.isoformat(), "delta": float(a.delta)}
+        for a in db.scalars(select(LeaveAdjustment).where(LeaveAdjustment.delta.is_not(None)))
+    ]
+    return LeaveBook(holidays=hol, data=data, adjustments=adjustments, approved_annual=approved, today=today)
 
 
 def request_days(book: LeaveBook, type_: RequestType, start: date, end: date) -> int:

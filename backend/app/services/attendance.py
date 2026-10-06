@@ -102,10 +102,9 @@ def _apply(
 
 
 def upsert(db: Session, data: AttendanceCreate, user: User) -> AttendanceRecord:
-    rec = _find(db, data.employee_id, data.work_date)
-    if rec is None:
-        rec = AttendanceRecord(employee_id=data.employee_id, work_date=data.work_date)
-        db.add(rec)
+    """Adds a session (several sessions a day are allowed, legacy V117); edits go through update()."""
+    rec = AttendanceRecord(employee_id=data.employee_id, work_date=data.work_date)
+    db.add(rec)
     _apply(
         db,
         rec,
@@ -185,9 +184,13 @@ def summary(db: Session, year: int, month: int) -> list[AttendanceSummaryOut]:
     recs = db.scalars(
         select(AttendanceRecord).where(AttendanceRecord.work_date >= start, AttendanceRecord.work_date <= end)
     )
+    # One status per employee per day: the first session of the day (legacy V117 grouping).
+    first: dict[tuple[uuid.UUID, date], AttendanceRecord] = {}
+    for r in sorted(recs, key=lambda x: (x.time_in is None, x.time_in.replace(tzinfo=None) if x.time_in else datetime.min)):
+        first.setdefault((r.employee_id, r.work_date), r)
     counts: dict[uuid.UUID, dict[str, int]] = {}
-    for r in recs:
-        c = counts.setdefault(r.employee_id, {"present": 0, "late": 0, "absent": 0, "leave": 0, "remote": 0})
+    for (emp_id, _), r in first.items():
+        c = counts.setdefault(emp_id, {"present": 0, "late": 0, "absent": 0, "leave": 0, "remote": 0})
         c[r.status.value] += 1
     zero = {"present": 0, "late": 0, "absent": 0, "leave": 0, "remote": 0}
     return [
