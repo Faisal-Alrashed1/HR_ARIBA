@@ -137,6 +137,7 @@ HR_ARIBA/
 **تم (2026-10-06):**
 - ✅ 1. التطبيق مربوط افتراضياً بالخادم المنشور (`src/lib/api.ts`، و`.env.example`).
 - ✅ 2. البصمة بالـ GPS: `services/geofence.py` (Haversine) + `services/punch.py` + `GET /me/attendance` و `POST /me/attendance/punch {action in|out, lat, lng}`. الأخطاء: `outside_geofence` (مع أقرب موقع ومسافته)، `too_early_for_flexible_window`، `too_late_for_flexible_window`، `remote_limit_reached`، `already_checked_in`، `not_checked_in`. التأخير من أول جلسة فقط؛ الساعة المرنة: لا تأخير والانصراف المتوقع = أول دخول + الساعات. شاشة الحضور في التطبيق (ساعة الرياض، حالة الموقع، رجوع للعمل، جلسات اليوم، سجل 31 يوم). + إصلاح: أوقات الحضور تُعرض بتوقيت الرياض (`attendance.local`) بدل UTC من Postgres.
+- ✅ 3+4. الطلبات والرصيد والفريق والموافقات: `routers/me_requests.py` — `GET/POST /me/requests`, `DELETE /me/requests/{id}` (غير المعتمد فقط)، `GET /me/leave`, `GET /me/team`, `GET /me/approvals`, `POST /me/approvals/{id} {action approve|reject, reason}` (المدير المباشر لمرحلة المدير، hr/admin لمرحلة HR، ceo/admin لمرحلة الرئيس التنفيذي). اعتماد «نسيان بصمة» يسجّل الحضور تلقائياً (`punch.record_forgot_punch`). شاشات الإجازات وفريقي في التطبيق. المرفقات في طلبات التطبيق لم تُبنَ بعد، والتواريخ تُكتب نصاً (YYYY-MM-DD).
 - ملاحظة: منطق `ariba_attendance` القديم كان في Supabase وغير موجود في الملفات؛ بُني من وصف التوثيق (3.2.4، 4.11، 4.12).
 
 **خطة التطبيق بالترتيب:**

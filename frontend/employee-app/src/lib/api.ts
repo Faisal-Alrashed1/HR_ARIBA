@@ -200,3 +200,53 @@ export const attendance = {
   punch: (action: "in" | "out", lat: number, lng: number) =>
     api<MySession>("/me/attendance/punch", { method: "POST", body: JSON.stringify({ action, lat, lng }) }),
 };
+
+export type RequestType =
+  | "annual" | "sick" | "emergency" | "death" | "marriage" | "maternity" | "paternity" | "umrah" | "hajj" | "remote"
+  | "permission" | "maternity_permission" | "early_leave" | "advance" | "mission" | "forgot_punch" | "overtime";
+
+export type MyRequest = {
+  id: string;
+  employee_id: string;
+  employee_name: string;
+  type: RequestType;
+  status: "pending" | "approved" | "rejected";
+  stage: "manager" | "hr" | "ceo" | "completed";
+  from_date: string | null;
+  to_date: string | null;
+  days: string | null;
+  on_date: string | null;
+  time_from: string | null;
+  time_to: string | null;
+  hours: string | null;
+  amount: string | null;
+  punch_kind: "in" | "out" | "both" | null;
+  notes: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+};
+
+export type NewRequest = Partial<Omit<MyRequest, "id" | "employee_id" | "employee_name" | "status" | "stage" | "days" | "rejection_reason" | "created_at">> & {
+  type: RequestType;
+};
+
+export type MyLeave = {
+  current: number;
+  carry: number;
+  year_end: number;
+  annual: number;
+  upcoming_holidays: { name: string; date: string; days: number }[];
+};
+
+export type TeamMember = { id: string; emp_no: string; name_ar: string; job_title: string | null };
+
+export const requests = {
+  mine: () => api<MyRequest[]>("/me/requests"),
+  submit: (body: NewRequest) => api<MyRequest>("/me/requests", { method: "POST", body: JSON.stringify(body) }),
+  remove: (id: string) => api<void>(`/me/requests/${id}`, { method: "DELETE" }),
+  leave: () => api<MyLeave>("/me/leave"),
+  team: () => api<TeamMember[]>("/me/team"),
+  approvals: () => api<MyRequest[]>("/me/approvals"),
+  decide: (id: string, action: "approve" | "reject", reason?: string) =>
+    api<MyRequest>(`/me/approvals/${id}`, { method: "POST", body: JSON.stringify({ action, reason }) }),
+};

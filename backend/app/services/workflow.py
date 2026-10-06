@@ -20,6 +20,7 @@ from app.models import (
     Request,
     RequestStatus,
     RequestStep,
+    RequestType,
     StepAction,
     User,
     WorkflowRule,
@@ -70,6 +71,10 @@ def _finish_or_advance(db: Session, req: Request) -> None:
     if nxt == WorkflowStage.completed:
         req.status = RequestStatus.approved
         req.decided_at = datetime.now(timezone.utc)
+        if req.type == RequestType.forgot_punch:
+            from app.services.punch import record_forgot_punch
+
+            record_forgot_punch(db, req)
 
 
 def approve(db: Session, req: Request, user: User, note: str | None = None) -> None:

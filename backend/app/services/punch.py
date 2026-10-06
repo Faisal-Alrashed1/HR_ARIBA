@@ -29,6 +29,8 @@ from app.models import (
     EmployeeLocation,
     Location,
     LocationType,
+    PunchKind,
+    Request,
 )
 from app.services import attendance as att
 from app.services import geofence
@@ -169,3 +171,32 @@ def history(db: Session, emp_id: uuid.UUID, days: int = 31) -> list[AttendanceRe
             .order_by(AttendanceRecord.work_date.desc(), AttendanceRecord.time_in)
         )
     )
+
+
+def record_forgot_punch(db: Session, req: Request) -> AttendanceRecord:
+    """V114: an approved «نسيان بصمة» is written to the attendance log (check-in, check-out, or both).
+    A missed check-out closes that day's open session when there is one."""
+    day, kind = req.on_date, req.punch_kind
+    tin = datetime.combine(day, req.time_from, tzinfo=RIYADH) if kind != PunchKind.check_out else None
+    tout_t = req.time_from if kind == PunchKind.check_out else req.time_to
+    tout = datetime.combine(day, tout_t, tzinfo=RIYADH) if tout_t else None
+    note = "نسيان بصمة" + (f": {req.notes}" if req.notes else "")
+    rec = None
+    if kind == PunchKind.check_out:
+        rec = next((r for r in reversed(sessions_on(db, req.employee_id, day)) if r.time_in and r.time_out is None), None)
+    if rec is None:
+        first = not sessions_on(db, req.employee_id, day)
+        late = att.late_early(db, tin, None)[0] if tin and first else 0
+        rec = AttendanceRecord(
+            employee_id=req.employee_id, work_date=day, time_in=tin,
+            status=AttendanceStatus.late if late > 0 else AttendanceStatus.present,
+            late_minutes=late, source=AttendanceSource.manual, notes=note,
+        )
+        db.add(rec)
+    else:
+        rec.notes = f"{rec.notes} · {note}" if rec.notes else note
+    if tout is not None:
+        rec.time_out = tout
+        rec.early_minutes = att.late_early(db, None, tout)[1]
+    db.flush()
+    return rec

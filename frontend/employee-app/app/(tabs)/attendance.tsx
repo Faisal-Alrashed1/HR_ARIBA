@@ -1,7 +1,7 @@
 // الحضور — legacy main/08-attendance-gps-forgot.js + V117 (رجوع للعمل، جلسات اليوم، سجل 31 يوم) + V122b (حالة الموقع).
 import { useCallback, useEffect, useState } from "react";
-import { Alert, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { router, useFocusEffect } from "expo-router";
 import { Button, Card, ErrorText, Loading, Txt } from "@/components/ui";
 import { ApiError, attendance, type MyAttendance, type MySession } from "@/lib/api";
 import { currentFix, distanceText, evaluate, type Fix, type LocState } from "@/lib/geo";
@@ -177,6 +177,12 @@ export default function Attendance() {
             <Button title="↩ رجوع للعمل — تسجيل حضور مرة أخرى" onPress={() => punch("in")} busy={busy} />
           </>
         )}
+        <Pressable
+          onPress={() => router.push({ pathname: "/leaves", params: { type: "forgot_punch" } })}
+          style={[styles.forgot, { borderColor: t.bd }]}
+        >
+          <Txt muted style={{ fontSize: 12, textAlign: "center" }}>⚠️ نسيت البصمة</Txt>
+        </Pressable>
         {!canPunch && loc.kind !== "loading" ? (
           <Txt muted style={[styles.note, { marginTop: 8 }]}>البصمة متاحة داخل نطاق موقع العمل فقط.</Txt>
         ) : null}
@@ -238,5 +244,6 @@ const styles = StyleSheet.create({
   dot: { width: 10, height: 10, borderRadius: 5 },
   status: { borderRadius: 10, padding: 12, marginBottom: 10 },
   note: { fontSize: 11, textAlign: "center", marginBottom: 6, lineHeight: 18 },
+  forgot: { borderWidth: 1, borderRadius: 8, padding: 8, marginTop: 8 },
   hist: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 7, borderBottomWidth: StyleSheet.hairlineWidth },
 });

@@ -11,7 +11,7 @@ from app.core.errors import install_error_handlers
 from app.core.security import SecurityHeadersMiddleware
 from app.migrations import run_migrations
 from app.services.seeds import bootstrap_admin
-from app.routers import attendance, auth, dashboard, dependents, documents, employees, health, leave, letters, locations, me, registry, salary, settings, sheets
+from app.routers import attendance, auth, dashboard, dependents, documents, employees, health, leave, letters, locations, me, me_requests, registry, salary, settings, sheets
 
 API_PREFIX = "/api/v1"
 
@@ -52,7 +52,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(sheets.archive, prefix=API_PREFIX)
-    for module in (auth, me, dashboard, employees, dependents, documents, salary, settings, sheets, locations, attendance, leave, registry, letters):
+    for module in (auth, me, me_requests, dashboard, employees, dependents, documents, salary, settings, sheets, locations, attendance, leave, registry, letters):
         app.include_router(module.router, prefix=API_PREFIX)
     return app
 
