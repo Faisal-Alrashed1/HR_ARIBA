@@ -508,6 +508,14 @@ class Location(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
 
 
+class EmployeeLocation(Base):
+    """V121: the punch locations an employee may use. No rows = the locations of their workplace (legacy default)."""
+
+    __tablename__ = "employee_locations"
+    employee_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"), primary_key=True)
+    location_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("locations.id", ondelete="CASCADE"), primary_key=True)
+
+
 class AttendanceRecord(IdMixin, TimestampMixin, Base):
     __tablename__ = "attendance_records"
     # Several sessions a day are allowed (legacy V117 groups them: first check-in, last check-out).

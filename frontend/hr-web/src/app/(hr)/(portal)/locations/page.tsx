@@ -2,6 +2,7 @@
 
 // Punch locations (مواقع البصمة) — port of #pg-loc / js/main/14-locations.js.
 import { useEffect, useState } from "react";
+import { LinkedEmployees } from "@/components/hr/linked-employees";
 import { Modal } from "@/components/hr/modal";
 import { PageState } from "@/components/hr/not-built";
 import { useToast } from "@/components/common/toast";
@@ -127,8 +128,12 @@ export default function Page() {
   return (
     <div className="pg on" id="pg-loc">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div>
+          <div className="ct"><i className="ti ti-map-pin" /> مواقع البصمة الجغرافية</div>
+          <div style={{ fontSize: 11, color: "var(--mu)" }}>تُستخدم هذه المواقع في تطبيق الموظف للبصمة الجغرافية</div>
+        </div>
         <button type="button" className="btn bgr" onClick={openAdd}>
-          <i className="ti ti-plus" /> إضافة موقع بصمة
+          <i className="ti ti-plus" /> إضافة موقع
         </button>
       </div>
 
@@ -214,6 +219,7 @@ export default function Page() {
           </div>
         </Modal>
       )}
+      {locs.length > 0 && <LinkedEmployees locs={locs} />}
     </div>
   );
 }
