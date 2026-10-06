@@ -106,6 +106,7 @@ class RequestOut(BaseModel):
     punch_kind: str | None
     notes: str | None
     rejection_reason: str | None
+    attachment_id: uuid.UUID | None = None
     created_at: datetime
 
 
@@ -119,6 +120,7 @@ class RequestIn(BaseModel):
     hours: Decimal | None = Field(None, ge=0, le=24)
     amount: Decimal | None = Field(None, ge=0)
     notes: str | None = Field(None, max_length=2000)
+    attachment_id: uuid.UUID | None = None
 
 
 class ReasonIn(BaseModel):
@@ -131,6 +133,7 @@ def _req_out(r: Req, names: dict) -> RequestOut:
         status=r.status.value, stage=r.current_stage.value, from_date=r.from_date, to_date=r.to_date, days=r.days,
         on_date=r.on_date, time_from=r.time_from, hours=r.hours, amount=r.amount,
         punch_kind=r.punch_kind.value if r.punch_kind else None, notes=r.notes, rejection_reason=r.rejection_reason,
+        attachment_id=r.attachment_id,
         created_at=r.created_at,
     )
 
@@ -173,7 +176,7 @@ def create_request(body: RequestIn, request: Request, user: User = Depends(_WRIT
     emp = db.get(Employee, body.employee_id)
     if emp is None or emp.deleted_at is not None:
         raise not_found("Employee")
-    r = Req(employee_id=emp.id, type=body.type, notes=body.notes, submitted_by=user.id)
+    r = Req(employee_id=emp.id, type=body.type, notes=body.notes, submitted_by=user.id, attachment_id=body.attachment_id)
     if body.type in LEAVE_TYPES:
         if not body.from_date or not body.to_date or body.to_date < body.from_date:
             raise ApiError(422, "dates_required", "From and to dates are required")

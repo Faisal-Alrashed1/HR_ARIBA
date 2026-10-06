@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/hr/modal";
 import { PageState } from "@/components/hr/not-built";
 import { useToast } from "@/components/common/toast";
-import { listAllEmployees } from "@/lib/employees";
+import { listAllEmployees, openDocument, uploadDocument } from "@/lib/employees";
 import { ddmmyyyy, todayIso } from "@/lib/format";
 import type { EmployeeListItem } from "@/lib/api";
 import {
@@ -48,6 +48,24 @@ function detailOf(r: HrRequest) {
   if (PERM_LIKE.has(r.type) || r.type === "overtime" || r.type === "forgot_punch")
     return `${fD(r.on_date)}${r.time_from ? " " + r.time_from.slice(0, 5) : ""}${r.hours ? ` (${Number(r.hours)} ساعة)` : ""}${r.amount ? ` — ${Number(r.amount).toLocaleString("en-US")} ر.س` : ""}`;
   return `${fD(r.from_date)} ← ${fD(r.to_date)} (${Number(r.days ?? 0)} أيام)`;
+}
+
+/** Legacy optional request attachment: PDF / Word / JPG / PNG, max 12 MB (stored as an employee document). */
+async function attach(employeeId: string, file: File | null): Promise<string | null> {
+  if (!file) return null;
+  if (file.size > 12582912) throw new Error("حجم المرفق يتجاوز 12 MB");
+  const d = await uploadDocument(employeeId, "other", file);
+  return d.id;
+}
+
+function AttachField({ onFile }: { onFile: (f: File | null) => void }) {
+  return (
+    <div className="ff" style={{ gridColumn: "1/-1" }}>
+      <label>📎 مرفق الطلب <span style={{ color: "var(--mu)", fontWeight: 400 }}>(اختياري)</span></label>
+      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+      <div style={{ fontSize: 10, color: "var(--mu)", marginTop: 4 }}>المرفق اختياري — PDF / Word / JPG / PNG — حد أقصى 12 MB.</div>
+    </div>
+  );
 }
 
 export default function Page() {
@@ -115,6 +133,12 @@ export default function Page() {
     act(() => deleteRequest(r.id), "تم حذف الطلب");
   };
 
+  const att = (r: HrRequest) =>
+    r.attachment_id ? (
+      <button type="button" className="btn bsm" style={{ color: "var(--cy)" }} onClick={() => openDocument(r.attachment_id!).catch(() => toast("المرفق غير موجود", "err"))}>
+        <i className="ti ti-paperclip" /> مرفق
+      </button>
+    ) : null;
   const actions = (r: HrRequest, compact = false) => {
     if (r.status !== "pending")
       return (
@@ -124,6 +148,7 @@ export default function Page() {
       );
     return (
       <>
+        {att(r)}{" "}
         {r.stage === "hr" ? (
           <>
             <button type="button" className="btn bgl bsm" onClick={() => approve(r)}>
@@ -296,6 +321,7 @@ function NewRequest({ emps, hols, bal, onDone }: { emps: EmployeeListItem[]; hol
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [notes, setNotes] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const balance = bal.find((b) => b.employee_id === empId)?.current ?? 0;
   const days = from && to ? (type === "annual" ? countWorkdays(from, to, hols) : Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86400000) + 1) : 0;
@@ -305,8 +331,10 @@ function NewRequest({ emps, hols, bal, onDone }: { emps: EmployeeListItem[]; hol
     if (type === "annual" && days > balance) return toast("يتجاوز الرصيد المتاح", "err");
     setBusy(true);
     try {
-      await createRequest({ employee_id: empId, type, from_date: from, to_date: to, notes: notes || null });
-      toast("✓ تم إرسال الطلب", "ok");
+      const attachment_id = await attach(empId, file);
+      await createRequest({ employee_id: empId, type, from_date: from, to_date: to, notes: notes || null, attachment_id });
+      toast("✓ تم إرسال الطلب" + (attachment_id ? " — تم إرفاق الملف" : ""), "ok");
+      setFile(null);
       setFrom("");
       setTo("");
       setNotes("");
@@ -399,6 +427,7 @@ function NewRequest({ emps, hols, bal, onDone }: { emps: EmployeeListItem[]; hol
             <label>ملاحظات</label>
             <textarea id="NLN" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
+          <AttachField onFile={setFile} />
         </div>
         <button type="button" className="btn bpl" style={{ marginTop: 10 }} onClick={submit} disabled={busy}>
           <i className="ti ti-send" /> <span>إرسال الطلب</span>
@@ -861,11 +890,14 @@ function Overtime({ emps, reqs, actions, onDone }: { emps: EmployeeListItem[]; r
   const [date, setDate] = useState("");
   const [hours, setHours] = useState("1");
   const [notes, setNotes] = useState("");
+  const [file, setFile] = useState<File | null>(null);
 
   async function submit() {
     if (!emp || !date || !(parseFloat(hours) >= 0.5)) return toast("اختر الموظف والتاريخ وعدد الساعات (0.5 على الأقل)", "err");
     try {
-      await createRequest({ employee_id: emp, type: "overtime", on_date: date, hours: parseFloat(hours), notes: notes || null });
+      const attachment_id = await attach(emp, file);
+      await createRequest({ employee_id: emp, type: "overtime", on_date: date, hours: parseFloat(hours), notes: notes || null, attachment_id });
+      setFile(null);
       toast("✓ تم إرسال طلب العمل الإضافي", "ok");
       setDate("");
       setHours("1");
@@ -908,6 +940,10 @@ function Overtime({ emps, reqs, actions, onDone }: { emps: EmployeeListItem[]; r
           <div className="ff">
             <label>السبب / المهمة</label>
             <textarea id="HR_OT_NOTES" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+          <div className="ff">
+            <label>مرفق اختياري</label>
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           </div>
         </div>
         <button type="button" className="btn bpl" style={{ marginTop: 10 }} onClick={submit}>

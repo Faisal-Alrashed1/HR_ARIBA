@@ -21,6 +21,7 @@ export interface HrRequest {
   punch_kind: string | null;
   notes: string | null;
   rejection_reason: string | null;
+  attachment_id: string | null;
   created_at: string;
 }
 
