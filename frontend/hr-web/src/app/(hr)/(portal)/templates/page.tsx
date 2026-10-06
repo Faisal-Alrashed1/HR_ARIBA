@@ -9,6 +9,7 @@ import { getEmployee, listAllEmployees } from "@/lib/employees";
 import type { Employee, EmployeeListItem } from "@/lib/api";
 import { request } from "@/lib/api";
 import { getSheet } from "@/lib/settings";
+import { buildEnglish, buildSalaryCertEn } from "@/lib/calc/forms-en";
 import {
   acctFromIban,
   buildClearance,
@@ -60,6 +61,8 @@ function toFormEmp(e: Employee): FormEmp {
     nameEn: e.name_en ?? "",
     nationality: e.nationality?.name_ar ?? "",
     iqamaNo: e.national_id ?? "",
+    nationalityEn: e.nationality?.name_en ?? "",
+    departmentEn: e.department?.name_en ?? "",
     empNo: e.emp_no,
     department: e.department?.name_ar ?? "",
     jobTitle: e.job_title ?? "",
@@ -164,7 +167,7 @@ export default function Page() {
   const [f6, setF6] = useState({ start: "", still: true, end: "", nature: "دوام كامل", no: "" });
   const [f7, setF7] = useState({ join: "", end: "", rec: "", decision: "", scores: [70, 70, 70, 70, 70] });
   const [ce, setCe] = useState({ join: "", last: "", law: "", other: "", ref: "", notes: "" });
-  const [sc, setSc] = useState({ to: "", place: "", bankOn: false, seal: true, ref: "" });
+  const [sc, setSc] = useState({ to: "", toEn: "", place: "", placeEn: "", bankOn: false, seal: true, ref: "", lang: "ar" });
 
   useEffect(() => {
     let alive = true;
@@ -201,16 +204,37 @@ export default function Page() {
     }
     return emp;
   }
+  function certData(e: FormEmp, ref?: string) {
+    return {
+      to: sc.to, toEn: sc.toEn || sc.to, nameAr: e.nameAr, nameEn: e.nameEn || e.nameAr, empNo: e.empNo, join: e.contractJoin, natAr: e.nationality,
+      natEn: e.nationalityEn || e.nationality, jobAr: e.jobTitle, jobEn: e.jobTitle, id: e.iqamaNo, placeAr: sc.place, placeEn: sc.placeEn || sc.place,
+      basic: e.salary, housing: e.housingAllowance, transport: e.transportAllowance, other: e.otherAllowance, bankOn: sc.bankOn, iban: e.iban,
+      bank: e.bank, acct: acctFromIban(e.iban), ref: ref || sc.ref || nextRef(), seal: sc.seal,
+    };
+  }
+  /** Arabic copy + <!--ARIBA_EN--> + English copy (legacy V117 send). */
+  function withEnglish(b: Built, e: FormEmp): string {
+    const fields = { f1, custody, f3, f4, f5, f6, f7, ce };
+    const en = b.type === "salary_cert" ? buildSalaryCertEn(certData(e), signer) : buildEnglish(b.type, e, fields, signer);
+    return en ? b.html + "<!--ARIBA_EN-->" + en.html : b.html;
+  }
+
   function out(b: Built | string | null, mode: "print" | "send") {
     if (!b) return;
     if (typeof b === "string") return toast(b, "err");
     if (mode === "print") {
+      if (b.type === "salary_cert" && sc.lang === "en" && emp) {
+        const en = buildSalaryCertEn(certData(emp, b.html.match(/AR-\d{8}-\d+/)?.[0]), signer);
+        printDoc(`${en.title} — ${emp.nameEn || emp.nameAr}`, en.html);
+        consumeRef();
+        return;
+      }
       printDoc(`${b.title} — ${emp?.nameAr ?? ""}`, b.html);
       if (b.type === "salary_cert") consumeRef();
       return;
     }
     if (!window.confirm(`هيتبعت "${b.title}" لـ ${emp?.nameAr ?? ""} في تطبيقه عشان يوافق أو يعترض. متأكد؟`)) return;
-    request("/letters", { method: "POST", body: { employee_id: empId, type: b.type, title: b.title, html: b.html } })
+    request("/letters", { method: "POST", body: { employee_id: empId, type: b.type, title: b.title, html: emp ? withEnglish(b, emp) : b.html } })
       .then(() => {
         toast("✅ اتبعت للموظف وبيقدر يوافق أو يعترض من تطبيقه", "ok");
         if (b.type === "salary_cert") consumeRef();
@@ -311,7 +335,7 @@ export default function Page() {
         const e = toFormEmp(await getEmployee(id));
         const b = buildFor(k, e);
         if (!b || typeof b === "string") throw new Error(typeof b === "string" ? b : "تعذر بناء النموذج");
-        await request("/letters", { method: "POST", body: { employee_id: id, type: b.type, title: b.title, html: b.html } });
+        await request("/letters", { method: "POST", body: { employee_id: id, type: b.type, title: b.title, html: withEnglish(b, e) } });
         if (b.type === "salary_cert") consumeRef();
         ok++;
       } catch (x) {
@@ -456,13 +480,21 @@ export default function Page() {
 
         <Card title="خطاب تعريف بالراتب" icon="ti-file-certificate">
           <Field label="الجهة الموجه إليها الخطاب"><input style={STY} value={sc.to} onChange={(e) => setSc({ ...sc, to: e.target.value })} placeholder="مثال: بنك الراجحي" /></Field>
+          <Field label="الجهة بالإنجليزي (للنسخة الإنجليزية)"><input style={STY} value={sc.toEn} onChange={(e) => setSc({ ...sc, toEn: e.target.value })} placeholder="Al Rajhi Bank" /></Field>
           <Field label="مكان إصدار الهوية"><input style={STY} value={sc.place} onChange={(e) => setSc({ ...sc, place: e.target.value })} placeholder="الرياض" /></Field>
-          <Field label="رقم الصادر"><input style={STY} value={sc.ref} onChange={(e) => setSc({ ...sc, ref: e.target.value })} placeholder={nextRef()} /></Field>
+          <Field label="مكان الإصدار بالإنجليزي"><input style={STY} value={sc.placeEn} onChange={(e) => setSc({ ...sc, placeEn: e.target.value })} placeholder="Riyadh" /></Field>
+          <Field label="لغة الخطاب">
+            <select style={STY} value={sc.lang} onChange={(e) => setSc({ ...sc, lang: e.target.value })}>
+              <option value="ar">عربي</option>
+              <option value="en">English</option>
+            </select>
+          </Field>
+          <Field label="رقم الصادر (تلقائي بتاريخ اليوم)"><input style={STY} value={sc.ref} onChange={(e) => setSc({ ...sc, ref: e.target.value })} placeholder={nextRef()} /></Field>
           <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 6, margin: "4px 0" }}>
-            <input type="checkbox" checked={sc.bankOn} onChange={(e) => setSc({ ...sc, bankOn: e.target.checked })} /> إظهار بيانات البنك (الحساب من الآيبان)
+            <input type="checkbox" checked={sc.bankOn} onChange={(e) => setSc({ ...sc, bankOn: e.target.checked })} /> إدراج بيانات الحساب البنكي (IBAN) في الخطاب
           </label>
           <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 6, margin: "4px 0" }}>
-            <input type="checkbox" checked={sc.seal} onChange={(e) => setSc({ ...sc, seal: e.target.checked })} /> التوقيع والختم
+            <input type="checkbox" checked={sc.seal} onChange={(e) => setSc({ ...sc, seal: e.target.checked })} /> إدراج التوقيع وختم الشركة من الإعدادات
           </label>
           {emp && (
             <div style={{ fontSize: 11, color: "var(--mu)" }}>

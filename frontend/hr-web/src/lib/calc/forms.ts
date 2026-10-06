@@ -10,6 +10,8 @@ export interface FormEmp {
   nameEn: string;
   nationality: string;
   iqamaNo: string;
+  nationalityEn?: string;
+  departmentEn?: string;
   empNo: string;
   department: string;
   jobTitle: string;
