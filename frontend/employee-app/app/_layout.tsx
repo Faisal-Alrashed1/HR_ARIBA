@@ -2,6 +2,7 @@ import { useFonts } from "expo-font";
 import { Redirect, Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { NotificationsProvider } from "@/lib/notifications";
 import { Loading } from "@/components/ui";
 import { fonts } from "@/theme";
 
@@ -28,8 +29,10 @@ export default function RootLayout() {
   if (!loaded) return <Loading />;
   return (
     <AuthProvider>
-      <StatusBar style="auto" />
-      <Gate />
+      <NotificationsProvider>
+        <StatusBar style="auto" />
+        <Gate />
+      </NotificationsProvider>
     </AuthProvider>
   );
 }

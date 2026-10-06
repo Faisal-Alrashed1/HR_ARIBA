@@ -88,6 +88,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     throw new ApiError(res.status, code, message);
   }
   if (res.status === 204) return undefined as T;
+  if (init.headers && (init.headers as Record<string, string>).Accept === "text/html") return (await res.text()) as T;
   return (await res.json()) as T;
 }
 
@@ -250,3 +251,42 @@ export const requests = {
   decide: (id: string, action: "approve" | "reject", reason?: string) =>
     api<MyRequest>(`/me/approvals/${id}`, { method: "POST", body: JSON.stringify({ action, reason }) }),
 };
+
+export type Payslip = {
+  year: number;
+  month: number;
+  data: Partial<Record<
+    "salByDays" | "houPay" | "traPay" | "prjPay" | "othPay" | "otherAllow" | "overtime" | "leaveComp" | "eosAmt" | "totalDue"
+    | "insEmp" | "loanDeduct" | "otherDeduct" | "net" | "netSAR", number | string | null
+  >> & { noInsDeduct?: boolean | null; currency?: string | null };
+};
+
+export type Letter = {
+  id: string;
+  type: string;
+  title: string;
+  status: "pending" | "approved" | "rejected";
+  rejection_reason: string | null;
+  created_at: string;
+  responded_at: string | null;
+};
+
+export const payslips = { mine: () => api<Payslip[]>("/me/payslips") };
+
+export const letters = {
+  mine: () => api<Letter[]>("/me/letters"),
+  html: (id: string) => api<string>(`/letters/${id}/html`, { headers: { Accept: "text/html" } }),
+  respond: (id: string, action: "approved" | "rejected", reason?: string) =>
+    api<Letter>(`/me/letters/${id}/respond`, { method: "POST", body: JSON.stringify({ action, reason }) }),
+};
+
+export type Notification = {
+  id: string;
+  kind: "template" | "request" | "ok" | "no";
+  title: string;
+  body: string | null;
+  at: string;
+  target: "documents" | "leaves" | "team";
+};
+
+export const notifications = { mine: () => api<Notification[]>("/me/notifications") };

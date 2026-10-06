@@ -251,3 +251,82 @@ def decide(request_id: uuid.UUID, body: DecisionIn, request: Request, user: User
     audit(db, request, user, body.action, "request", r.id, {"stage": r.current_stage.value})
     db.commit()
     return _out(r, emp.name_ar)
+
+
+# --------------------------------------------------------------------------- payslips (V119)
+from app.models import PayrollRow, PayrollRun  # noqa: E402
+
+# Keys of the HR payroll row (frontend/hr-web/src/lib/calc/payroll.ts) shown on the legacy V119 payslip.
+_SLIP_KEYS = ("salByDays", "houPay", "traPay", "prjPay", "othPay", "otherAllow", "overtime", "leaveComp", "eosAmt",
+              "totalDue", "insEmp", "noInsDeduct", "loanDeduct", "otherDeduct", "net", "netSAR", "currency")
+
+
+class Payslip(BaseModel):
+    year: int
+    month: int
+    data: dict
+
+
+@router.get("/payslips", response_model=list[Payslip])
+def my_payslips(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Rows of the approved payrolls only (legacy ME.payroll), newest first."""
+    emp = _me(db, user)
+    q = (
+        select(PayrollRun.year, PayrollRun.month, PayrollRow.data)
+        .join(PayrollRow, PayrollRow.run_id == PayrollRun.id)
+        .where(PayrollRun.status == "approved", PayrollRow.employee_id == emp.id)
+        .order_by(PayrollRun.year.desc(), PayrollRun.month.desc())
+    )
+    return [Payslip(year=y, month=m, data={k: (d or {}).get(k) for k in _SLIP_KEYS}) for y, m, d in db.execute(q)]
+
+
+# --------------------------------------------------------------------------- notifications bell (V118)
+from datetime import timedelta, timezone  # noqa: E402
+
+from app.models import SentLetter  # noqa: E402
+
+TYPE_AR = {
+    "annual": "إجازة سنوية", "sick": "إجازة مرضية", "emergency": "إجازة اضطرارية", "death": "إجازة وفاة",
+    "marriage": "إجازة زواج", "maternity": "إجازة أمومة", "paternity": "إجازة أبوة", "umrah": "إجازة عمرة",
+    "hajj": "إجازة حج", "remote": "عمل عن بعد", "permission": "استئذان", "maternity_permission": "استئذان أمومة",
+    "early_leave": "خروج مبكر", "advance": "سلفة", "mission": "مهمة خارجية", "forgot_punch": "نسيان بصمة",
+    "overtime": "عمل إضافي",
+}
+
+
+class Notification(BaseModel):
+    id: str
+    kind: Literal["template", "request", "ok", "no"]
+    title: str
+    body: str | None
+    at: datetime
+    target: str  # app tab to open
+
+
+def _aware(dt: datetime) -> datetime:
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+
+
+@router.get("/notifications", response_model=list[Notification])
+def my_notifications(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Built from live data, newest first (last 60 days): forms waiting for my answer, decisions on my requests,
+    and requests waiting for my approval. Read/unread is kept on the device."""
+    emp = _me(db, user)
+    since = datetime.now(timezone.utc) - timedelta(days=60)
+    out: list[Notification] = []
+    for x in db.scalars(select(SentLetter).where(SentLetter.employee_id == emp.id, SentLetter.status == "pending")):
+        out.append(Notification(id=f"l:{x.id}", kind="template", title=f"نموذج جديد بانتظار ردك: {x.title}", body=None, at=_aware(x.created_at), target="documents"))
+    q = select(Req).where(Req.employee_id == emp.id, Req.status != RequestStatus.pending, Req.decided_at.is_not(None))
+    for r in db.scalars(q):
+        ok = r.status == RequestStatus.approved
+        name = TYPE_AR.get(r.type.value, r.type.value)
+        out.append(Notification(
+            id=f"d:{r.id}", kind="ok" if ok else "no",
+            title=f"✅ تمت الموافقة على طلب {name}" if ok else f"⚠️ تم رفض طلب {name}",
+            body=None if ok else r.rejection_reason, at=_aware(r.decided_at), target="leaves",
+        ))
+    for r in my_approvals(user, db):
+        out.append(Notification(id=f"a:{r.id}", kind="request", title=f"طلب بانتظار موافقتك: {r.employee_name}",
+                                body=TYPE_AR.get(r.type, r.type), at=_aware(r.created_at), target="team"))
+    # Waiting items stay until answered; decisions are kept for 60 days.
+    return sorted((n for n in out if n.kind in ("template", "request") or n.at >= since), key=lambda n: n.at, reverse=True)[:50]
