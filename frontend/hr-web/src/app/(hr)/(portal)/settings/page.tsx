@@ -477,7 +477,10 @@ function RolesCard({ emps, accounts, run }: { emps: EmployeeListItem[]; accounts
       <button type="button" className="btn bpl" style={{ marginTop: 10 }} onClick={save}>
         حفظ
       </button>
-      <div className="ct" style={{ marginTop: 14, fontSize: 12 }}>الصلاحيات الحالية لكل المستخدمين</div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
+        <div className="ct" style={{ fontSize: 12 }}>الصلاحيات الحالية لكل المستخدمين</div>
+        <button type="button" className="btn bsm" onClick={() => run(async () => undefined, "✓ تم تحديث القائمة")}>تحديث القائمة</button>
+      </div>
       <div className="tw" style={{ marginTop: 6 }}>
         <table>
           <thead>
@@ -607,7 +610,7 @@ function ExclusionCard({ basis, run }: { basis: SalaryBasisRow[]; run: Run }) {
   );
 }
 
-type Signer = { name_ar: string; title_ar: string; title_en: string; signature: string | null; stamp: string | null };
+type Signer = { name_ar: string; title_ar: string; title_en: string; signature: string | null; stamp: string | null; show_signature?: boolean; show_stamp?: boolean };
 
 function SignerCard({ signer, emps, run }: { signer: Signer; emps: EmployeeListItem[]; run: Run }) {
   const toast = useToast();
@@ -665,6 +668,19 @@ function SignerCard({ signer, emps, run }: { signer: Signer; emps: EmployeeListI
             </button>
           )}
         </div>
+      </div>
+      <div style={{ display: "flex", gap: 14, marginTop: 8, fontSize: 12 }}>
+        <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <input type="checkbox" checked={s.show_signature !== false} onChange={(e) => setS({ ...s, show_signature: e.target.checked })} /> إظهار التوقيع
+        </label>
+        <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <input type="checkbox" checked={s.show_stamp !== false} onChange={(e) => setS({ ...s, show_stamp: e.target.checked })} /> إظهار ختم الشركة
+        </label>
+        {s.signature && (
+          <button type="button" className="btn bsm" style={{ color: "var(--rd)" }} onClick={() => setS({ ...s, signature: null })}>
+            حذف توقيع المدير المختار
+          </button>
+        )}
       </div>
       <button type="button" className="btn bpl" style={{ marginTop: 10 }} onClick={() => run(() => putSheet("hr_signer", s), "✓ اتحفظ على السيرفر")}>
         حفظ

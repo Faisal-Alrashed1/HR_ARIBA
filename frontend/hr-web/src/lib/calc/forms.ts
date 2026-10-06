@@ -31,6 +31,8 @@ export interface Signer {
   title_en: string;
   signature: string | null;
   stamp: string | null;
+  show_signature?: boolean;
+  show_stamp?: boolean;
 }
 
 const origin = () => (typeof window !== "undefined" ? window.location.origin : "");
@@ -134,6 +136,8 @@ export function tfInfoTable(e: FormEmp) {
 
 /** V120 HR signature block (Arabic: signer on the left; the date on the opposite side when requested). */
 export function hrSign(s: Signer, opt: { date?: boolean; extra?: string } = {}) {
+  if (s.show_signature === false) s = { ...s, signature: null };
+  if (s.show_stamp === false) s = { ...s, stamp: null };
   const sig = s.signature ? `<img class="sg" src="${s.signature}">` : `<div style="font-family:cursive;font-size:16px;margin-top:10mm">${esc(s.name_ar)}</div>`;
   const stamp = s.stamp ? `<img class="st" src="${s.stamp}">` : "";
   const left = `<div class="blk"><div style="font-weight:800">${esc(s.title_ar)}</div>${stamp}${sig}<div style="position:absolute;bottom:0;left:0;right:0;font-weight:800">${esc(s.name_ar)}</div></div>`;

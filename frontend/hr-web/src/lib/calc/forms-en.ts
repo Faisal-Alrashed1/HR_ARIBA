@@ -15,6 +15,8 @@ const p = (t: string) => `<p class="tf-p" dir="ltr" style="text-align:left;margi
 const bx = (t: string) => `<div class="tf-box" dir="ltr" style="text-align:left">${t}</div>`;
 const sgn = (l: string, r: string, mt = 5) => `<div class="tf-sign" dir="ltr" style="margin-top:${mt}mm"><div>${l}</div><div>${r}</div></div>`;
 function hrs(s: Signer, opt: { date?: boolean; extra?: string } = {}) {
+  if (s.show_signature === false) s = { ...s, signature: null };
+  if (s.show_stamp === false) s = { ...s, stamp: null };
   const sig = s.signature ? `<img class="sg" src="${s.signature}">` : `<div style="font-family:cursive;font-size:16px;margin-top:10mm">${esc(s.name_ar)}</div>`;
   const stamp = s.stamp ? `<img class="st" src="${s.stamp}">` : "";
   const blk = `<div class="blk"><div style="font-weight:800">${esc(s.title_en || "HR Manager")}</div>${stamp}${sig}<div style="position:absolute;bottom:0;left:0;right:0;font-weight:800">${esc(s.name_ar)}</div></div>`;
