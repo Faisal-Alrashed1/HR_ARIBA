@@ -296,7 +296,7 @@ export function AttendanceReports({ emps }: { emps: EmployeeListItem[] }) {
       )}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         <button type="button" className="btn bpl bsm" onClick={() => run()} disabled={busy}><i className="ti ti-search" /> عرض التقرير</button>
-        <button type="button" className="btn bgr bsm" onClick={doPrint}><i className="ti ti-printer" /> طباعة التقرير</button>
+        <button type="button" className="btn bgr bsm" onClick={doPrint}><i className="ti ti-printer" /> طباعة تقرير الحضور</button>
         <button type="button" className="btn bgr bsm" onClick={doXls}><i className="ti ti-file-spreadsheet" /> Excel</button>
       </div>
       <div style={{ marginTop: 10 }}>

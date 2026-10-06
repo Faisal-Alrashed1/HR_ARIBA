@@ -176,7 +176,7 @@ export default function Page() {
       </div>
 
       <div className="card" style={{ padding: 0, marginTop: 12 }}>
-        <div className="ct" style={{ padding: "12px 14px" }}><i className="ti ti-calendar-stats" /> التقرير الشهري</div>
+        <div className="ct" style={{ padding: "12px 14px" }}><i className="ti ti-calendar-stats" /> تقرير شهري</div>
         <div style={{ padding: "0 14px 14px", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
             <thead>

@@ -478,8 +478,8 @@ export default function Page() {
           <Buttons label="طباعة إشعار انتهاء العقد" onPrint={() => out(builders.contract_end(), "print")} onSend={() => out(builders.contract_end(), "send")} />
         </Card>
 
-        <Card title="خطاب تعريف بالراتب" icon="ti-file-certificate">
-          <Field label="الجهة الموجه إليها الخطاب"><input style={STY} value={sc.to} onChange={(e) => setSc({ ...sc, to: e.target.value })} placeholder="مثال: بنك الراجحي" /></Field>
+        <Card title="خطاب تعريف راتب" icon="ti-file-certificate">
+          <Field label="السادة / الجهة الموجّه إليها الخطاب"><input style={STY} value={sc.to} onChange={(e) => setSc({ ...sc, to: e.target.value })} placeholder="مثال: بنك الراجحي" /></Field>
           <Field label="الجهة بالإنجليزي (للنسخة الإنجليزية)"><input style={STY} value={sc.toEn} onChange={(e) => setSc({ ...sc, toEn: e.target.value })} placeholder="Al Rajhi Bank" /></Field>
           <Field label="مكان إصدار الهوية"><input style={STY} value={sc.place} onChange={(e) => setSc({ ...sc, place: e.target.value })} placeholder="الرياض" /></Field>
           <Field label="مكان الإصدار بالإنجليزي"><input style={STY} value={sc.placeEn} onChange={(e) => setSc({ ...sc, placeEn: e.target.value })} placeholder="Riyadh" /></Field>
@@ -498,10 +498,10 @@ export default function Page() {
           </label>
           {emp && (
             <div style={{ fontSize: 11, color: "var(--mu)" }}>
-              الإجمالي = الأساسي + السكن + المواصلات + البدلات الأخرى = {(emp.salary + emp.housingAllowance + emp.transportAllowance + emp.otherAllowance).toLocaleString("en-US")} ر.س
+              الإجمالي (محسوب) = الأساسي + السكن + المواصلات + البدلات الأخرى = {(emp.salary + emp.housingAllowance + emp.transportAllowance + emp.otherAllowance).toLocaleString("en-US")} ر.س
             </div>
           )}
-          <Buttons label="طباعة خطاب الراتب" onPrint={() => out(builders.salary_cert(), "print")} onSend={() => out(builders.salary_cert(), "send")} />
+          <Buttons label="طباعة خطاب تعريف الراتب" onPrint={() => out(builders.salary_cert(), "print")} onSend={() => out(builders.salary_cert(), "send")} />
         </Card>
       </div>
 
