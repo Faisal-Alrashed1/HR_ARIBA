@@ -5,6 +5,14 @@
 
 ---
 
+## 0. تحديث 2026-10-08 — قاعدة البيانات صارت قاعدة Supabase الأصلية (canonical)
+- الخادم يشتغل الآن على جداول Supabase الـ 34 كما هي (`employee_directory` + `data` JSONB، `workflow_requests`، `employee_payrolls`…) عبر `backend/app/routers/canonical.py`. لا Alembic ولا إنشاء جداول عند التشغيل؛ ملفات ORM القديمة (`routers/*` عدا canonical/health، `alembic/`, `tests/`) أرشيف فقط.
+- منطق الحسابات من كودنا: الإجازات `services/leave.py` عبر `services/canonical_data.py`، التأمينات `services/gosi.py` (الإعدادات في `ariba_app_settings['ins_settings']`)، البصمة وسير الاعتماد منقولة من دوال الخادم القديم المحفوظة في `ariba_function_backups`، وملف الموظف مترجم بالاتجاهين في `services/employee_map.py`.
+- Railway: قاعدة جديدة `Postgres-Q6OM` فيها بيانات زميلنا (106 موظف، 110 حساب). الخادم `DATABASE_URL=${{Postgres-Q6OM.DATABASE_URL}}`, `RUN_MIGRATIONS_ON_STARTUP=false`. القاعدة القديمة `Postgres` لم تُلمس (للرجوع: أرجع المتغير لها وانشر `1ea0d8a`)، ونسخة pg_dump منها في `~/Desktop/HR/backups/`.
+- تحميل البيانات لقاعدة فاضية: `CANONICAL_TARGET_URL=... python tools/load_canonical.py supabase_canonical.sql` (الملف خارج الريبو — فيه بيانات حقيقية).
+- الدخول بحسابات النظام القديم (bcrypt). حساب `admin` الخاص بقاعدتنا القديمة غير موجود في القاعدة الجديدة.
+- غير مدعوم بعد: المرافقين، إضافة/حذف الأقسام وجهات العمل. التفاصيل في `docs/INTEGRATION_AUDIT.md`.
+
 ## 1. الهدف
 إعادة بناء نظام الموارد البشرية لشركة أريبا بحيث **يطابق 100%** النسخة القديمة (ملفات HTML المفصولة حتى التحديث V130) في الشاشات والحقول والنصوص والمعادلات، لكن على تقنيات حديثة:
 - **موقع للموارد البشرية** (متصفح).
