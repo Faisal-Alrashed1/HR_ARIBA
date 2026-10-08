@@ -14,7 +14,7 @@ The settlement calculator is a later phase; this module already serves the emplo
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
-from app.models import TerminationArticle as A
+from app.enums import TerminationArticle as A
 
 CENT = Decimal("0.01")
 _FULL = {A.art_84, A.art_74, A.art_74_death, A.art_74_retirement}

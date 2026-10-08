@@ -13,13 +13,24 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
-from app.models import EmployeeCategory, GosiRule, GosiSystem, WpsType
+from app.enums import EmployeeCategory, GosiSystem, WpsType
 
 CENT = Decimal("0.01")
 DEFAULT_AGE = 30  # prototype default when the birth date is missing
+
+
+@dataclass(frozen=True)
+class GosiRule:
+    """One effective-dated rate set for one system (rates in percent)."""
+
+    effective_from: date
+    system: GosiSystem
+    employee_rate: Decimal
+    employer_rate: Decimal
+    employee_rate_senior: Decimal
+    employer_rate_senior: Decimal
+    senior_age: int
+    wage_cap: Decimal
 
 
 @dataclass(frozen=True)
@@ -119,5 +130,16 @@ def calculate(
     )
 
 
-def load_rules(db: Session) -> list[GosiRule]:
-    return list(db.scalars(select(GosiRule)))
+def rules_from_settings(settings: dict) -> list["GosiRule"]:
+    """GOSI rules from the legacy settings shape (wageCap, ageThreshold, effectiveRules[] in percent)."""
+    cap, age = Decimal(str(settings.get("wageCap") or 45000)), int(settings.get("ageThreshold") or 55)
+    out: list[GosiRule] = []
+    for p in settings.get("effectiveRules") or []:
+        on = date.fromisoformat(str(p["date"])[:10])
+        d = lambda k: Decimal(str(p.get(k) or 0))  # noqa: E731
+        out += [
+            GosiRule(on, GosiSystem.matching, d("matchEmp"), d("matchEr"), d("matchEmp55"), d("matchEr55"), age, cap),
+            GosiRule(on, GosiSystem.non_matching, d("noMatchEmp"), d("noMatchEr"), d("noMatchEmp55"), d("noMatchEr55"), age, cap),
+            GosiRule(on, GosiSystem.non_saudi, Decimal(0), d("nonSaudiEr"), Decimal(0), d("nonSaudiEr"), age, cap),
+        ]
+    return out

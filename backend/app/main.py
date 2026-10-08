@@ -9,19 +9,30 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.core.errors import install_error_handlers
 from app.core.security import SecurityHeadersMiddleware
-from app.migrations import run_migrations
-from app.services.seeds import bootstrap_admin
-from app.routers import attendance, auth, dashboard, dependents, documents, employees, health, leave, letters, locations, me, me_requests, registry, salary, settings, sheets
+from app.database import engine
+from app.models import configure_models
+from app.routers import canonical, health
 
 API_PREFIX = "/api/v1"
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    s = get_settings()
-    if s.run_migrations_on_startup:
-        run_migrations()
-    bootstrap_admin()
+    # The canonical database is restored independently. Startup only verifies and
+    # reflects its public schema; it never runs Alembic or creates seed accounts.
+    with engine.connect() as connection:
+        if connection.dialect.name != "postgresql":
+            raise RuntimeError("The canonical Supabase schema requires PostgreSQL")
+        connection.exec_driver_sql("SELECT 1")
+        bypass_rls = connection.exec_driver_sql(
+            "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname=current_user"
+        ).scalar_one_or_none()
+        if not bypass_rls:
+            raise RuntimeError(
+                "The imported canonical schema enforces Supabase RLS; use a test DB role with BYPASSRLS "
+                "for this FastAPI-only test phase. Do not disable or rewrite production policies here."
+            )
+    configure_models(engine)
     yield
 
 
@@ -51,9 +62,7 @@ def create_app() -> FastAPI:
     install_error_handlers(app)
 
     app.include_router(health.router)
-    app.include_router(sheets.archive, prefix=API_PREFIX)
-    for module in (auth, me, me_requests, dashboard, employees, dependents, documents, salary, settings, sheets, locations, attendance, leave, registry, letters):
-        app.include_router(module.router, prefix=API_PREFIX)
+    app.include_router(canonical.router, prefix=API_PREFIX)
     return app
 
 

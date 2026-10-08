@@ -26,3 +26,8 @@ next-env.d.ts
 
 # Local dev file storage
 .storage/
+
+# Database exports (contain production data) — never commit
+*.sql
+*.dump
+supabase_*.sql

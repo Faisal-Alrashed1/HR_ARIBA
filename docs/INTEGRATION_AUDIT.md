@@ -101,3 +101,18 @@ Most likely ⚠️: the variable exists on the Postgres service (or as a shared 
 ## 8. Verification plan (Phase D)
 
 Restore `supabase_canonical.sql` into a **local/throwaway** PostgreSQL (never production) → run `tests_canonical` + new contract tests → start backend (`ENV=production`, PG URL) → exercise login with an existing bcrypt account, employees list/detail, punch in/out, leave request → manager → HR → CEO, payroll get/put/approve, documents upload/download, settings, `/health` → confirm no Alembic run and no table created (`\dt` before/after) → deploy branch to a Railway **preview** environment, not production.
+
+---
+
+## 9. Implemented (2026-10-08)
+
+- Canonical schema + data are the database; the retired ORM schema is no longer used at runtime (no Alembic, no seeding).
+- Loader `backend/tools/load_canonical.py` (empty target only; repeated COPY blocks loaded once; source file read-only).
+- Fixes for the canonical export: bigint ids without identity (audit log, login attempts), no unique keys (all `ON CONFLICT` replaced by update-then-insert).
+- The 5 missing DB functions replaced by Python: punch = port of the legacy `ariba_attendance` (from `ariba_function_backups`), workflow = port of `ariba_workflow_action` / `ariba_submit_request`, leave balances = the verified `LeaveBook` engine fed from `employee_directory.data`, forgot-punch apply in Python.
+- GOSI settings stored in `ariba_app_settings['ins_settings']` (defaults = previous seed). Logo / HR signer mapped to `ariba_app_settings`.
+- Employee record mapped both ways between legacy `data` vocabulary and the HR site contract (`app/services/employee_map.py`); salary preview restored.
+- Employee-app routes return the app's contract (requests, approvals, team, leave, payslips, notifications); `DELETE /me/requests/{id}` and `POST /leave/used-through` restored.
+- Verified on a local PostgreSQL restore: contract tests 10 passed / 1 skipped; every HR page loads with no failed API call; end-to-end: request → manager → HR → CEO, forgot-punch → attendance, punch inside/outside geofence, payroll save/approve/reopen, payslips, GOSI, signer, logo, employee read/patch/create.
+- Still unsupported (no canonical storage): dependents, adding/deleting workplace/department lookups (501).
+- Railway: new service `Postgres-Q6OM` holds the canonical data; backend `DATABASE_URL=${{Postgres-Q6OM.DATABASE_URL}}`, `RUN_MIGRATIONS_ON_STARTUP=false`. The previous `Postgres` service is untouched (rollback: point `DATABASE_URL` back to `${{Postgres.DATABASE_URL}}` and redeploy `1ea0d8a`); a pg_dump of it is kept outside the repo.

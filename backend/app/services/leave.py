@@ -25,10 +25,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from typing import TYPE_CHECKING
 
-from app.models import Employee, Holiday, LeaveAdjustment, LeaveYearOverride, Request, RequestStatus, RequestType
+if TYPE_CHECKING:  # the engine is storage-agnostic; any object with id/join_date/annual_leave_days/termination works
+    from sqlalchemy.orm import Session
+
+    from app.models import Employee
 
 CARRY_CAP = 10
 
@@ -318,6 +320,11 @@ _OV = {"carry": "carry", "entitlement": "entitlement", "used": "used", "adjustme
 
 
 def load_book(db: Session, today: date) -> LeaveBook:
+    """Retired ORM loader (kept for the old test suite); the canonical loader is app.services.canonical_data."""
+    from sqlalchemy import select
+
+    from app.models import Employee, Holiday, LeaveAdjustment, LeaveYearOverride, Request, RequestStatus, RequestType
+
     hol = HolidayCalendar([(h.start_date, h.days, h.is_recurring) for h in db.scalars(select(Holiday))])
     approved: dict[str, list[tuple[date, date]]] = {}
     q = select(Request).where(Request.type == RequestType.annual, Request.status == RequestStatus.approved)
@@ -342,9 +349,9 @@ def load_book(db: Session, today: date) -> LeaveBook:
     return LeaveBook(holidays=hol, data=data, adjustments=adjustments, approved_annual=approved, today=today)
 
 
-def request_days(book: LeaveBook, type_: RequestType, start: date, end: date) -> int:
+def request_days(book: LeaveBook, type_, start: date, end: date) -> int:
     """Days of a request: annual = workdays (no Fri/Sat, no holidays); other types = calendar days (legacy rule)."""
-    if type_ == RequestType.annual:
+    if getattr(type_, "value", type_) == "annual":
         return book.count_workdays(start, end)
     return (end - start).days + 1
 

@@ -11,5 +11,6 @@ pyjwt[crypto]==2.*
 python-dateutil==2.9.*
 python-multipart==0.0.*
 argon2-cffi==23.*
+bcrypt==4.*
 # tests
 pytest==8.*
