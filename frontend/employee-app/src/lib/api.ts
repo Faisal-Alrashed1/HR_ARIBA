@@ -1,6 +1,6 @@
 // Client for the backend's versioned JSON API (/api/v1). Same contract as frontend/hr-web/src/lib/api.ts.
 // Tokens live in the device's secure store (Keychain / Keystore), never in plain storage.
-import * as SecureStore from "expo-secure-store";
+import { store } from "./store";
 
 // Defaults to the deployed backend (Railway) so Expo Go on a phone works without any setup.
 export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "https://hrariba-production.up.railway.app").replace(/\/$/, "");
@@ -35,17 +35,17 @@ export class ApiError extends Error {
 }
 
 export async function saveSession(s: Session) {
-  await SecureStore.setItemAsync(ACCESS, s.access_token);
-  await SecureStore.setItemAsync(REFRESH, s.refresh_token);
+  await store.set(ACCESS, s.access_token);
+  await store.set(REFRESH, s.refresh_token);
 }
 
 export async function clearSession() {
-  await SecureStore.deleteItemAsync(ACCESS);
-  await SecureStore.deleteItemAsync(REFRESH);
+  await store.del(ACCESS);
+  await store.del(REFRESH);
 }
 
 export async function hasSession() {
-  return (await SecureStore.getItemAsync(ACCESS)) !== null;
+  return (await store.get(ACCESS)) !== null;
 }
 
 async function send(path: string, init: RequestInit, token: string | null): Promise<Response> {
@@ -56,7 +56,7 @@ async function send(path: string, init: RequestInit, token: string | null): Prom
 }
 
 async function refreshTokens(): Promise<string | null> {
-  const refresh = await SecureStore.getItemAsync(REFRESH);
+  const refresh = await store.get(REFRESH);
   if (!refresh) return null;
   const res = await send("/auth/refresh", { method: "POST", body: JSON.stringify({ refresh_token: refresh }) }, null);
   if (!res.ok) {
@@ -69,7 +69,7 @@ async function refreshTokens(): Promise<string | null> {
 }
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  let token = await SecureStore.getItemAsync(ACCESS);
+  let token = await store.get(ACCESS);
   let res = await send(path, init, token);
   if (res.status === 401 && token) {
     token = await refreshTokens();
@@ -126,6 +126,7 @@ export type Salary = {
   currency: string;
   exchange_rate: string;
   bank_name: string | null;
+  iban: string | null;
 };
 
 export type Lookup = { id: string; code: string; name_ar: string; name_en: string };
@@ -148,6 +149,8 @@ export type Employee = {
   passport_expiry: string | null;
   join_date: string | null;
   contract_end_date: string | null;
+  birth_date: string | null;
+  sponsor: string | null;
   annual_leave_days: number;
   years_of_service: string;
   salary: Salary | null;
@@ -198,6 +201,7 @@ export type MyAttendance = {
 
 export const attendance = {
   mine: () => api<MyAttendance>("/me/attendance"),
+  range: (from: string, to: string) => api<MySession[]>(`/me/attendance/range?date_from=${from}&date_to=${to}`),
   punch: (action: "in" | "out", lat: number, lng: number) =>
     api<MySession>("/me/attendance/punch", { method: "POST", body: JSON.stringify({ action, lat, lng }) }),
 };

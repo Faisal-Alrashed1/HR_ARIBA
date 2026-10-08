@@ -45,7 +45,8 @@
         {
           "locationWhenInUsePermission": "نحتاج موقعك لتسجيل الحضور داخل نطاق موقع العمل."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "scheme": "ariba",
     "experiments": {

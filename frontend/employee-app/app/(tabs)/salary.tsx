@@ -1,97 +1,87 @@
-import { useEffect, useState } from "react";
+// الراتب — legacy payroll/019 renderPay (الراتب الحالي، بيانات البنك) + 031 V119 payslip (قسيمة الراتب، الرواتب الشهرية المعتمدة).
+import { useState } from "react";
 import { Pressable, View } from "react-native";
-import { Card, ErrorText, Loading, Row, Screen, Txt } from "@/components/ui";
-import { payslips, type Payslip } from "@/lib/api";
-import { money, useMyEmployee } from "@/lib/use-employee";
+import { Icon } from "@/components/icons";
+import { sar } from "@/components/shared";
+import { Card, CardTitle, Empty, Page, PayRow, T } from "@/components/ui";
+import type { Payslip } from "@/lib/api";
+import { useData } from "@/lib/data";
 import { useTheme } from "@/theme";
 
 const MONTHS = ["", "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 const n0 = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
-const sar = (v: unknown) => `${money(String(n0(v)))} ر.س`;
 
-// V119 payslip: same rows as the approved HR payroll line.
-function Slip({ p }: { p: Payslip }) {
-  const t = useTheme();
+function SlipRows({ p }: { p: Payslip }) {
   const d = p.data;
-  const ins = d.noInsDeduct ? 0 : n0(d.insEmp);
   const cur = d.currency && d.currency !== "ريال سعودي" ? d.currency : "";
-  const opt = (label: string, v: unknown, neg = false) => (n0(v) ? <Row label={label} value={`${neg ? "- " : ""}${sar(v)}`} /> : null);
+  const opt = (label: string, v: unknown, kind?: "ded") => (n0(v) ? <PayRow label={label} value={sar(v)} kind={kind} /> : null);
   return (
     <>
-      <Row label="الراتب الأساسي (حسب أيام العمل)" value={sar(d.salByDays)} />
-      <Row label="بدل السكن" value={sar(d.houPay)} />
-      <Row label="بدل النقل" value={sar(d.traPay)} />
+      <PayRow label="الراتب الأساسي (حسب أيام العمل)" value={sar(d.salByDays)} />
+      <PayRow label="بدل السكن" value={sar(d.houPay)} />
+      <PayRow label="بدل النقل" value={sar(d.traPay)} />
       {opt("بدل المشروع", d.prjPay)}
       {opt("بدلات أخرى", n0(d.othPay) + n0(d.otherAllow))}
       {opt("الإضافي", d.overtime)}
       {opt("بدل الإجازة", d.leaveComp)}
       {opt("مكافأة نهاية الخدمة", d.eosAmt)}
-      <Row label="إجمالي المستحق" value={<Txt bold style={{ color: t.bl }}>{sar(d.totalDue)}</Txt>} />
-      <Row label="استقطاع التأمينات" value={<Txt bold style={{ color: t.rd }}>- {sar(ins)}</Txt>} />
-      {opt("سلف / غياب", d.loanDeduct, true)}
-      {opt("استقطاعات أخرى", d.otherDeduct, true)}
-      <Row label="صافي الراتب" value={<Txt bold style={{ color: t.gr, fontSize: 15 }}>{sar(d.netSAR ?? d.net)}</Txt>} />
-      {cur ? <Row label="الصافي بالعملة الأصلية" value={`${money(String(n0(d.net)))} ${cur}`} /> : null}
+      <PayRow label="إجمالي المستحق" value={sar(d.totalDue)} kind="total" />
+      <PayRow label="استقطاع التأمينات" value={sar(d.noInsDeduct ? 0 : d.insEmp)} kind="ded" />
+      {opt("سلف / غياب", d.loanDeduct, "ded")}
+      {opt("استقطاعات أخرى", d.otherDeduct, "ded")}
+      <PayRow label="صافي الراتب" value={sar(d.netSAR ?? d.net)} kind="net" />
+      {cur ? <PayRow label="الصافي بالعملة الأصلية" value={`${n0(d.net).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur}`} /> : null}
     </>
   );
 }
 
-function Payslips() {
-  const [list, setList] = useState<Payslip[] | null>(null);
-  const [open, setOpen] = useState(0);
-  useEffect(() => {
-    payslips.mine().then(setList).catch(() => setList([]));
-  }, []);
-  if (list === null) return null;
-  if (!list.length)
-    return (
-      <Card title="قسيمة الراتب">
-        <Txt muted>لا توجد مسيرات معتمدة بعد.</Txt>
-      </Card>
-    );
-  return (
-    <>
-      {list.map((p, i) => (
-        <Card key={`${p.year}-${p.month}`}>
-          <Pressable onPress={() => setOpen(open === i ? -1 : i)}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <Txt bold style={{ fontSize: 15 }}>قسيمة الراتب — {MONTHS[p.month]} {p.year}</Txt>
-              <Txt muted>{open === i ? "▲" : "▼"}</Txt>
-            </View>
-          </Pressable>
-          {open === i ? <View style={{ marginTop: 8 }}><Slip p={p} /></View> : null}
-        </Card>
-      ))}
-    </>
-  );
-}
-
-// Same rows as the prototype's salary tab: basic, housing, transport, project, other, gross, insurance, net.
 export default function Salary() {
-  const { data, error, loading } = useMyEmployee();
-  if (loading) return <Loading />;
-  const s = data?.salary;
+  const t = useTheme();
+  const { employee, payslips, refresh } = useData();
+  const [open, setOpen] = useState<number | null>(null);
+  const s = employee?.salary;
+  const ic = (name: "cash" | "invoice" | "history" | "bank") => <Icon name={name} size={18} color={t.tx} />;
   return (
-    <Screen>
-      <ErrorText message={error} />
-      {s ? (
-        <Card title="تفاصيل الراتب">
-          <Row label="الراتب الأساسي" value={money(s.basic_salary)} />
-          <Row label="بدل السكن" value={money(s.housing_allowance)} />
-          <Row label="بدل المواصلات" value={money(s.transport_allowance)} />
-          <Row label="بدل المشروع" value={money(s.project_allowance)} />
-          <Row label="بدلات أخرى" value={money(s.other_allowances)} />
-          <Row label="الإجمالي" value={money(s.total_salary)} />
-          <Row label="خصم التأمينات" value={money(s.gosi_employee)} />
-          <Row label="استقطاعات أخرى" value={money(s.other_deductions)} />
-          <Row label="الصافي" value={`${money(s.net_salary)} ${s.currency}`} />
-        </Card>
-      ) : (
+    <Page onRefresh={refresh}>
+      <Card>
+        <CardTitle icon={ic("cash")}>الراتب الحالي</CardTitle>
+        {s ? (
+          <>
+            <PayRow label="الراتب الأساسي" value={sar(s.basic_salary)} />
+            <PayRow label="بدل السكن" value={sar(s.housing_allowance)} />
+            <PayRow label="بدل النقل" value={sar(s.transport_allowance)} />
+            <PayRow label="بدل المشروع" value={sar(s.project_allowance)} />
+            <PayRow label="بدلات أخرى" value={sar(n0(s.other_allowances) + n0(s.extra_allowance))} />
+            <PayRow label="إجمالي الراتب" value={sar(s.total_salary)} kind="total" />
+            <PayRow label="استقطاع التأمينات" value={sar(s.gosi_employee)} kind="ded" />
+            <PayRow label="صافي الراتب" value={sar(s.net_salary_sar)} kind="net" />
+          </>
+        ) : <Empty text="لا توجد بيانات راتب" />}
+      </Card>
+      {payslips[0] ? (
         <Card>
-          <Txt muted>لا توجد بيانات راتب.</Txt>
+          <CardTitle icon={ic("invoice")}>{`قسيمة الراتب — ${MONTHS[payslips[0].month]} ${payslips[0].year}`}</CardTitle>
+          <SlipRows p={payslips[0]} />
         </Card>
-      )}
-      <Payslips />
-    </Screen>
+      ) : null}
+      {payslips.length > 1 ? (
+        <Card>
+          <CardTitle icon={ic("history")}>الرواتب الشهرية المعتمدة</CardTitle>
+          {payslips.slice(1).map((p, i) => (
+            <View key={`${p.year}-${p.month}`} style={{ borderWidth: 1, borderColor: t.bd, borderRadius: 14, padding: 12, marginBottom: 8, backgroundColor: t.c2 }}>
+              <Pressable onPress={() => setOpen(open === i ? null : i)} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <T weight={800}>{`قسيمة الراتب — ${MONTHS[p.month]} ${p.year}`}</T>
+                <T color={t.gr} weight={700}>{sar(p.data.netSAR ?? p.data.net)}</T>
+              </Pressable>
+              {open === i ? <View style={{ marginTop: 6 }}><SlipRows p={p} /></View> : null}
+            </View>
+          ))}
+        </Card>
+      ) : null}
+      <Card>
+        <CardTitle icon={ic("bank")}>بيانات البنك</CardTitle>
+        <PayRow label="الإيبان" value={s?.iban ?? "—"} />
+      </Card>
+    </Page>
   );
 }

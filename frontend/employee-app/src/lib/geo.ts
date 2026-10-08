@@ -25,7 +25,6 @@ export type LocState =
 
 export function evaluate(fix: Fix, locations: WorkLocation[]): LocState {
   const all = locations.filter((l) => l.type !== "remote");
-  const remote = locations.find((l) => l.type === "remote");
   const withCoords = all.filter(located);
   let best: WorkLocation | null = null;
   let bd = Infinity;
@@ -37,7 +36,6 @@ export function evaluate(fix: Fix, locations: WorkLocation[]): LocState {
     }
   }
   if (best && bd <= (best.radius_m || 200)) return { kind: "inside", name: best.name };
-  if (remote) return { kind: "remote", name: remote.name };
   if (!all.length) return { kind: "none" };
   if (!best) return { kind: "unset" };
   return { kind: "outside", name: best.name, distance: bd };

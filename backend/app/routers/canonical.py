@@ -957,6 +957,15 @@ def _distance_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return radius * 2 * math.asin(min(1, math.sqrt(a)))
 
 
+@router.get("/me/attendance/range")
+def my_attendance_range(date_from: date, date_to: date, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
+    """Legacy ariba_my_attendance_range: my sessions between two dates (attendance lookup card)."""
+    if date_to < date_from or (date_to - date_from).days > 370:
+        raise ApiError(422, "invalid_range", "حدد الفترة بشكل صحيح")
+    rows = _rows(db, "SELECT * FROM public.attendance WHERE emp_id=:e AND date BETWEEN :f AND :t ORDER BY date DESC,time_in", e=actor.get("employee_id"), f=date_from, t=date_to)
+    return [_attendance_row(db, r) for r in rows]
+
+
 @router.post("/me/attendance/punch")
 def punch(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     """Port of the legacy server function ariba_attendance (V114, source kept in ariba_function_backups):
@@ -1151,6 +1160,8 @@ def _me_requests_out(db: Session, rows: list[dict[str, Any]]) -> list[dict[str, 
         p = r.get("payload") or {}
         o["time_to"] = p.get("time2")
         o["hours"] = p.get("hours") or p.get("dur")
+        if r.get("request_type") in HOURLY_TYPES:  # shown as «date time (hours)», not as a leave period
+            o["from_date"] = o["to_date"] = o["days"] = None
         out.append(o)
     return out
 
@@ -1321,11 +1332,11 @@ def payslips(actor: dict[str, Any] = Depends(current_actor), db: Session = Depen
             continue
         seen.add((r["year"], r["month"]))
         p = dict(r["payload"] or {})
-        for new, old in (("houPay", "hou"), ("traPay", "tra"), ("prjPay", "prj"), ("othPay", "oth")):
-            if p.get(new) is None and p.get(old) is not None:
-                p[new] = p[old]
-        if p.get("salByDays") is None and p.get("sal") is not None:
-            p["salByDays"] = p["sal"]
+        if p.get("houPay") is None:
+            # Pre-V119 row: salByDays was the all-in pay by days; the slip shows the original components instead.
+            for new_k, old_k in (("houPay", "hou"), ("traPay", "tra"), ("prjPay", "prj"), ("othPay", "oth"), ("salByDays", "sal")):
+                if p.get(old_k) is not None:
+                    p[new_k] = p[old_k]
         out.append({"year": r["year"], "month": r["month"], "data": {k: p.get(k) for k in _SLIP_KEYS}})
     return out
 

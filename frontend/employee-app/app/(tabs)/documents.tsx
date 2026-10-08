@@ -1,68 +1,71 @@
-// مستندات — forms sent by HR for signature (legacy forms/020 pending templates + V71/V114/V117).
-import { useCallback, useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { router, useFocusEffect } from "expo-router";
-import { Card, ErrorText, Txt } from "@/components/ui";
-import { letters, type Letter } from "@/lib/api";
+// المستندات — legacy forms/020 (📄 مستندات بانتظار توقيعي): view, موافقة / رفض (reason ≥ 3 chars).
+import { useState } from "react";
+import { View } from "react-native";
+import { router } from "expo-router";
+import { Icon } from "@/components/icons";
+import { dmy } from "@/components/shared";
+import { Badge, Btn, Card, CardTitle, Empty, Input, Page, T, useToast } from "@/components/ui";
+import { ApiError, letters, type Letter } from "@/lib/api";
+import { useData } from "@/lib/data";
 import { useTheme } from "@/theme";
 
-const LETTER_STATUS: Record<Letter["status"], { text: string; tone: "am" | "gr" | "rd" }> = {
-  pending: { text: "بانتظار ردك", tone: "am" },
-  approved: { text: "تمت الموافقة", tone: "gr" },
-  rejected: { text: "معترض عليه", tone: "rd" },
-};
-
-export default function Documents() {
+function Doc({ x, onDone }: { x: Letter; onDone: () => Promise<void> }) {
   const t = useTheme();
-  const [list, setList] = useState<Letter[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const load = useCallback(async () => {
-    setError(null);
+  const toast = useToast();
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function respond(action: "approved" | "rejected") {
+    setBusy(true);
     try {
-      setList(await letters.mine());
+      await letters.respond(x.id, action, action === "rejected" ? reason.trim() : undefined);
+      toast(action === "approved" ? "✅ تمت الموافقة" : "تم إرسال الرفض", "ok");
+      await onDone();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "تعذر تحميل البيانات");
+      toast(e instanceof ApiError ? e.message : "تعذر الإرسال", "err");
+    } finally {
+      setBusy(false);
     }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
-
+  }
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: t.bg }}
-      contentContainerStyle={styles.screen}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} />}
-    >
-      <ErrorText message={error} />
-      <Card title="📄 النماذج المرسلة لك">
-        {!list.length ? <Txt muted style={{ textAlign: "center", padding: 16 }}>لا توجد نماذج</Txt> : null}
-        {list.map((x) => {
-          const st = LETTER_STATUS[x.status];
-          return (
-            <Pressable key={x.id} onPress={() => router.push({ pathname: "/letter/[id]", params: { id: x.id, title: x.title, status: x.status } })}>
-              <View style={[styles.item, { borderBottomColor: t.bd }]}>
-                <View style={{ flex: 1 }}>
-                  <Txt bold style={{ fontSize: 13 }}>{x.title}</Txt>
-                  <Txt muted style={{ fontSize: 10 }}>{x.created_at.slice(0, 10)}</Txt>
-                  {x.rejection_reason ? <Txt style={{ fontSize: 11, color: t.rd }}>❌ {x.rejection_reason}</Txt> : null}
-                </View>
-                <Txt bold style={{ fontSize: 11, color: t[st.tone] }}>{st.text}</Txt>
-              </View>
-            </Pressable>
-          );
-        })}
-      </Card>
-    </ScrollView>
+    <Card style={{ padding: 12, marginBottom: 10, backgroundColor: t.c2 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <Icon name="file" size={18} color={t.tx} />
+        <View style={{ flex: 1 }}>
+          <T size={13} weight={700}>{x.title}</T>
+          <T size={10.5} color={t.mu}>{dmy(x.created_at)}</T>
+        </View>
+        {x.status !== "pending" ? <Badge text={x.status === "approved" ? "موافق" : "مرفوض"} tone={x.status === "approved" ? "bg" : "br"} /> : null}
+      </View>
+      <Btn kind="ghost" title="عرض المستند" icon={<Icon name="eye" size={16} color={t.tx} />}
+        onPress={() => router.push({ pathname: "/letter/[id]", params: { id: x.id, title: x.title } })} />
+      {x.status === "pending" ? (
+        <>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Btn title="موافقة" icon={<Icon name="check" size={16} color="#fff" />} onPress={() => respond("approved")} busy={busy} style={{ flex: 1, backgroundColor: "#12b76a" }} kind="success" />
+            <Btn title="رفض" icon={<Icon name="x" size={16} color="#fff" />} onPress={() => setRejecting(true)} style={{ flex: 1, backgroundColor: "#e5484d" }} kind="danger" />
+          </View>
+          {rejecting ? (
+            <>
+              <Input value={reason} onChangeText={setReason} placeholder="اكتب سبب الرفض هنا (إجباري)..." multiline />
+              <Btn kind="danger" title="تأكيد الرفض" disabled={reason.trim().length < 3} busy={busy} onPress={() => respond("rejected")} />
+            </>
+          ) : null}
+        </>
+      ) : x.rejection_reason ? <T size={11} color={t.rd} style={{ marginTop: 6 }}>❌ {x.rejection_reason}</T> : null}
+    </Card>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { padding: 16, gap: 12 },
-  item: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 11, borderBottomWidth: StyleSheet.hairlineWidth },
-});
+export default function Documents() {
+  const { letters: list, refresh } = useData();
+  return (
+    <Page onRefresh={refresh}>
+      <Card>
+        <CardTitle>📄 مستندات بانتظار توقيعي</CardTitle>
+        {!list.length ? <Empty text="لا توجد مستندات" /> : null}
+        {list.map((x) => <Doc key={x.id} x={x} onDone={refresh} />)}
+      </Card>
+    </Page>
+  );
+}

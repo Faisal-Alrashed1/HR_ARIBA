@@ -1,7 +1,7 @@
 // Bell state (legacy V118): the feed comes from the server, "read" is a last-seen time kept on the device.
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { AppState } from "react-native";
-import * as SecureStore from "expo-secure-store";
+import { store } from "./store";
 import { notifications, type Notification } from "./api";
 import { useAuth } from "./auth";
 
@@ -27,7 +27,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    SecureStore.getItemAsync(SEEN).then((v) => setSeenAt(Number(v) || 0));
+    store.get(SEEN).then((v) => setSeenAt(Number(v) || 0));
   }, []);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const markAllRead = useCallback(async () => {
     const now = Date.now();
     setSeenAt(now);
-    await SecureStore.setItemAsync(SEEN, String(now));
+    await store.set(SEEN, String(now));
   }, []);
 
   const unread = items.filter((n) => new Date(n.at).getTime() > seenAt).length;

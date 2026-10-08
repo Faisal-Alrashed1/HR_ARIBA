@@ -1,13 +1,18 @@
 import { useFonts } from "expo-font";
 import { Redirect, Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { Platform } from "react-native";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { NotificationsProvider } from "@/lib/notifications";
-import { Loading } from "@/components/ui";
-import { fonts } from "@/theme";
+import { Loading, ToastProvider } from "@/components/ui";
+import { fonts, ThemeProvider, useTheme } from "@/theme";
+
+// Native builds force RTL (expo-localization forcesRTL); the web dev preview needs the document direction.
+if (Platform.OS === "web" && typeof document !== "undefined") document.documentElement.dir = "rtl";
 
 function Gate() {
   const { user, ready } = useAuth();
+  const t = useTheme();
   const segments = useSegments();
   if (!ready) return <Loading />;
 
@@ -17,7 +22,12 @@ function Gate() {
   if (user && !user.must_change_password && (screen === "login" || screen === "change-password"))
     return <Redirect href="/" />;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <>
+      <StatusBar style={t.dark ? "light" : "dark"} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }} />
+    </>
+  );
 }
 
 export default function RootLayout() {
@@ -26,13 +36,16 @@ export default function RootLayout() {
     [fonts.medium]: require("../assets/fonts/ARIBA_TWO_MEDIUM.ttf"),
     [fonts.bold]: require("../assets/fonts/ARIBA_TWO_BOLD.ttf"),
   });
-  if (!loaded) return <Loading />;
+  if (!loaded) return null;
   return (
-    <AuthProvider>
-      <NotificationsProvider>
-        <StatusBar style="auto" />
-        <Gate />
-      </NotificationsProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <NotificationsProvider>
+          <ToastProvider>
+            <Gate />
+          </ToastProvider>
+        </NotificationsProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
