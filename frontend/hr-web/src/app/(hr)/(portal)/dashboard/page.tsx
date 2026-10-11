@@ -9,6 +9,9 @@ import { dmy, num } from "@/lib/format";
 import type { MessageKey } from "@/lib/i18n/ar";
 import { useLocale } from "@/lib/i18n/locale";
 import { useApi } from "@/lib/use-api";
+import { FemaleIcon, MaleIcon } from "@/components/hr/gender-icons";
+
+const DASH_ICON: Partial<Record<MessageKey, string>> = { "dash.pending": "ti-bell", "dash.ended": "ti-user-off" };
 
 // Layout and inline styles reproduce the prototype dashboard (#pg-dash after its V42 patch).
 const TILE: React.CSSProperties = { background: "var(--c2)", borderRadius: 18, padding: "24px 20px", minHeight: 140 };
@@ -67,13 +70,13 @@ export default function DashboardPage() {
             <div style={{ fontSize: 12, color: "var(--mu)", marginBottom: 14, fontWeight: 600 }}>{t("dash.gender")}</div>
             <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", height: "calc(100% - 36px)" }}>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 34, marginBottom: 6, color: "#014D3D" }}><i className="ti ti-man" aria-hidden /></div>
+                <div style={{ marginBottom: 6 }}><MaleIcon /></div>
                 <div className="ariba-male-number" style={{ fontSize: 28, fontWeight: 900, color: "#014D3D", lineHeight: 1 }}>{d.male}</div>
                 <div style={{ fontSize: 12, color: "var(--mu)", marginTop: 4 }}>{t("dash.male", { pct: malePct })}</div>
               </div>
               <div style={{ width: 1, height: 60, background: "var(--bd)" }} />
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 34, marginBottom: 6, color: "#29B35E" }}><i className="ti ti-woman" aria-hidden /></div>
+                <div style={{ marginBottom: 6 }}><FemaleIcon /></div>
                 <div className="ariba-male-number" style={{ fontSize: 28, fontWeight: 900, color: "#014D3D", lineHeight: 1 }}>{d.female}</div>
                 <div style={{ fontSize: 12, color: "var(--mu)", marginTop: 4 }}>{t("dash.female", { pct: known ? 100 - malePct : 0 })}</div>
               </div>
@@ -98,7 +101,7 @@ export default function DashboardPage() {
               ] as [MessageKey, number][]
             ).map(([k, v]) => (
               <div key={k} style={ROW}>
-                <span style={{ fontSize: 12, color: "var(--mu)" }}>{t(k)}</span>
+                <span style={{ fontSize: 12, color: "var(--mu)", display: "inline-flex", alignItems: "center", gap: 4 }}>{k === "dash.tamheer" ? <img src="/icons/tamheer.png" alt="" width={16} height={16} /> : <i className={`ti ${DASH_ICON[k] ?? "ti-point"}`} aria-hidden />} {t(k)}</span>
                 <span className="ariba-pending-number" style={{ fontSize: 26, fontWeight: 900, color: "#014D3D" }}>{v}</span>
               </div>
             ))}
@@ -152,7 +155,7 @@ export default function DashboardPage() {
           <div className="ch"><div className="ct"><i className="ti ti-clock" /> <span>{t("dash.pendingTitle")}</span></div></div>
           <div id="PL" style={{ maxHeight: 200, overflowY: "auto" }}>
             <div style={{ color: "var(--mu)", textAlign: "center", padding: 14, fontSize: 12 }}>
-              {d.pending_requests === 0 ? t("dash.noPending") : `${d.pending_requests}`}
+              {d.pending_requests === 0 ? <><i className="ti ti-circle-check" aria-hidden /> {t("dash.noPending")}</> : `${d.pending_requests}`}
             </div>
           </div>
         </div>

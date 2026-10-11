@@ -9,6 +9,7 @@ import { PageState } from "@/components/hr/not-built";
 import { calcEmployeeGosi, currencyLabel, isLocalCurrency, MONTHS_AR, money, num, p2, type PayRow } from "@/lib/calc/payroll";
 import { getGosiRates, getSalaryBasis, fN, type SalaryBasisRow } from "@/lib/salary";
 import { getSheet } from "@/lib/sheets";
+import { printIcon } from "@/lib/print-icons";
 
 const row = (l: string, v: React.ReactNode, color?: string) => (
   <div className="prow" style={{ color: color || "var(--dm)" }}>
@@ -120,7 +121,7 @@ export default function Page() {
       <div><b>البنك:</b> ${emp.bank_name || "—"}</div><div><b>IBAN:</b> ${emp.iban || "—"}</div>
     </div>
     <div class="two-col">
-      <div><h3 class="sec">الاستحقاقات</h3><table class="doc-table">
+      <div><h3 class="sec">${printIcon("plus", 15)}الاستحقاقات</h3><table class="doc-table">
         <tr><td>الراتب الأساسي</td><td>${money(rowData.basic)}</td></tr>
         <tr><td>بدل السكن</td><td>${money(rowData.hou)}</td></tr>
         <tr><td>بدل المواصلات</td><td>${money(rowData.tra)}</td></tr>
@@ -128,7 +129,7 @@ export default function Page() {
         ${rowData.oth ? `<tr><td>بدلات أخرى</td><td>${money(rowData.oth)}</td></tr>` : ""}
         <tr style="font-weight:800;background:#f0f6f4"><td>الإجمالي</td><td style="color:#0a7a3f">${money(rowData.gross)}</td></tr>
       </table></div>
-      <div><h3 class="sec">الاستقطاعات</h3><table class="doc-table">
+      <div><h3 class="sec">${printIcon("minus", 15)}الاستقطاعات</h3><table class="doc-table">
         <tr><td>التأمينات الاجتماعية</td><td>${rowData.ins ? "-" + money(rowData.ins) : "—"}</td></tr>
         <tr><td>استقطاعات أخرى</td><td>${rowData.ded ? "-" + money(rowData.ded) : "—"}</td></tr>
         <tr style="font-weight:800;background:#fbeeee"><td>إجمالي الاستقطاعات</td><td style="color:#c0392b">-${money(rowData.ins + rowData.ded)}</td></tr>

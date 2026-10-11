@@ -52,7 +52,7 @@ function Doc({ x, onDone }: { x: Letter; onDone: () => Promise<void> }) {
             </>
           ) : null}
         </>
-      ) : x.rejection_reason ? <T size={11} color={t.rd} style={{ marginTop: 6 }}>سبب الرفض: {x.rejection_reason}</T> : null}
+      ) : x.rejection_reason ? <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 }}><Icon name="xCircle" size={13} color={t.rd} stroke={2} /><T size={11} color={t.rd} style={{ flexShrink: 1 }}>سبب الرفض: {x.rejection_reason}</T></View> : null}
     </Card>
   );
 }

@@ -48,7 +48,7 @@ function EmpLogin() {
             <label htmlFor="lp">{t("auth.password")}</label>
             <input id="lp" type="password" placeholder="****" autoComplete="current-password" value={p} onChange={(e) => setP(e.target.value)} />
           </div>
-          {err && <div className="login-err" style={{ display: "block" }} role="alert">{t("auth.badCredentials")}</div>}
+          {err && <div className="login-err" style={{ display: "block" }} role="alert"><i className="ti ti-alert-circle" aria-hidden /> {t("auth.badCredentials")}</div>}
           <button className="btn-login" type="submit" disabled={busy}>{t("auth.signIn")}</button>
         </form>
       </div>

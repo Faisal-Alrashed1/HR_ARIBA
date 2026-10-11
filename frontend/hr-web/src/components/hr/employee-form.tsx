@@ -220,7 +220,7 @@ export function EmployeeForm({
       </div>
       <div className="tbar">
         {tabs.map(([k, l]) => (
-          <div key={k} className={`tab ${tab === k ? "on" : ""}`} onClick={() => setTab(k)}>{t(l)}</div>
+          <div key={k} className={`tab ${tab === k ? "on" : ""}`} onClick={() => setTab(k)}>{k === "ft5" && <><i className="ti ti-users-group" aria-hidden /> </>}{t(l)}</div>
         ))}
       </div>
       {masked && <div className="al alb"><i className="ti ti-lock" /><div>{t("form.idsMasked")}</div></div>}
@@ -279,7 +279,7 @@ export function EmployeeForm({
             {field("insurance_class", "form.icl")}
             {field("insurance_card_no", "form.icard", "text", { disabled: masked })}
             {field("insurance_expiry", "form.ie", "date")}
-            <div className="fsec" style={{ marginTop: 10 }}>{t("form.eDocsSec")}</div>
+            <div className="fsec" style={{ marginTop: 10 }}><i className="ti ti-paperclip" aria-hidden /> {t("form.eDocsSec")}</div>
             {isNew ? (
               <div className="ff" style={{ fontSize: 11, color: "var(--mu)" }}>{t("form.eDocsAfterSave")}</div>
             ) : (
@@ -366,7 +366,7 @@ export function EmployeeForm({
             <button type="submit" className="btn bpl" disabled={busy}><i className="ti ti-check" /> <span id="t_save">{t("form.saveUpdate")}</span></button>
             {!isNew && !employee?.is_terminated && (
               <button type="button" className="btn bsm" style={{ marginInlineStart: 8 }} onClick={newPassword}>
-                {employee?.has_account ? t("form.newPassword") : t("form.createLogin")}
+                <i className="ti ti-key" aria-hidden /> {employee?.has_account ? t("form.newPassword") : t("form.createLogin")}
               </button>
             )}
             <Link href="/employees" className="btn bsm" id="t_cancel">{t("common.cancel")}</Link>

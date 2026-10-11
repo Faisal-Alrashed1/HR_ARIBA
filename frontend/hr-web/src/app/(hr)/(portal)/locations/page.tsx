@@ -155,7 +155,7 @@ export default function Page() {
                   </div>
                 </div>
                 <div style={{ fontSize: 11, color: "var(--mu)", marginBottom: 8 }}>
-                  {l.type === "remote" ? "بدون قيد موقع" : `${Number(l.latitude).toFixed(6)}, ${Number(l.longitude).toFixed(6)} | النطاق: ${l.radius_m}م`}
+                  {l.type === "remote" ? "بدون قيد موقع" : <><i className="ti ti-map-pin" aria-hidden /> {`${Number(l.latitude).toFixed(6)}, ${Number(l.longitude).toFixed(6)} | النطاق: ${l.radius_m}م`}</>}
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
                   {l.type !== "remote" && (

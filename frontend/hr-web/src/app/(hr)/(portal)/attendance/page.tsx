@@ -164,7 +164,7 @@ export default function Page() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 11, color: "var(--mu)" }}>{r ? `${r.time_in ?? ""} → ${r.time_out ?? "..."}` : "—"}</div>
                     {r?.late_minutes ? <div style={{ fontSize: 10, color: "var(--am)" }}>⏰ تأخير {r.late_minutes} دقيقة</div> : null}
-                    {r?.early_minutes ? <div style={{ fontSize: 10, color: "var(--rd)" }}>خروج مبكر {r.early_minutes} دقيقة</div> : null}
+                    {r?.early_minutes ? <div style={{ fontSize: 10, color: "var(--rd)" }}><i className="ti ti-door-exit" aria-hidden /> خروج مبكر {r.early_minutes} دقيقة</div> : null}
                   </div>
                   <span className={st.cls}>{st.label}</span>
                   {r && <button type="button" className="btn bsm" onClick={() => openEdit(r)}><i className="ti ti-edit" style={{ fontSize: 12 }} /></button>}

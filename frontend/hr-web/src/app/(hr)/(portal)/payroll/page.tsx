@@ -600,7 +600,7 @@ export default function Page() {
         <div id="payStatus">
           {approved ? (
             <span style={{ background: "rgba(16,185,129,.15)", color: "var(--gr)", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-              معتمد {approvedAt ? `— ${approvedAt.slice(0, 10)}` : ""}
+              <i className="ti ti-circle-check" aria-hidden /> معتمد {approvedAt ? `— ${approvedAt.slice(0, 10)}` : ""}
             </span>
           ) : (
             <span style={{ background: "rgba(245,158,11,.1)", color: "var(--am)", padding: "3px 10px", borderRadius: 6, fontSize: 11 }}>⏳ غير معتمد</span>

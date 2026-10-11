@@ -52,7 +52,10 @@ export function ForgotPunchSheet({ visible, onClose }: { visible: boolean; onClo
   const kinds: [typeof kind, string][] = [["in", "دخول"], ["out", "خروج"], ["both", "دخول وخروج"]];
   return (
     <Sheet visible={visible} onClose={onClose}>
-      <T size={17} weight={700} color="#111" style={{ marginBottom: 6 }}>نسيان بصمة</T>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 6 }}>
+        <Icon name="fingerprint" size={19} color="#014D3D" stroke={2} />
+        <T size={17} weight={700} color="#111">نسيان بصمة</T>
+      </View>
       <T size={12.5} color="#555" style={{ lineHeight: 21, marginBottom: 10 }}>
         اختر نوع البصمة اللي نسيتها والتاريخ والوقت واكتب السبب. الطلب بيروح للموارد البشرية مباشرة، ولما يوافقوا بيتسجل الحضور/الانصراف في سجلك.
       </T>
@@ -111,7 +114,10 @@ export function LocationsCard() {
             <View style={{ backgroundColor: t.dark ? "rgba(228,228,188,.14)" : "rgba(1,77,61,.1)", borderRadius: 999, paddingHorizontal: 9, paddingVertical: 2 }}>
               <T size={10} weight={700} color={t.dark ? "#E4E4BC" : "#014D3D"}>{l.type === "hq" ? "مقر رئيسي" : "مشروع"}</T>
             </View>
-            <T size={11} weight={700} color={st.color}>{st.txt}</T>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+              {st.txt === "داخل النطاق" ? <Icon name="check" size={13} color={st.color} stroke={2.4} /> : null}
+              <T size={11} weight={700} color={st.color}>{st.txt}</T>
+            </View>
           </View>
         );
       })}

@@ -55,3 +55,8 @@ a{color:var(--ariba-dark)!important}
 hr,.divider{border-color:var(--ariba-gray2)!important}
 ::selection{background:rgba(41,179,94,.25)!important;color:var(--ariba-dark)!important}
 
+
+/* Dashboard gender avatars (components/hr/gender-icons.tsx, masks in public/icons) */
+.ariba-gender-ic.male{color:#014D3D}.ariba-gender-ic.female{color:#1F8D49}
+html[data-ariba-theme="dark"] .ariba-gender-ic.male,body.ariba-dark .ariba-gender-ic.male{color:#29B35E}
+html[data-ariba-theme="dark"] .ariba-gender-ic.female,body.ariba-dark .ariba-gender-ic.female{color:#E4E4BC}

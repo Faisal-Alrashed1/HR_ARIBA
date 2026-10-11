@@ -59,7 +59,7 @@ function HrLogin() {
         </button>
         {err && (
           <div id="LE" role="alert" style={{ color: "#6B7280", fontSize: 12, marginTop: 10, padding: 9, background: "rgba(248,113,113,.08)", borderRadius: 8 }}>
-            {t("auth.badCredentials")}
+            <i className="ti ti-alert-circle" aria-hidden /> {t("auth.badCredentials")}
           </div>
         )}
       </form>

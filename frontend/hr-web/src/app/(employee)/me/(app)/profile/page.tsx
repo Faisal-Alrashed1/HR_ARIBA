@@ -58,7 +58,7 @@ export default function MeProfile() {
       </div>
       {s && (
         <div className="card">
-          <div className="card-title">{t("me.salaryTitle")}</div>
+          <div className="card-title"><i className="ti ti-cash" aria-hidden /> {t("me.salaryTitle")}</div>
           {([["me.sal", s.basic_salary], ["me.hou", s.housing_allowance], ["me.tra", s.transport_allowance], ["me.prj", s.project_allowance], ["me.oth", s.other_allowances]] as [MessageKey, string][]).map(([k, v]) => (
             <div className="hr-pay-row" key={k}><span>{t(k)}</span><b>{sar2(v)}</b></div>
           ))}
@@ -69,12 +69,12 @@ export default function MeProfile() {
       )}
       {s && (
         <div className="card">
-          <div className="card-title">{t("me.bank")}</div>
+          <div className="card-title"><i className="ti ti-building-bank" aria-hidden /> {t("me.bank")}</div>
           <div className="profile-info"><span>IBAN</span><b>{s.iban || "—"}</b></div>
         </div>
       )}
       <div className="card">
-        <div className="card-title">{t("me.myDocs")}</div>
+        <div className="card-title"><i className="ti ti-paperclip" aria-hidden /> {t("me.myDocs")}</div>
         {docs.data?.length === 0 && <div style={{ color: "var(--mu)", fontSize: 12 }}>{t("me.noDocs")}</div>}
         {docs.data?.map((d) => (
           <div key={d.id} className="req-item" style={{ justifyContent: "space-between" }}>

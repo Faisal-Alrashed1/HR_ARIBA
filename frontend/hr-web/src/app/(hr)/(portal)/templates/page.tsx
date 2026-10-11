@@ -47,8 +47,8 @@ const TYPE_AR: Record<string, string> = {
 };
 const STATUS: Record<string, React.ReactNode> = {
   pending: <span className="b ba">⏳ بانتظار الموظف</span>,
-  approved: <span className="b bg">تمت الموافقة</span>,
-  rejected: <span className="b br">معترَض عليه</span>,
+  approved: <span className="b bg"><i className="ti ti-circle-check" aria-hidden /> تمت الموافقة</span>,
+  rejected: <span className="b br"><i className="ti ti-alert-triangle" aria-hidden /> معترَض عليه</span>,
 };
 
 interface LetterRow { id: string; employee_name: string; type: string; title: string; status: string; rejection_reason: string | null; created_at: string }
@@ -138,11 +138,11 @@ function BulkCard({ emps, onSend }: { emps: EmployeeListItem[]; onSend: (k: stri
         ))}
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-        <button type="button" className="btn bsm" disabled={busy} style={{ background: "#0a5c9e", color: "#fff" }} onClick={async () => { setBusy(true); await onSend(k, [...sel], setStat); setBusy(false); }}>
+        <button type="button" className="btn bsm" disabled={busy} style={{ background: "#014D3D", color: "#fff" }} onClick={async () => { setBusy(true); await onSend(k, [...sel], setStat); setBusy(false); }}>
           <i className="ti ti-send" /> إرسال للمحدّدين
         </button>
         <span style={{ fontSize: 11, color: "var(--mu)" }}>{sel.size} موظف محدد</span>
-        {stat && <span style={{ fontSize: 11 }}>{stat}</span>}
+        {stat && <span style={{ fontSize: 11 }}>{stat.split(" — ").map((part, i) => <span key={i}>{i ? " — " : ""}<i className={`ti ${part.startsWith("تعذر") ? "ti-alert-triangle" : "ti-circle-check"}`} aria-hidden /> {part}</span>)}</span>}
       </div>
     </div>
   );

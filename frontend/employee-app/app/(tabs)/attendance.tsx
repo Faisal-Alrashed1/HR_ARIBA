@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { ForgotPunchSheet, todayISO } from "@/components/shared";
+import { Icon, type IconName } from "@/components/icons";
 import { Btn, Card, CardTitle, Empty, isoDate, Page, PickerField, T } from "@/components/ui";
 import { attendance, type MySession } from "@/lib/api";
 import { useData } from "@/lib/data";
@@ -21,10 +22,11 @@ function useClock() {
   return now;
 }
 
-function Status({ text, kind }: { text: string; kind: "in" | "none" }) {
+function Status({ text, kind, icon }: { text: string; kind: "in" | "none"; icon?: IconName }) {
   const t = useTheme();
   return (
-    <View style={{ borderRadius: 10, padding: 10, marginVertical: 8, backgroundColor: kind === "in" ? "rgba(16,185,129,.1)" : "rgba(100,116,139,.1)" }}>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 10, padding: 10, marginVertical: 8, backgroundColor: kind === "in" ? "rgba(41,179,94,.1)" : "rgba(65,64,66,.08)" }}>
+      {icon ? <Icon name={icon} size={16} color={kind === "in" ? t.gr : t.mu} stroke={2} /> : null}
       <T size={13} center color={kind === "in" ? t.gr : t.mu}>{text}</T>
     </View>
   );
@@ -52,13 +54,13 @@ export default function Attendance() {
   const date = now.toLocaleDateString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", weekday: "long", year: "numeric", month: "long", day: "numeric" });
   const badge = (() => {
     switch (loc.kind) {
-      case "inside": return { dot: t.gr, text: loc.name, color: t.gr };
-      case "outside": return { dot: t.rd, text: `خارج النطاق — أقرب موقع ${loc.name} (${distanceText(loc.distance)})`, color: t.rd };
-      case "none": return { dot: t.am, text: "لا يوجد موقع عمل", color: t.am };
-      case "unset": return { dot: t.am, text: "إحداثيات موقع عملك غير مضبوطة", color: t.am };
-      case "denied": return { dot: t.rd, text: "فعّل صلاحية الموقع", color: t.rd };
-      case "error": return { dot: t.rd, text: "تعذر تحديد الموقع", color: t.rd };
-      default: return { dot: t.mu, text: "جاري تحديد الموقع...", color: t.mu };
+      case "inside": return { icon: "pin" as const, dot: t.gr, text: loc.name, color: t.gr };
+      case "outside": return { icon: "xCircle" as const, dot: t.rd, text: `خارج النطاق — أقرب موقع ${loc.name} (${distanceText(loc.distance)})`, color: t.rd };
+      case "none": return { icon: "alert" as const, dot: t.am, text: "لا يوجد موقع عمل", color: t.am };
+      case "unset": return { icon: "alert" as const, dot: t.am, text: "إحداثيات موقع عملك غير مضبوطة", color: t.am };
+      case "denied": return { icon: "xCircle" as const, dot: t.rd, text: "فعّل صلاحية الموقع", color: t.rd };
+      case "error": return { icon: "xCircle" as const, dot: t.rd, text: "تعذر تحديد الموقع", color: t.rd };
+      default: return { icon: "pin" as const, dot: t.mu, text: "جاري تحديد الموقع...", color: t.mu };
     }
   })();
 
@@ -85,7 +87,7 @@ export default function Attendance() {
         <T size={12} color={t.mu} style={{ marginTop: 4 }}>{date}</T>
       </View>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: t.c2, borderRadius: 10, marginBottom: 10 }}>
-        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: badge.dot }} />
+        <Icon name={badge.icon} size={16} color={badge.dot} stroke={2} />
         <T size={12} color={badge.color} style={{ flexShrink: 1 }}>{badge.text}</T>
       </View>
 
@@ -98,13 +100,13 @@ export default function Attendance() {
           </>
         ) : open ? (
           <>
-            <Status kind="in" text={`حضور — ${rows[0].time_in}${rows.length > 1 ? ` (جلسة حالية من ${open.time_in})` : ""}`} />
+            <Status kind="in" icon="checkCircle" text={`حضور — ${rows[0].time_in}${rows.length > 1 ? ` (جلسة حالية من ${open.time_in})` : ""}`} />
             {lastOut && rows.length > 1 ? <T size={11} color={t.mu} center style={{ marginVertical: 4 }}>رجعت للعمل بعد انصراف الساعة {lastOut}</T> : null}
             <Btn kind="danger" title="تسجيل الانصراف" icon="logout" onPress={() => punch("out")} busy={busy} />
           </>
         ) : (
           <>
-            <Status kind="in" text={`آخر انصراف — ${lastOut ?? ""}`} />
+            <Status kind="in" icon="logout" text={`آخر انصراف — ${lastOut ?? ""}`} />
             <Btn kind="success" title="رجوع للعمل — تسجيل حضور مرة أخرى" icon="back" onPress={() => punch("in")} busy={busy} />
           </>
         )}

@@ -50,7 +50,10 @@ export function PasswordSheet({ visible, forced, onClose, onDone }: { visible: b
 
   return (
     <Sheet visible={visible} onClose={forced ? () => {} : onClose}>
-      <T size={17} weight={700} color="#111" style={{ marginBottom: 6 }}>{forced ? "غيّر كلمة المرور" : "تغيير كلمة المرور"}</T>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 6 }}>
+        <Icon name="lock" size={19} color="#014D3D" stroke={2} />
+        <T size={17} weight={700} color="#111">{forced ? "غيّر كلمة المرور" : "تغيير كلمة المرور"}</T>
+      </View>
       {forced ? <T size={12.5} color="#555" style={{ marginBottom: 10, lineHeight: 20 }}>حسابك <T size={12.5} weight={700} color="#111">{user?.username}</T> — غيّر كلمة المرور الافتراضية</T> : null}
       <PwInput value={oldPw} onChange={setOld} placeholder="كلمة المرور الحالية" />
       <PwInput value={pw} onChange={setPw} placeholder="كلمة المرور الجديدة" />

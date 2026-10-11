@@ -166,6 +166,7 @@ function Hero({ onForgot }: { onForgot: () => void }) {
       ) : null}
       {state === "done" ? (
         <Pressable onPress={() => punch("in")} disabled={busy} style={[styles.back, { borderColor: fg }]}>
+          <Icon name="back" size={15} color={fg} stroke={2} />
           <T size={12.5} weight={800} color={fg}>رجوع للعمل — تسجيل حضور مرة أخرى</T>
         </Pressable>
       ) : null}
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
     shadowColor: "#014D3D", shadowOpacity: 0.12, shadowRadius: 17, shadowOffset: { width: 0, height: 14 }, elevation: 3 },
   avatar: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   chips: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 7, marginTop: 6 },
-  back: { alignSelf: "center", marginTop: 10, borderWidth: 1.5, borderRadius: 999, paddingVertical: 7, paddingHorizontal: 14 },
+  back: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "center", marginTop: 10, borderWidth: 1.5, borderRadius: 999, paddingVertical: 7, paddingHorizontal: 14 },
   tiles: { flexDirection: "row", gap: 10, marginBottom: 14 },
   tile: { flex: 1, borderRadius: 20, paddingVertical: 12, paddingHorizontal: 8, alignItems: "center", gap: 4,
     shadowColor: "#014D3D", shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 8 }, elevation: 2 },

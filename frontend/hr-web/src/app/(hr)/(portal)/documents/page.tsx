@@ -8,13 +8,14 @@ import { useToast } from "@/components/common/toast";
 import { ddmmyyyy } from "@/lib/format";
 import { printHtml } from "@/lib/print";
 import { listDocRegistry, type DocRow } from "@/lib/registry";
+import { printIcon } from "@/lib/print-icons";
 
 type Tab = "dc1" | "dc2" | "dc3" | "dc4";
-const TABS: [Tab, string][] = [
-  ["dc1", "الإقامات"],
-  ["dc2", "الجوازات"],
-  ["dc3", "التأمين الطبي"],
-  ["dc4", "العقود"],
+const TABS: [Tab, string, string][] = [
+  ["dc1", "الإقامات", "ti-id"],
+  ["dc2", "الجوازات", "ti-world"],
+  ["dc3", "التأمين الطبي", "ti-heart-plus"],
+  ["dc4", "العقود", "ti-file-certificate"],
 ];
 const fD = (d: string | null) => (d ? ddmmyyyy(d) : "—");
 
@@ -62,7 +63,7 @@ export default function Page() {
     if (t) printHtml(TABS.find((x) => x[0] === tab)![1], t.outerHTML);
   };
   const printAll = () => {
-    const html = TABS.map(([k, l]) => (tables.current[k] ? `<h3>${l}</h3>${tables.current[k]!.outerHTML}` : "")).join("");
+    const html = TABS.map(([k, l]) => (tables.current[k] ? `<h3>${k === "dc1" ? printIcon("id", 16) : ""}${l}</h3>${tables.current[k]!.outerHTML}` : "")).join("");
     printHtml("وثائق الموظفين", html);
   };
 
@@ -80,9 +81,9 @@ export default function Page() {
         <button type="button" id="docsRefreshBtn62" className="btn bsm" style={{ marginRight: 6, background: "var(--bl)", color: "#fff" }} onClick={refresh}>
           <i className="ti ti-refresh" /> تحديث البيانات
         </button>
-        {TABS.map(([k, l]) => (
+        {TABS.map(([k, l, ic]) => (
           <div key={k} className={"tab" + (tab === k ? " on" : "")} onClick={() => setTab(k)}>
-            {l}
+            <i className={`ti ${ic}`} aria-hidden /> {l}
           </div>
         ))}
         <button type="button" className="btn bsm" onClick={printTab} style={{ marginRight: "auto", background: "var(--gr)", color: "#fff" }}>

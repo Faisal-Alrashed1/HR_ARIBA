@@ -65,7 +65,7 @@ export function DependentsTab({ employeeId, canEdit }: { employeeId: string; can
   return (
     <div id="ft5" style={{ padding: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, paddingBottom: 8, borderBottom: "1px solid var(--bd)" }}>
-        <div style={{ fontWeight: 700, fontSize: 13, color: "var(--bl)" }}>{t("dep.title")}</div>
+        <div style={{ fontWeight: 700, fontSize: 13, color: "var(--bl)" }}><i className="ti ti-users-group" aria-hidden /> {t("dep.title")}</div>
         {canEdit && (
           <button type="button" className="btn bpl" onClick={() => open()} style={{ padding: "7px 14px", fontSize: 12 }}>
             <i className="ti ti-plus" /> {t("dep.add")}

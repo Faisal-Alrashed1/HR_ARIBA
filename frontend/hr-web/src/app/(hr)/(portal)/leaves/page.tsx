@@ -224,7 +224,7 @@ function Pending({ list, actions }: { list: HrRequest[]; actions: (r: HrRequest)
         </div>
         <div id="LVP">
           {list.length === 0 ? (
-            <div style={{ color: "var(--mu)", textAlign: "center", padding: 24, fontSize: 13 }}>لا توجد طلبات معلقة حالياً</div>
+            <div style={{ color: "var(--mu)", textAlign: "center", padding: 24, fontSize: 13 }}><i className="ti ti-circle-check" aria-hidden /> لا توجد طلبات معلقة حالياً</div>
           ) : (
             list.map((r) => (
               <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderBottom: "1px solid rgba(36,48,68,.5)", flexWrap: "wrap" }}>
