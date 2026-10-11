@@ -33,6 +33,7 @@
     {k:'retire',  f:1,      ar:'بلوغ سن التقاعد / العجز / الوفاة',                                         en:'Retirement / disability / death'},
     {k:'art81',   f:1,      ar:'ترك العامل العمل للحالات الواردة في المادة (81)',                           en:'Employee left work under Article (81)'},
     {k:'abandon', f:0,      ar:'ترك العامل العمل دون تقديم استقالة لغير الحالات الواردة في المادة (81)',    en:'Employee left without resignation (not under Art. 81)'},
+    {k:'art87',   f:1,      ar:'استقالة لقوة قاهرة، أو للمرأة خلال 6 أشهر من الزواج أو 3 أشهر من الوضع (المادة 87)', en:'Resignation under Article (87)'},
     {k:'resign',  f:'tier', ar:'استقالة',                                                                  en:'Resignation'}
   ];
   function normTxt(s){ return String(s||'').replace(/[\u064B-\u065F\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/\s+/g,' ').trim(); }
@@ -46,12 +47,13 @@
     if(/تقاعد|وفاه|عجز/.test(s)) return REASONS[4];
     if(/دون/.test(s)&&/استقاله/.test(s)) return REASONS[6];
     if(/ماده \(?81|ماده 81/.test(s)) return REASONS[5];
-    if(/استقاله/.test(s)) return REASONS[7];
+    if(/ماده \(?87|ماده 87|قوه قاهره/.test(s)) return REASONS[7];
+    if(/استقاله/.test(s)) return REASONS[8];
     return null;
   }
   function eosFactor(reason,K){          /* AK: العامل حسب سبب الإنهاء (K = سنوات الخدمة) */
     var R=findReason(reason); if(!R) return 0;
-    if(R.f==='tier'){ if(K<2) return 0; if(K<=5) return 1/3; if(K<=10) return 2/3; return 1; }
+    if(R.f==='tier'){ if(K<2) return 0; if(K<=5) return 1/3; if(K<10) return 2/3; return 1; }   /* م.85: الثلثان أكثر من 5 وأقل من 10، والكاملة من 10 (تصحيح نظامي A) */
     return R.f;
   }
 
@@ -84,7 +86,7 @@
     var K=(isNaN(AD)||isNaN(AE)||isNaN(AF))?NaN:(AD/1+AE/12+AF/360); o.K=K;  /* K */
     var M=isBlank(x.leaveDays)?21:num(x.leaveDays);
     var N=null;
-    if(!isNaN(K)&&!(H&&asOf<H)){ N=r2(K<=0?0:(K<=5?K*M:105+((K-5)*30))); }   /* N */
+    if(!isNaN(K)&&!(H&&asOf<H)){ N=r2(K<=0?0:(K<=5?K*M:5*M+((K-5)*Math.max(M,30)))); }   /* N */
     o.N=N;
     var hasReason=!!findReason(x.reason)||!isBlank(x.reason);
     var Oauto=num(x.usedAuto);
@@ -103,16 +105,16 @@
     /* التأمينات الاجتماعية */
     /* أيام التأمينات (Ins): لو ما اتبعتتش بتساوي أيام العمل (زي الإكسيل بالظبط). بتتحسب منها: الأجر الخاضع + حصة الموظف + حصة الشركة */
     var Ins=(x.insDays===undefined||x.insDays===null||x.insDays==='')?U:Math.max(0,Math.min(days,num(x.insDays))); o.INS=Ins;
-    var a55=age(x.dob,asOf)>=(R.ageThr||55), st=String(x.insStatus||'').trim(), insBase=Math.min(cap/days*Ins, (Q+Q*0.25)/days*Ins);
+    var a55=age(x.dob,asOf)>=(R.ageThr||55), st=String(x.insStatus||'').trim(), insBase=Math.min(cap/days*Ins, (Q+Q*houRate)/days*Ins);
     if(trainee||x.noIns){ o.AO=0; o.AR=0; o.AQ=0; }
-    else if(st==='لا يطبق'||st==='غير خاضع'){ o.AO=0; o.AR=0; o.AQ=(Q>cap)?Math.min(cap,Q+Q*0.25):((Ins<days)?Math.min(cap,(Q+Q*0.25)*Ins/days):Math.min(cap,Q+Q*0.25)); }
+    else if(st==='لا يطبق'||st==='غير خاضع'){ o.AO=0; o.AR=0; o.AQ=(Q>cap)?Math.min(cap,Q+Q*houRate):((Ins<days)?Math.min(cap,(Q+Q*houRate)*Ins/days):Math.min(cap,Q+Q*houRate)); }
     else {
       if(saudi){
         if(st==='يطابق'){ o.AO=insBase*(a55?R.matchEmp55:R.matchEmp); o.AR=insBase*(a55?R.matchEr55:R.matchEr); }
         else if(st==='لا يطابق'){ o.AO=insBase*(a55?R.noMatchEmp55:R.noMatchEmp); o.AR=insBase*(a55?R.noMatchEr55:R.noMatchEr); }
         else { o.AO=0; o.AR=0; }
-      } else { o.AO=0; o.AR=Math.min(cap/days*Ins, ((Q+Q*0.25)/days*Ins))*R.nonSaudiEr; }
-      o.AQ=(Q>cap)?Math.min(cap,Q+Q*0.25):((Ins<days)?Math.min(cap,(Q+Q*0.25)*Ins/days):Math.min(cap,Q+Q*0.25));   /* AQ الأجر الخاضع */
+      } else { o.AO=0; o.AR=Math.min(cap/days*Ins, ((Q+Q*houRate)/days*Ins))*R.nonSaudiEr; }
+      o.AQ=(Q>cap)?Math.min(cap,Q+Q*houRate):((Ins<days)?Math.min(cap,(Q+Q*houRate)*Ins/days):Math.min(cap,Q+Q*houRate));   /* AQ الأجر الخاضع */
     }
     o.AU=num(x.otherDed)+(x.noInsDeduct?0:o.AO)+num(x.advances);            /* AU إجمالي المستقطع */
     o.AV=o.AM-o.AU;                                                         /* AV المستحق بالعملة */

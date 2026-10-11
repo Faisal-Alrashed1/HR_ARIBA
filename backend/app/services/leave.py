@@ -145,7 +145,8 @@ class LeaveBook:
             return 0.0
         return min(annual, max(0.0, annual * (self.count_workdays(start, end) / full)))
 
-    def default_used(self, emp: Employee, y: int, to: date | None = None) -> float:
+    def default_used(self, emp: Employee, y: int, to: date | None = None, whole: bool = False) -> float:
+        """Annual leave used in year y up to `to`; `whole` counts a leave that has started in full (server V115)."""
         end = to or date(y, 12, 31)
         o = self.override(emp, y)
         snapshot = _d(o.get("asOf")) if o else None
@@ -155,7 +156,7 @@ class LeaveBook:
                 continue
             if snapshot and f < snapshot:
                 continue  # already inside the imported balance
-            req += self.count_workdays(f, min(t, end))
+            req += self.count_workdays(f, t if whole else min(t, end))
         hist = self._emp(emp)
         baseline = max(
             float((hist.get("used_history") or {}).get(str(y), 0) or 0),
@@ -229,6 +230,32 @@ class LeaveBook:
                 self.carry_forward(emp, y) + self.accrued(emp, y, end) + self.manual_net(emp, y) - self.default_used(emp, y, end),
             )
         return self.ledger(emp, y)["close"]
+
+    def app_current(self, emp: Employee) -> float:
+        """Employee-app balance today (server `ariba_leave_calc`): like `current`, but an approved annual leave that has
+        started is deducted in full."""
+        y, now = self.today.year, self.today
+        o = self.override(emp, y)
+        if o and o.get("current") is not None:
+            return max(0.0, float(o["current"] or 0))
+        return max(
+            0.0,
+            self.carry_forward(emp, y) + self.accrued(emp, y, now) + self.manual_net(emp, y, now) - self.default_used(emp, y, now, whole=True),
+        )
+
+    def app_year_end(self, emp: Employee) -> float:
+        """Employee-app year-end (server `ariba_leave_calc` V115): an imported yearEnd only stands when the override
+        also has a carry, and approved annual leave after the snapshot (incl. future dates) is deducted from it."""
+        y = self.today.year
+        o = self.override(emp, y) or {}
+        has = lambda k: o.get(k) is not None  # noqa: E731
+        used = self.default_used(emp, y)
+        if has("yearEnd") and has("carry"):
+            after = max(0.0, used - float(o["used"] or 0)) if has("used") else 0.0
+            return max(0.0, float(o["yearEnd"] or 0) - after)
+        ent = max(0.0, float(o["entitlement"] or 0)) if has("entitlement") else self.accrued(emp, y)
+        adj = float(o["adjustment"] or 0) if has("adjustment") else self.manual_net(emp, y)
+        return max(0.0, self.carry_forward(emp, y) + ent + adj - used)
 
     def year_excess(self, emp: Employee, y: int) -> float:
         return max(0.0, self.year_closing(emp, y) - CARRY_CAP)

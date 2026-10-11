@@ -68,29 +68,27 @@ _EXEMPT_WPS = {WpsType.consultant: "consultant", WpsType.tamheer: "tamheer", Wps
 def exempt_kind(
     *,
     wps_type: WpsType,
-    category: EmployeeCategory,
+    category: EmployeeCategory | None = None,
     job_title: str | None = None,
     department: str | None = None,
     workplace: str | None = None,
+    emp_type: str | None = None,
+    excel_category: str | None = None,
 ) -> str:
-    """V130 (legacy js/payroll/114-ariba-v130-insurance-exempt.js `kindOf`): '' when the employee pays GOSI,
-    otherwise why not. Explicit WPS type first, then words in the job title / department / workplace."""
+    """V130 (legacy js/payroll/114-ariba-v130-insurance-exempt.js `kindOf`), exactly: '' when the employee pays GOSI,
+    otherwise why not. Explicit WPS type first, then words in the job title / department / workplace, the Excel
+    category 'consultant' and the Arabic employment-type text (مهمة محددة / متدرب). `category` is not used: the
+    legacy rule never looks at the English empType codes."""
     if wps_type in _EXEMPT_WPS:
         return _EXEMPT_WPS[wps_type]
     if wps_type != WpsType.wps:
         return wps_type.value  # external / no_wps / remote: not subject either (prototype rule)
-    if category == EmployeeCategory.consultant:
-        return "consultant"
-    if category == EmployeeCategory.tamheer:
-        return "tamheer"
-    if category == EmployeeCategory.training:
-        return "trainee"
-    job, dep, emp = job_title or "", department or "", workplace or ""
+    job, dep, emp, typ = job_title or "", department or "", workplace or "", emp_type or ""
     if "تمهير" in emp or "تمهير" in job or "تمهير" in dep:
         return "tamheer"
-    if re.search("استشاري|مستشار|استشاريه|استشارية", job):
+    if re.search("استشاري|مستشار|استشاريه|استشارية", job) or (excel_category or "") == "consultant" or "مهمة محددة" in typ:
         return "consultant"
-    if re.search("متدرب|تدريب|trainee|intern", job, re.I) or dep.strip() == "تدريب" or "تدريب" in emp:
+    if re.search("متدرب|تدريب|trainee|intern", job, re.I) or re.fullmatch(r"\s*تدريب\s*", dep) or "تدريب" in emp or "متدرب" in typ:
         return "trainee"
     return ""
 
@@ -110,8 +108,11 @@ def calculate(
     job_title: str | None = None,
     department: str | None = None,
     workplace: str | None = None,
+    emp_type: str | None = None,
+    excel_category: str | None = None,
 ) -> GosiResult:
-    if exempt_kind(wps_type=wps_type, category=category, job_title=job_title, department=department, workplace=workplace):
+    if exempt_kind(wps_type=wps_type, category=category, job_title=job_title, department=department, workplace=workplace,
+                   emp_type=emp_type, excel_category=excel_category):
         return GosiResult.zero()
     rule = rule_for(rules, system, on)
     if rule is None:

@@ -31,3 +31,5 @@ next-env.d.ts
 *.sql
 *.dump
 supabase_*.sql
+# Exception: schema + legacy function code (no data) for the parity tests
+!tools/legacy-parity/sql/*.sql

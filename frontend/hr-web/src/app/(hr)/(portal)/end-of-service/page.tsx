@@ -1,6 +1,8 @@
 "use client";
 
 // End-of-service by article (#pg-eos in frontend/legacy/hr-portal/index.html, function rEOS).
+// Labour-law corrections (docs/LOGIC_AUDIT.md section 4): the award is on the actual wage (art. 2 / 84: basic + the
+// fixed allowances, as the payroll and the settlement), and art. 77 on a fixed-term contract pays the months left.
 import { useEffect, useMemo, useState } from "react";
 import { dmy } from "@/lib/format";
 import { calcByLaw, durationText, EOS_LAW_NAMES, EOS_LAWS, eosYears, type EosLaw } from "@/lib/calc/eos";
@@ -12,6 +14,16 @@ const ths: React.CSSProperties = { padding: "7px 10px", textAlign: "right", font
 const thl: React.CSSProperties = { padding: "7px 10px", textAlign: "center", fontSize: 10, fontWeight: 700, borderBottom: "2px solid var(--bl)", background: "rgba(59,130,246,.12)", color: "var(--bl)" };
 const tds: React.CSSProperties = { padding: "7px 10px", borderBottom: "1px solid rgba(36,48,68,.25)", textAlign: "right" };
 const ftd: React.CSSProperties = { padding: "7px 10px", background: "rgba(59,130,246,.08)", borderTop: "2px solid var(--bl)", fontWeight: 700, fontSize: 11, textAlign: "right" };
+/** Actual wage (art. 2): basic + every fixed monthly allowance. */
+const allowances = (e: SalaryBasisRow) =>
+  [e.housing_allowance, e.transport_allowance, e.project_allowance, e.other_allowances, e.extra_allowance].reduce((s, v) => s + (Number(v) || 0), 0);
+/** Art. 77 fixed-term: months between the termination date and the contract end (null = indefinite / already ended). */
+const monthsLeft = (e: SalaryBasisRow, endD: Date): number | null => {
+  if (!e.contract_end_date) return null;
+  const days = (new Date(e.contract_end_date).getTime() - endD.getTime()) / 86400000;
+  return days > 0 ? days / 30 : 0;
+};
+
 const box = (c: string): React.CSSProperties => ({
   background: `color-mix(in srgb, ${c} 8%, transparent)`,
   border: `1px solid color-mix(in srgb, ${c} 27%, transparent)`,
@@ -49,9 +61,9 @@ export default function Page() {
     const items = emps.map((e, i) => {
       const yrs = eosYears(e.join_date, endD);
       const sal = Number(e.basic_salary) || 0;
-      const hou = Number(e.housing_allowance) || 0;
+      const hou = allowances(e);
       const base = sal + hou;
-      const eos = calcByLaw(sal, hou, yrs, law);
+      const eos = calcByLaw(sal, hou, yrs, law, monthsLeft(e, endD));
       return { e, i, sal, hou, base, eos, yrs };
     });
     const totBase = items.reduce((s, x) => s + x.base, 0);
@@ -82,12 +94,12 @@ export default function Page() {
 
   function exportEOS() {
     const endD = new Date(endDate || new Date().toISOString().slice(0, 10));
-    const head = ["م", "الموظف", "جهة العمل", "تاريخ المباشرة", "مدة الخدمة", "الأساسي", "السكن", "الوعاء", `المكافأة (${law})`];
+    const head = ["م", "الموظف", "جهة العمل", "تاريخ المباشرة", "مدة الخدمة", "الأساسي", "البدلات", "الوعاء", `المكافأة (${law})`];
     const lines = emps.map((e, i) => {
       const yrs = eosYears(e.join_date, endD);
       const sal = Number(e.basic_salary) || 0;
-      const hou = Number(e.housing_allowance) || 0;
-      const eos = calcByLaw(sal, hou, yrs, law);
+      const hou = allowances(e);
+      const eos = calcByLaw(sal, hou, yrs, law, monthsLeft(e, endD));
       return [i + 1, e.name_ar.split(" ").slice(0, 3).join(" "), e.workplace ?? "", dmy(e.join_date), e.join_date ? durationText(e.join_date, endD) : yrs.toFixed(2) + " سنة", fN(sal), fN(hou), fN(sal + hou), eos > 0 ? fN(eos) + " ر.س" : "0"];
     });
     const csv = "﻿" + [head, ...lines].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
@@ -158,7 +170,7 @@ export default function Page() {
                   <th style={ths}>المباشرة</th>
                   <th style={ths}>الخدمة</th>
                   <th style={ths}>الأساسي</th>
-                  <th style={ths}>السكن</th>
+                  <th style={ths}>البدلات</th>
                   <th style={ths}>الوعاء</th>
                   <th style={thl}>{EOS_LAW_NAMES[law]}</th>
                 </tr>

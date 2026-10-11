@@ -11,6 +11,7 @@ export interface SalaryBasisRow {
   nationality: string | null;
   is_saudi: boolean;
   birth_date: string | null;
+  excel_category?: string | null;
   category: string;
   wps_type: string;
   gosi_system: string;

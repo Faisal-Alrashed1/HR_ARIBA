@@ -1,12 +1,14 @@
 // End-of-service page by article — port of `rEOS` / `calcByLaw` in
-// frontend/legacy/hr-portal/js/calculations/04-eos-page-by-law.js (docs section 4.5.2).
+// frontend/legacy/hr-portal/js/calculations/04-eos-page-by-law.js (docs section 4.5.2), with the documented
+// labour-law corrections (docs/LOGIC_AUDIT.md section 4): art. 85 at exactly 5 years = one third, art. 87, art. 77 fixed-term.
 
-export type EosLaw = "m84" | "m74" | "m85" | "m75" | "m77" | "m80" | "m74r" | "m74d";
+export type EosLaw = "m84" | "m74" | "m85" | "m75" | "m77" | "m80" | "m74r" | "m74d" | "m87";
 
 export const EOS_LAWS: { value: EosLaw; label: string }[] = [
   { value: "m84", label: "م.84 — إنهاء من الشركة" },
   { value: "m74", label: "م.74 — اتفاق الطرفين" },
   { value: "m85", label: "م.85 — استقالة" },
+  { value: "m87", label: "م.87 — استقالة بمكافأة كاملة (قوة قاهرة / زواج أو وضع للمرأة)" },
   { value: "m75", label: "م.75 — استقالة قسرية" },
   { value: "m77", label: "م.77 — فصل تعسفي" },
   { value: "m80", label: "م.80 — فصل تأديبي" },
@@ -18,6 +20,7 @@ export const EOS_LAW_NAMES: Record<EosLaw, string> = {
   m84: "م.84 إنهاء الشركة",
   m74: "م.74 اتفاق",
   m85: "م.85 استقالة",
+  m87: "م.87 استقالة كاملة",
   m75: "م.75 قسرية",
   m77: "م.77 تعسفي",
   m80: "م.80 تأديبي",
@@ -32,20 +35,24 @@ export function eosYears(join: string | null, end: Date, fallback = 0): number {
   return Math.max(0, Math.round(((end.getTime() - new Date(join).getTime()) / (365.25 * 24 * 3600 * 1000)) * 100) / 100);
 }
 
-export function calcByLaw(sal: number, hou: number, yrs: number, sel: EosLaw): number {
+/** `fixedTermMonthsLeft`: art. 77 for a fixed-term contract = wage of the months left (two months at least). */
+export function calcByLaw(sal: number, hou: number, yrs: number, sel: EosLaw, fixedTermMonthsLeft?: number | null): number {
   const base = sal + hou;
   const y1 = Math.min(yrs, 5);
   const y2 = Math.max(0, yrs - 5);
   const eos84 = r2((base / 2) * y1 + base * y2);
-  if (sel === "m84" || sel === "m74" || sel === "m74r" || sel === "m74d") return eos84;
+  if (sel === "m84" || sel === "m74" || sel === "m74r" || sel === "m74d" || sel === "m87") return eos84;
   if (sel === "m85" || sel === "m75") {
     if (yrs < 2) return 0;
-    if (yrs < 5) return r2(eos84 / 3);
+    if (yrs <= 5) return r2(eos84 / 3);
     if (yrs < 10) return r2((eos84 * 2) / 3);
     return eos84;
   }
   if (sel === "m77") {
-    const c77 = Math.max(Math.round(base * 2), Math.round((base / 30) * 15 * yrs));
+    const fixed = fixedTermMonthsLeft !== undefined && fixedTermMonthsLeft !== null && fixedTermMonthsLeft >= 0;
+    const c77 = fixed
+      ? Math.max(Math.round(base * 2), Math.round(base * (fixedTermMonthsLeft as number)))
+      : Math.max(Math.round(base * 2), Math.round((base / 30) * 15 * yrs));
     return r2(eos84 + c77);
   }
   return 0;

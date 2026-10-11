@@ -279,6 +279,11 @@ function Pending({ list: all, actions, type, onType }: { list: HrRequest[]; acti
                     {typeLabel(r.type)} | {detailOf(r)}
                   </div>
                   {r.notes && <div style={{ fontSize: 11, color: "var(--dm)" }}>{r.notes}</div>}
+                  {r.law_note && (
+                    <div style={{ fontSize: 11, color: "var(--am)", marginTop: 2 }}>
+                      <i className="ti ti-scale" aria-hidden /> {r.law_note}
+                    </div>
+                  )}
                 </div>
                 {r.stage === "hr" && <span className="b ba">{STAGE.hr}</span>}
                 {actions(r)}
@@ -823,6 +828,18 @@ function Holidays({ hols, onChange }: { hols: Holiday[]; onChange: () => void })
       toast(e instanceof Error ? e.message : String(e), "err");
     }
   }
+  // The Eids follow the Hijri calendar, so each year's dates must be entered; a missing year counts its Eid days
+  // against the annual leave balance (docs/LOGIC_AUDIT.md section 4, I).
+  const missingEids = useMemo(() => {
+    const y = new Date().getFullYear();
+    const norm = (x: string) => x.replace(/[أإآ]/g, "ا");
+    const out: string[] = [];
+    for (const yr of [y, y + 1])
+      for (const [key, label] of [["فطر", "عيد الفطر"], ["اضحى", "عيد الأضحى"]] as const)
+        if (!hols.some((h) => h.start_date.startsWith(String(yr)) && norm(h.name_ar).includes(key))) out.push(`${label} ${yr}`);
+    return out;
+  }, [hols]);
+
   async function del(h: Holiday) {
     try {
       await deleteHoliday(h.id);
@@ -843,6 +860,11 @@ function Holidays({ hols, onChange }: { hols: Holiday[]; onChange: () => void })
             <i className="ti ti-plus" />
           </button>
         </div>
+        {missingEids.length > 0 && (
+          <div style={{ margin: "0 0 10px", padding: "8px 12px", borderRadius: 8, fontSize: 12, color: "var(--am)", border: "1px solid color-mix(in srgb, var(--am) 40%, transparent)" }}>
+            <i className="ti ti-alert-triangle" aria-hidden /> غير مسجّل: {missingEids.join("، ")}. أضف تواريخها حسب تقويم أم القرى، وإلا تنحسب أيام العيد من رصيد الإجازة السنوية.
+          </div>
+        )}
         <div className="tw">
           <table id="HLT">
             <thead>

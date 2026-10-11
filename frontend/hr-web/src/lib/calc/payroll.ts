@@ -147,22 +147,21 @@ export function exemptKind(e: SalaryBasisRow | undefined): string {
   const w = e.wps_type;
   if (w === "consultant" || w === "tamheer" || w === "trainee") return w;
   if (w !== "wps") return w;
-  if (e.category === "consultant") return "consultant";
-  if (e.category === "tamheer") return "tamheer";
-  if (e.category === "training") return "trainee";
+  // Legacy kindOf: never the English empType codes — only words, the Excel category and the Arabic employment-type text.
   const job = e.job_title || "";
   const dep = e.department || "";
   const emp = e.workplace || "";
+  const typ = e.category || "";
   if (/تمهير/.test(emp) || /تمهير/.test(job) || /تمهير/.test(dep)) return "tamheer";
-  if (/استشاري|مستشار|استشاريه|استشارية/.test(job)) return "consultant";
-  if (/متدرب|تدريب|trainee|intern/i.test(job) || dep.trim() === "تدريب" || /تدريب/.test(emp)) return "trainee";
+  if (/استشاري|مستشار|استشاريه|استشارية/.test(job) || e.excel_category === "consultant" || /مهمة محددة/.test(typ)) return "consultant";
+  if (/متدرب|تدريب|trainee|intern/i.test(job) || /^\s*تدريب\s*$/.test(dep) || /تدريب/.test(emp) || /متدرب/.test(typ)) return "trainee";
   return "";
 }
 
 export function insDefault(e: SalaryBasisRow | undefined): string {
   if (!e) return "لا يطابق";
   if (exemptKind(e)) return "غير خاضع";
-  if (e.category === "consultant" || /استشاري/.test(e.job_title || "")) return "لا يطبق";
+  if (e.excel_category === "consultant" || /استشاري/.test(e.job_title || "") || /مهمة محددة/.test(e.category || "")) return "لا يطبق";
   if (!e.is_saudi) return "غير سعودي";
   if (e.wps_type !== "wps") return "لا يطبق";
   return e.gosi_system === "matching" ? "يطابق" : "لا يطابق";

@@ -452,6 +452,48 @@ def _employee_top_fields(body: dict[str, Any], data: dict[str, Any], active: boo
     }
 
 
+_AUTO_END = __import__("re").compile("انتهاء (مدة )?العقد|انتهاء فترة التدريب|انتهاء التدريب")
+
+
+def _reactivate_if_renewed(data: dict[str, Any], active: bool) -> bool:
+    """Legacy V101 reactivateIfRenewed (js/employees-data/088-…): an employee closed automatically because the
+    contract/training ended comes back active when the contract is renewed (indefinite, or the new end is today or
+    later and after the last day). A manual termination is never touched."""
+    if active and not (data.get("isTerminated") or data.get("term")):
+        return False
+    reason = str(data.get("terminationReason") or data.get("reason") or "")
+    if reason and not _AUTO_END.search(reason):
+        return False
+    end = str(data.get("contractEnd") or data.get("ce") or "")[:10]
+    indefinite = str(data.get("contractNature") or "") == "indefinite"
+    if not indefinite and not (end and end >= today_riyadh().isoformat()):
+        return False
+    last = str(data.get("lastDay") or "")[:10]
+    if not indefinite and last and end <= last:
+        return False
+    data.update({"isTerminated": False, "term": False})
+    for f in ("lastDay", "terminationReason", "reason", "terminationDate", "ld", "tr"):
+        if f in data:
+            data[f] = ""
+    return True
+
+
+def _contract_end(data: dict[str, Any]) -> None:
+    """Legacy sEmp (js/main/06-employees.js): a fixed-term contract ends at addMonthsSafe(contractJoin, contractDuration)
+    = join + months − 1 day; an indefinite one keeps no duration."""
+    from app.services.contracts import fixed_term_end
+    if str(data.get("contractNature") or "fixed") == "fixed":
+        join = emap.d(data.get("contractJoin") or data.get("join_date"))
+        try:
+            months = int(float(data.get("contractDuration") or 0))
+        except (TypeError, ValueError):
+            months = 0
+        if join and months > 0:
+            data["contractEnd"] = data["ce"] = fixed_term_end(join, months).isoformat()
+    else:
+        data["contractDuration"] = 0
+
+
 def _store_figures(db: Session, data: dict[str, Any], top: dict[str, Any], old: dict[str, Any] | None = None) -> None:
     """Stored figures as the legacy HTML keeps them (sEmp in js/main/06-employees.js + refreshInsuranceDependentViews in
     js/calculations/05-gosi-social-insurance.js, which recomputes with the full employee, birth date included):
@@ -486,6 +528,7 @@ def create_employee(body: dict[str, Any], request: Request, actor: dict[str, Any
     username = "EMP" + emp_no.zfill(3) if emp_no.isdigit() else emp_no.upper()
     data, top = emap.apply_input({"id": emp_no, "employee_id": emp_no, "employeeId": emp_no, "empNo": emp_no, "username": username,
                                   "u": username, "active": True, "isTerminated": False, "term": False}, body)
+    _contract_end(data)
     _store_figures(db, data, top)
     row = _row(db, """INSERT INTO public.employee_directory
         (employee_id,username,name_ar,name_en,employer,department,job_title,nationality,iqama_no,dob,join_date,manager_id,active,data)
@@ -503,8 +546,10 @@ def update_employee(employee_id: str, body: dict[str, Any], request: Request, ac
     _require(actor, *HR_ROLES)
     old = _employee_scope(db, actor, employee_id)
     data, top = emap.apply_input(dict(old.get("data") or {}), body)
+    _contract_end(data)
     _store_figures(db, data, top, old)
-    sets = ["data=CAST(:data AS jsonb)", "updated_at=now()"] + [f"{c}=:{c}" for c in top]
+    renewed = _reactivate_if_renewed(data, bool(old.get("active")))
+    sets = ["data=CAST(:data AS jsonb)", "updated_at=now()"] + [f"{c}=:{c}" for c in top] + (["active=true"] if renewed else [])
     row = _row(db, f"UPDATE public.employee_directory SET {','.join(sets)} WHERE employee_id=:id RETURNING *",
                id=employee_id, data=json.dumps(data, ensure_ascii=False), **top)
     _write_audit(db, actor, request, "employees", "update", "employee", employee_id, details={"changed_fields": sorted(body.keys())})
@@ -793,6 +838,10 @@ def payroll_exclusion(body: dict[str, Any], request: Request, actor: dict[str, A
     db.commit()
 
 
+_FEMALE_NAMES = ("منى", "زينب", "ريم", "بدريه", "ساره", "نوره", "كادي", "منيرة", "دعاء", "غدي", "لينا", "نهى", "سجى", "روان",
+                 "أثير", "هيا", "نورة", "فاطمة", "عائشة", "أفنان")
+
+
 @router.get("/dashboard")
 def dashboard(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     all_rows = _rows(db, "SELECT * FROM public.employee_directory")
@@ -806,14 +855,18 @@ def dashboard(actor: dict[str, Any] = Depends(current_actor), db: Session = Depe
             grouped[name] = grouped.get(name, 0) + 1
         return [{"name_ar": name, "name_en": name, "count": count} for name, count in sorted(grouped.items(), key=lambda item: (-item[1], item[0]))]
     saudi = sum(1 for row in active if bool((row.get("data") or {}).get("isSaudi")) or str(row.get("nationality") or "").lower() in {"saudi", "saudi arabia", "سعودي", "سعودية"})
+    # Legacy loadDash (js/main/05-dashboard.js): female = gender field or a known female first name; everyone else male.
     gender_counts = {"male": 0, "female": 0, "unknown": 0}
     for row in active:
-        gender = str((row.get("data") or {}).get("gender") or (row.get("data") or {}).get("gen") or "").lower()
-        key = "male" if gender in {"male", "m", "ذكر"} else "female" if gender in {"female", "f", "أنثى", "انثى"} else "unknown"
-        gender_counts[key] += 1
+        d = row.get("data") or {}
+        g = str(d.get("gender") or d.get("gen") or "").strip()
+        name = str(d.get("nameAr") or row.get("name_ar") or "")
+        female = g in {"أنثى", "f", "female"} or any(name.startswith(fn) for fn in _FEMALE_NAMES)
+        gender_counts["female" if female else "male"] += 1
     pending = db.scalar(text("SELECT count(*) FROM public.workflow_requests WHERE status='pending'")) or 0
     payroll_allowed = actor["role"] in SALARY_ROLES
-    payroll_total = sum(float((r.get("data") or {}).get("salaryTotal") or 0) for r in active) if payroll_allowed else None
+    # Legacy totSal: basic + housing + transport of the current employees.
+    payroll_total = sum(_num((r.get("data") or {}).get(k)) for r in active for k in ("salary", "housingAllowance", "transportAllowance")) if payroll_allowed else None
     summary_row = _row(db, "SELECT pay_year,pay_month FROM public.payroll_archives_v2 WHERE approved ORDER BY pay_year DESC,pay_month DESC LIMIT 1")
     alerts = []
     today = today_riyadh()
@@ -830,6 +883,8 @@ def dashboard(actor: dict[str, Any] = Depends(current_actor), db: Session = Depe
             except ValueError:
                 continue
             days_left = (expires-today).days
+            if kind == "contract" and str(data.get("contractNature") or "") == "indefinite":
+                continue  # legacy getAlerts: no contract alert for an indefinite contract
             if days_left <= 90:
                 alerts.append({"employee": brief, "kind": kind, "expires_on": expires, "days_left": days_left,
                                "level": "expired" if days_left < 0 else "urgent" if days_left <= 30 else "soon"})
@@ -840,9 +895,9 @@ def dashboard(actor: dict[str, Any] = Depends(current_actor), db: Session = Depe
         else:
             item["salary_total"] = None
     return {"current": len(active), "saudi": saudi, "expat": len(active)-saudi,
-            "saudization_pct": round(saudi*100/len(active), 1) if active else 0, "payroll_total": payroll_total,
+            "saudization_pct": _round_half_up(saudi*100/len(active)) if active else 0, "payroll_total": payroll_total,
             "male": gender_counts["male"], "female": gender_counts["female"], "gender_unspecified": gender_counts["unknown"],
-            "terminated": len(terminated), "tamheer": sum(1 for r in active if (r.get("data") or {}).get("empType") == "tamheer"),
+            "terminated": len(terminated), "tamheer": sum(1 for r in active if "تمهير" in str(r.get("job_title") or (r.get("data") or {}).get("jobTitle") or (r.get("data") or {}).get("jt") or "")),
             "pending_requests": pending, "departments": group_count(active, "department"),
             "nationalities": group_count(active, "nationality"), "workplaces": workplaces, "alerts": alerts,
             "payroll_summary": ({"year": summary_row["pay_year"], "month": summary_row["pay_month"]} if summary_row else None)}
@@ -991,10 +1046,80 @@ def my_attendance_range(date_from: date, date_to: date, actor: dict[str, Any] = 
     return [_attendance_row(db, r) for r in rows]
 
 
+def _point_in_polygon(lat: float, lng: float, poly: Any) -> bool:
+    """Legacy ariba_point_in_polygon: ray casting over [[lat, lng], ...]."""
+    if isinstance(poly, str):
+        try:
+            poly = json.loads(poly)
+        except ValueError:
+            return False
+    if not isinstance(poly, list) or len(poly) < 3:
+        return False
+    inside, j = False, len(poly) - 1
+    for i in range(len(poly)):
+        yi, xi, yj, xj = float(poly[i][0]), float(poly[i][1]), float(poly[j][0]), float(poly[j][1])
+        if (yi > lat) != (yj > lat) and lng < (xj - xi) * (lat - yi) / (yj - yi) + xi:
+            inside = not inside
+        j = i
+    return inside
+
+
+def _round_half_up(x: float) -> int:
+    """Postgres numeric round / ::integer (half away from zero), as the legacy SQL minutes."""
+    return int(math.floor(x + 0.5)) if x >= 0 else -int(math.floor(-x + 0.5))
+
+
+def _locate(locs: list[dict[str, Any]], lat: float, lng: float) -> tuple[dict[str, Any] | None, float]:
+    """The location a point falls in (legacy ariba_attendance V140): non-remote, inside its polygon or within radius_m of
+    its centre; the smallest circle first, polygons last. Returns (location, distance_m) or (None, 0)."""
+    def circle_d(w: dict[str, Any]) -> float:
+        return _distance_m(lat, lng, float(w["latitude"] or 0), float(w["longitude"] or 0))
+
+    inside = [w for w in locs if (w.get("type") or "") != "remote"
+              and (_point_in_polygon(lat, lng, w["polygon"]) if w.get("polygon") is not None else circle_d(w) <= float(w["radius_m"] or 0))]
+    if not inside:
+        return None, 0.0
+    loc = min(inside, key=lambda w: 1e12 if w.get("polygon") is not None else float(w["radius_m"] or 0))
+    return loc, 0.0 if loc.get("polygon") is not None else circle_d(loc)
+
+
+def _clock_minutes(t: time) -> float:
+    return t.hour * 60 + t.minute + t.second / 60
+
+
+def _tolerance(cs: dict[str, Any]) -> int:
+    """company_settings.tolerance_minutes; 0 is a real setting (legacy coalesce(tolerance_minutes, 15))."""
+    v = cs.get("tolerance_minutes")
+    return 15 if v is None else int(v)
+
+
+def _punch_late(cs: dict[str, Any], t: time) -> int:
+    """Late minutes of the day's first check-in. Flexible: legacy ariba_punch_late — after (window end - shift hours +
+    tolerance), at least 1 minute, rounded. Fixed: ariba_attendance — after work start + tolerance, rounded."""
+    tol = _tolerance(cs)
+    if cs.get("flexible_enabled"):
+        last_in = _clock_minutes(cs.get("flex_window_end") or time(17)) - float(cs.get("shift_hours") or 8) * 60 + tol
+        return 0 if _clock_minutes(t) <= last_in else max(1, _round_half_up(_clock_minutes(t) - last_in))
+    return max(0, _round_half_up(_clock_minutes(t) - (_clock_minutes(cs.get("work_start") or time(8)) + tol)))
+
+
+def _punch_early(cs: dict[str, Any], first_in: time, first_late: int, t: time) -> int:
+    """Early-leave minutes at check-out (legacy ariba_attendance 'out' / ariba_punch_early): flexible only — expected =
+    first check-in + shift hours, capped at the window end when that check-in was late. Fixed hours: 0."""
+    if not cs.get("flexible_enabled"):
+        return 0
+    expected = (datetime.combine(date(2000, 1, 1), first_in) + timedelta(hours=float(cs.get("shift_hours") or 8))).time()
+    if first_late > 0:
+        expected = min(expected, cs.get("flex_window_end") or time(17))
+    return max(0, _round_half_up(_clock_minutes(expected) - _clock_minutes(t)))
+
+
 @router.post("/me/attendance/punch")
 def punch(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    """Port of the legacy server function ariba_attendance (V114, source kept in ariba_function_backups):
-    nearest allowed active location (the employee's workLocationIds, else employer or 'all'), haversine <= radius_m,
+    """Port of the legacy server function ariba_attendance (latest, V140 — supabase_full.sql): the allowed active
+    locations are the employee's workLocationIds, else employer or 'all'; the punch is accepted inside a polygon zone or
+    within radius_m of a circle (smallest circle first, polygons last); outside all of them only a 'remote' location
+    with an approved remote request covering today is accepted.
     auto-close of earlier open sessions at 23:59, several sessions a day, late from the first session only.
     Flexible hours: no punch before the window; late = after (window end - shift hours + tolerance), in which case
     the expected check-out is the window end; early = expected - check-out. Fixed hours: early is 0 (as legacy)."""
@@ -1016,20 +1141,28 @@ def punch(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depend
         locs = _rows(db, "SELECT * FROM public.work_locations WHERE active AND (employer='all' OR employer=:er)", er=emp.get("employer"))
     if not locs:
         raise ApiError(409, "no_active_location", "لا يوجد موقع عمل")
-    loc = min(locs, key=lambda w: (lat - float(w["latitude"] or 0)) ** 2 + (lng - float(w["longitude"] or 0)) ** 2)
-    d = _distance_m(lat, lng, float(loc["latitude"] or 0), float(loc["longitude"] or 0))
-    if d > float(loc["radius_m"] or 0):
-        raise ApiError(409, "outside_geofence", "أنت خارج نطاق مواقع العمل المسموح بها",
-                       {"nearest": loc["name"], "distance_m": round(d)})
+
+    def circle_d(w: dict[str, Any]) -> float:
+        return _distance_m(lat, lng, float(w["latitude"] or 0), float(w["longitude"] or 0))
+
+    loc, d = _locate(locs, lat, lng)
+    if not loc:
+        remote = sorted((w for w in locs if (w.get("type") or "") == "remote"), key=lambda w: str(w["id"]))
+        if not remote:
+            near = min((w for w in locs if w.get("polygon") is None), key=circle_d, default=None)
+            raise ApiError(409, "outside_geofence", "أنت خارج نطاق مواقع العمل المسموح بها",
+                           {"nearest": near["name"], "distance_m": round(circle_d(near))} if near else None)
+        today_s = today_riyadh().isoformat()
+        if not _row(db, """SELECT 1 AS x FROM public.workflow_requests WHERE employee_id=:e AND request_type='remote' AND status='approved'
+                AND nullif(payload->>'from','') <= :t AND coalesce(nullif(payload->>'to',''), nullif(payload->>'from','')) >= :t LIMIT 1""",
+                    e=eid, t=today_s):
+            raise ApiError(409, "remote_not_approved", "أنت خارج مواقع العمل — العمل عن بعد يحتاج طلب عن بعد معتمد لليوم")
+        loc, d = remote[0], 0.0
     cs = _row(db, "SELECT * FROM public.company_settings WHERE id='default'") or {}
     today = today_riyadh()
     nowt = now_riyadh().time().replace(tzinfo=None, microsecond=0)
-    ws, tol = cs.get("work_start") or time(8), int(cs.get("tolerance_minutes") or 15)
     flex = bool(cs.get("flexible_enabled"))
-    shift = timedelta(hours=float(cs.get("shift_hours") or 8))
-    w_start, w_end = cs.get("flex_window_start") or time(8), cs.get("flex_window_end") or time(17)
-    mins = lambda t: t.hour * 60 + t.minute + t.second / 60  # noqa: E731
-    plus = lambda t, delta: (datetime.combine(today, t) + delta).time()  # noqa: E731
+    w_start = cs.get("flex_window_start") or time(8)
     db.execute(text("""UPDATE public.attendance SET time_out='23:59:00',early_minutes=0,notes=coalesce(notes,'')||' | إغلاق تلقائي 23:59 (نسي بصمة الخروج)'
         WHERE emp_id=:e AND time_in IS NOT NULL AND time_out IS NULL AND date<:d"""), {"e": eid, "d": today})
     open_rec = _row(db, "SELECT * FROM public.attendance WHERE emp_id=:e AND date=:d AND time_in IS NOT NULL AND time_out IS NULL ORDER BY created_at DESC LIMIT 1", e=eid, d=today)
@@ -1037,29 +1170,18 @@ def punch(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depend
     if action == "in":
         if open_rec:
             raise ApiError(409, "already_checked_in", "سجلت حضورك بالفعل — سجّل الانصراف أولاً")
-        late = 0
-        if flex:
-            if not first_rec:
-                if nowt < w_start:
-                    raise ApiError(409, "too_early_for_flexible_window", f"لا يمكن تسجيل الحضور قبل بداية الدوام المرن {w_start.strftime('%H:%M')}")
-                last_in = mins(w_end) - shift.total_seconds() / 60 + tol
-                late = max(0, round(mins(nowt) - last_in))
-        elif not first_rec:
-            late = max(0, int((mins(nowt) - (mins(ws) + tol))))
+        if flex and not first_rec and nowt < w_start:
+            raise ApiError(409, "too_early_for_flexible_window", f"لا يمكن تسجيل الحضور قبل بداية الدوام المرن {w_start.strftime('%H:%M')}")
+        late = 0 if first_rec else _punch_late(cs, nowt)
         extra = " (دخول إضافي في نفس اليوم)" if first_rec else ""
         row = _row(db, """INSERT INTO public.attendance(emp_id,date,time_in,location_id,location_name,lat,lng,status,notes,late_minutes,early_minutes)
             VALUES(:e,:d,:t,:loc,:name,:lat,:lng,:st,:n,:late,0) RETURNING *""", e=eid, d=today, t=nowt, loc=loc["id"], name=loc["name"],
-            lat=lat, lng=lng, st="late" if late > 0 else "present", n=f"GPS distance: {round(d)} m{extra}", late=late)
+            lat=lat, lng=lng, st="remote" if loc.get("type") == "remote" else "late" if late > 0 else "present",
+            n=("عمل عن بعد (طلب معتمد) — " if loc.get("type") == "remote" else "") + f"GPS distance: {round(d)} m{extra}", late=late)
     else:
         if not open_rec:
             raise ApiError(409, "not_checked_in", "لا يوجد سجل حضور مفتوح اليوم")
-        early = 0
-        if flex:
-            first_in = (first_rec or open_rec)["time_in"]
-            expected = plus(first_in, shift)
-            if int((first_rec or {}).get("late_minutes") or 0) > 0:
-                expected = min(expected, w_end)
-            early = max(0, int(mins(expected) - mins(nowt)))
+        early = _punch_early(cs, (first_rec or open_rec)["time_in"], int((first_rec or {}).get("late_minutes") or 0), nowt)
         row = _row(db, """UPDATE public.attendance SET time_out=:t,notes=coalesce(notes,'')||:n,early_minutes=:early WHERE id=:id RETURNING *""",
                    t=nowt, n=f" | GPS checkout distance: {round(d)} m", early=early, id=open_rec["id"])
     _write_audit(db, actor, request, "attendance", "punch_" + action, "attendance", row["id"])
@@ -1070,15 +1192,14 @@ def punch(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depend
 # --------------------------------------------------------------------------- workflow (legacy ariba_submit_request / ariba_workflow_action)
 LEAVE_TYPES = {"annual", "sick", "emergency", "death", "marriage", "maternity", "paternity", "umrah", "hajj", "remote"}
 HOURLY_TYPES = {"permission", "maternity_permission", "early_leave", "perm", "perm_mat"}
-# Approval stages per type (workflow_rules confirmed with the business owner): leaves/remote/advance go to the CEO,
-# permissions/overtime/mission stop at HR, forgot-punch goes to HR only.
-_NO_CEO = HOURLY_TYPES | {"overtime", "mission"}
 
 
 def _stages(req_type: str) -> list[str]:
+    """Approval stages (legacy ariba_workflow_action, as decided with the business owner): every type goes
+    manager → HR → CEO; forgot-punch goes to HR only."""
     if req_type == "forgot_punch":
         return ["hr"]
-    return ["manager", "hr"] if req_type in _NO_CEO else ["manager", "hr", "ceo"]
+    return ["manager", "hr", "ceo"]
 
 
 def _next_stage(req_type: str, stage: str) -> str:
@@ -1124,30 +1245,82 @@ def _can_act(actor: dict[str, Any], item: dict[str, Any]) -> bool:
 
 
 def _apply_forgot_punch(db: Session, item: dict[str, Any]) -> None:
-    """V114: an approved «نسيان بصمة» is written to attendance (check-in, check-out — closing that day's open
-    session when there is one — or both)."""
+    """Legacy ariba_apply_forgot_punch (V114b): an approved «نسيان بصمة» is merged into that day's attendance —
+    an earlier check-in replaces the first session's, a check-out closes the last session (or replaces an auto-close /
+    an earlier check-out), «both» fills the first session; late/early with the punch rules (flexible hours included)."""
     p = item.get("payload") or {}
     kind, day = p.get("kind"), cdata._d(p.get("date"))
-    t1 = p.get("time")
-    t2 = p.get("time2") if kind == "both" else None
+    tm = lambda v: time.fromisoformat(str(v)[:8]) if v else None  # noqa: E731
+    t1, t2 = tm(p.get("time")), tm(p.get("time2"))
     if not day or not t1 or kind not in {"in", "out", "both"}:
         return
-    note = "نسيان بصمة" + (f": {p.get('notes')}" if p.get("notes") else "")
-    eid = item["employee_id"]
-    if kind == "out":
-        open_rec = _row(db, "SELECT id FROM public.attendance WHERE emp_id=:e AND date=:d AND time_in IS NOT NULL AND time_out IS NULL ORDER BY time_in DESC LIMIT 1", e=eid, d=day)
-        if open_rec:
-            db.execute(text("UPDATE public.attendance SET time_out=:t,notes=coalesce(notes||' · ','')||:n WHERE id=:id"), {"t": t1, "n": note, "id": open_rec["id"]})
+    cs = _row(db, "SELECT * FROM public.company_settings WHERE id='default'") or {}
+    note, loc, eid = " | أُضيفت بطلب نسيان بصمة معتمد من الموارد البشرية", "طلب نسيان بصمة", item["employee_id"]
+    first = lambda: _row(db, "SELECT * FROM public.attendance WHERE emp_id=:e AND date=:d ORDER BY time_in ASC NULLS LAST, created_at ASC LIMIT 1", e=eid, d=day)  # noqa: E731
+    insert = """INSERT INTO public.attendance(emp_id,date,time_in,time_out,status,notes,late_minutes,early_minutes,location_name)
+        VALUES(:e,:d,:t1,:t2,:st,:n,:late,:early,:loc)"""
+    if kind == "in":
+        a, late = first(), _punch_late(cs, t1)
+        if not a:
+            db.execute(text(insert), {"e": eid, "d": day, "t1": t1, "t2": None, "st": "late" if late else "present",
+                                      "n": "طلب نسيان بصمة (دخول)" + note, "late": late, "early": 0, "loc": loc})
+        elif a["time_in"] is None or t1 < a["time_in"]:
+            early = _punch_early(cs, t1, late, a["time_out"]) if a["time_out"] else a["early_minutes"]
+            db.execute(text("UPDATE public.attendance SET time_in=:t,late_minutes=:late,status=:st,early_minutes=:early,notes=coalesce(notes,'')||:n WHERE id=:id"),
+                       {"t": t1, "late": late, "st": "late" if late else "present", "early": early, "n": note, "id": a["id"]})
+    elif kind == "out":
+        a = _row(db, "SELECT * FROM public.attendance WHERE emp_id=:e AND date=:d ORDER BY time_in DESC NULLS LAST, created_at DESC LIMIT 1", e=eid, d=day)
+        if not a:
+            db.execute(text(insert), {"e": eid, "d": day, "t1": None, "t2": t1, "st": "present", "n": "طلب نسيان بصمة (خروج)" + note,
+                                      "late": 0, "early": 0, "loc": loc})
+        elif a["time_out"] is None or "إغلاق تلقائي" in (a["notes"] or "") or t1 > a["time_out"]:
+            early = _punch_early(cs, a["time_in"], int(a["late_minutes"] or 0), t1) if a["time_in"] else 0
+            db.execute(text("UPDATE public.attendance SET time_out=:t,early_minutes=:early,notes=coalesce(notes,'')||:n WHERE id=:id"),
+                       {"t": t1, "early": early, "n": note, "id": a["id"]})
+    else:
+        if not t2:
             return
-        db.execute(text("INSERT INTO public.attendance(emp_id,date,time_out,status,notes,late_minutes,early_minutes) VALUES(:e,:d,:t,'present',:n,0,0)"), {"e": eid, "d": day, "t": t1, "n": note})
+        a, late = first(), _punch_late(cs, t1)
+        if not a:
+            db.execute(text(insert), {"e": eid, "d": day, "t1": t1, "t2": t2, "st": "late" if late else "present",
+                                      "n": "طلب نسيان بصمة (دخول وخروج)" + note, "late": late, "early": _punch_early(cs, t1, late, t2), "loc": loc})
+        else:
+            if a["time_in"] is not None and a["time_in"] <= t1:
+                t1 = a["time_in"]
+                late = a["late_minutes"] if a["late_minutes"] is not None else _punch_late(cs, t1)
+            db.execute(text("UPDATE public.attendance SET time_in=:t1,time_out=:t2,late_minutes=:late,status=:st,early_minutes=:early,notes=coalesce(notes,'')||:n WHERE id=:id"),
+                       {"t1": t1, "t2": t2, "late": late, "st": "late" if late else "present", "early": _punch_early(cs, t1, late, t2), "n": note, "id": a["id"]})
+
+
+def _override(db: Session, actor: dict[str, Any], item: dict[str, Any], reason: str | None) -> None:
+    """Legacy ariba_hr_override_workflow: HR approves on behalf of whoever holds the current stage and moves it on
+    (forgot-punch: approved and applied at once)."""
+    rid, stage = item["id"], item.get("current_stage") or "manager"
+    if stage not in {"manager", "hr", "ceo"}:
+        raise ApiError(409, "not_overrideable", "REQUEST_STAGE_NOT_OVERRIDEABLE")
+    t = item["request_type"]
+    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_employee_id,actor_account_id,stage,action,comment) VALUES(:r,:e,:a,:s,'approved',:c)"),
+               {"r": rid, "e": actor.get("employee_id"), "a": actor.get("account_id"), "s": "hr" if t == "forgot_punch" else f"hr_override_{stage}",
+                "c": reason or "اعتماد الموارد البشرية نيابة عن المسؤول في هذه المرحلة"})
+    db.execute(text("UPDATE public.workflow_notifications SET is_read=true,read_at=now() WHERE request_id=:r AND NOT is_read"), {"r": rid})
+    done = "UPDATE public.workflow_requests SET status='approved',current_stage='completed',completed_at=now(),updated_at=now() WHERE id=:r"
+    if t == "forgot_punch":
+        _apply_forgot_punch(db, item)
+        db.execute(text(done), {"r": rid})
+        _insert_notification(db, item["employee_id"], rid, "تمت الموافقة على نسيان البصمة", "تمت الموافقة على طلبك وتم تسجيل الحضور/الانصراف", "employee", "decision")
         return
-    first = not _row(db, "SELECT id FROM public.attendance WHERE emp_id=:e AND date=:d LIMIT 1", e=eid, d=day)
-    cs = _row(db, "SELECT work_start,tolerance_minutes FROM public.company_settings WHERE id='default'") or {}
-    ws, tol = cs.get("work_start") or time(8), int(cs.get("tolerance_minutes") or 15)
-    tin = time.fromisoformat(str(t1)[:5])
-    late = max(0, tin.hour * 60 + tin.minute - (ws.hour * 60 + ws.minute + tol)) if first else 0
-    db.execute(text("INSERT INTO public.attendance(emp_id,date,time_in,time_out,status,notes,late_minutes,early_minutes) VALUES(:e,:d,:t1,:t2,:st,:n,:late,0)"),
-               {"e": eid, "d": day, "t1": t1, "t2": t2, "st": "late" if late else "present", "n": note, "late": late})
+    if stage in {"manager", "hr"}:
+        col, nxt = ("mgr", "hr") if stage == "manager" else ("hr", "ceo")
+        db.execute(text(f"UPDATE public.leave_requests SET {col}_status='approved',{col}_at=now(),status='pending',updated_at=now() WHERE workflow_request_id=:r"), {"r": rid})
+        db.execute(text("UPDATE public.workflow_requests SET current_stage=:n,updated_at=now() WHERE id=:r"), {"r": rid, "n": nxt})
+        title, body = (("طلب بانتظار موافقة الموارد البشرية", "تم اعتماد الطلب نيابة عن المدير المباشر") if nxt == "hr"
+                       else ("طلب بانتظار موافقتك", "تم اعتماد الطلب نيابة عن الموارد البشرية"))
+        for who in _stage_people(db, nxt):
+            _insert_notification(db, who, rid, title, body, "workflow", "request")
+        return
+    db.execute(text("UPDATE public.leave_requests SET ceo_status='approved',ceo_at=now(),status='approved',updated_at=now() WHERE workflow_request_id=:r"), {"r": rid})
+    db.execute(text(done), {"r": rid})
+    _insert_notification(db, item["employee_id"], rid, "تمت الموافقة النهائية", "تمت الموافقة على طلبك بالكامل بواسطة الموارد البشرية نيابة عن المسؤول", "employee", "decision")
 
 
 def _advance(db: Session, actor: dict[str, Any], item: dict[str, Any], action: str, reason: str | None, stage: str | None = None) -> None:
@@ -1175,6 +1348,7 @@ def _advance(db: Session, actor: dict[str, Any], item: dict[str, Any], action: s
         _insert_notification(db, item["employee_id"], rid, "تمت الموافقة النهائية", "تمت الموافقة على طلبك بالكامل", "employee", "decision")
     else:
         db.execute(text("UPDATE public.workflow_requests SET current_stage=:n,updated_at=now() WHERE id=:r"), {"r": rid, "n": nxt})
+        _insert_notification(db, item["employee_id"], rid, "تمت الموافقة على مرحلة", "تمت الموافقة على طلبك وانتقل للمرحلة التالية", "employee", "workflow")
         _notify_stage(db, dict(item, current_stage=nxt), nxt)
 
 
@@ -1201,7 +1375,7 @@ def my_leave(actor: dict[str, Any] = Depends(current_actor), db: Session = Depen
     book = cdata.leave_book(db, today, emps)
     s = book.summary(emps[0])
     hols = _rows(db, "SELECT DISTINCT name,holiday_date,days FROM public.public_holidays WHERE holiday_date>=:d ORDER BY holiday_date LIMIT 4", d=today)
-    return {"current": s["current"], "carry": s["carry"], "year_end": s["year_end"], "annual": book.annual(emps[0]),
+    return {"current": round(book.app_current(emps[0]), 2), "carry": s["carry"], "year_end": round(book.app_year_end(emps[0]), 2), "annual": book.annual(emps[0]),
             "upcoming_holidays": [{"name": h["name"], "date": h["holiday_date"].isoformat(), "days": h["days"]} for h in hols]}
 
 
@@ -1302,7 +1476,20 @@ def submit_request(body: dict[str, Any], request: Request, actor: dict[str, Any]
         db.execute(text("""INSERT INTO public.leave_requests(emp_id,type,from_date,to_date,days,notes,status,mgr_status,hr_status,ceo_status,manager_id,workflow_request_id)
             VALUES(:eid,:type,:f,:t,:days,:notes,'pending','pending','pending','pending',:m,:rid)"""),
             {"eid": eid, "type": t, "f": f, "t": to, "days": max(1, int(payload.get("days") or 1)), "notes": notes, "m": manager, "rid": row["id"]})
-    _notify_stage(db, row, stage)
+    if t == "forgot_punch":
+        for h in _stage_people(db, "hr"):
+            _insert_notification(db, h, row["id"], "طلب نسيان بصمة", "يوجد طلب نسيان بصمة بانتظار موافقتك", "hr", "request")
+    elif stage == "manager":
+        _insert_notification(db, manager, row["id"], "طلب جديد", "يوجد طلب جديد من الموظف بانتظار موافقتك", "manager", "request")
+    else:
+        _notify_stage(db, row, stage)
+    if stage == "hr" and t != "forgot_punch":  # legacy: no manager → the employee is told it went to HR
+        _insert_notification(db, eid, row["id"], "طلب جديد", "تم إرسال طلبك إلى الموارد البشرية", "hr", "request")
+    if stage == "manager":  # V115: HR hears of every new request (it can approve on the manager's behalf)
+        for h in _stage_people(db, "hr"):
+            if h not in {eid, manager}:
+                _insert_notification(db, h, row["id"], f"طلب جديد من {emp.get('name_ar') or eid}",
+                                     "الطلب بانتظار المدير المباشر — تقدر تعتمده بالنيابة عنه من طلبات الموظفين", "hr", "request")
     _write_audit(db, actor, request, "workflow", "submit", "workflow_request", row["id"], details={"type": t})
     db.commit()
     return _me_requests_out(db, [row])[0]
@@ -1316,11 +1503,22 @@ def delete_my_request(request_id: uuid.UUID, request: Request, actor: dict[str, 
         raise ApiError(404, "not_found", "Request not found")
     if item["status"] == "approved":
         raise ApiError(409, "approved", "لا يمكن حذف طلب معتمد")
+    snap = _row(db, """SELECT jsonb_build_object('request',to_jsonb(r),
+        'documents',coalesce((SELECT jsonb_agg(jsonb_build_object('id',d.id,'file_name',d.file_name,'mime_type',d.mime_type,'file_size',d.file_size,'document_type',d.document_type,'uploaded_by',d.uploaded_by,'created_at',d.created_at,'base64',encode(d.file_data,'base64'))) FROM public.ariba_documents d WHERE d.request_id=r.id),'[]'::jsonb),
+        'leave',coalesce((SELECT jsonb_agg(to_jsonb(l)) FROM public.leave_requests l WHERE l.workflow_request_id=r.id),'[]'::jsonb),
+        'notifications',coalesce((SELECT jsonb_agg(to_jsonb(n)) FROM public.workflow_notifications n WHERE n.request_id=r.id),'[]'::jsonb)) AS s
+        FROM public.workflow_requests r WHERE r.id=:r""", r=request_id)["s"]
     db.execute(text("INSERT INTO public.ariba_deleted_items(kind,ref_id,employee_id,snapshot,deleted_by,deleted_by_role) VALUES('workflow_request',:r,:e,CAST(:s AS jsonb),:by,:role)"),
-               {"r": str(request_id), "e": item["employee_id"], "s": json.dumps(item, default=str, ensure_ascii=False), "by": actor.get("employee_id"), "role": actor.get("role")})
-    for sql in ("DELETE FROM public.workflow_notifications WHERE request_id=:r", "DELETE FROM public.workflow_actions WHERE request_id=:r",
-                "DELETE FROM public.leave_requests WHERE workflow_request_id=:r", "DELETE FROM public.workflow_requests WHERE id=:r"):
+               {"r": str(request_id), "e": item["employee_id"], "s": json.dumps(snap, default=str, ensure_ascii=False), "by": actor.get("employee_id"), "role": actor.get("role")})
+    for sql in ("DELETE FROM public.ariba_documents WHERE request_id=:r", "DELETE FROM public.workflow_notifications WHERE request_id=:r",
+                "DELETE FROM public.workflow_actions WHERE request_id=:r", "DELETE FROM public.leave_requests WHERE workflow_request_id=:r",
+                "DELETE FROM public.workflow_requests WHERE id=:r"):
         db.execute(text(sql), {"r": request_id})
+    if item["status"] == "pending":  # legacy ariba_delete_request: HR is told when an employee withdraws a pending request
+        name = _row(db, "SELECT coalesce(name_ar,employee_id) AS n FROM public.employee_directory WHERE employee_id=:e", e=item["employee_id"])
+        title = f"{(name or {}).get('n') or item['employee_id']} حذف طلباً معلقاً: {(item.get('payload') or {}).get('title') or item['request_type']}"
+        for h in _role_employees(db, "hr"):
+            _insert_notification(db, h, None, title, "اتحذف من طرف الموظف ومتسجّل في أرشيف المحذوفات.", "hr", "request")
     _write_audit(db, actor, request, "workflow", "delete", "workflow_request", request_id)
     db.commit()
 
@@ -1721,6 +1919,13 @@ def payroll_archive(actor: dict[str, Any] = Depends(current_actor), db: Session 
         FROM public.payroll_archives_v2 WHERE approved ORDER BY pay_year DESC,pay_month DESC""")
 
 
+def _num(v: Any) -> float:
+    try:
+        return float(v or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 @router.get("/salary/basis")
 def salary_basis(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *SALARY_ROLES)
@@ -1731,18 +1936,22 @@ def salary_basis(actor: dict[str, Any] = Depends(current_actor), db: Session = D
         data = emp["data"]
         basic = float(data.get("salary") or 0)
         housing = float(data.get("housingAllowance") or 0)
-        joined = emp.get("join_date")
-        ended = data.get("lastDay") or today_riyadh().isoformat()
-        try:
-            years = max(0.0, (date.fromisoformat(str(ended)[:10])-date.fromisoformat(str(joined)[:10])).days/365.0) if joined else 0.0
-        except ValueError:
-            years = 0.0
-        eos_base = basic + housing
-        eos = eos_base/2*min(years,5)+eos_base*max(0,years-5)
+        # As the legacy HTML (settlement sOnSel / reports rptEOS, js/reports/042-v44-reports-terminated-eos.js):
+        # years = the stored yearsOfService; EOS = the recorded eosLaborLaw (it already applies the termination
+        # article), else — when nothing is recorded and no eosCategory — calcEOS(salary, yearsOfService, housing).
+        years = _num(data.get("yearsOfService"))
+        recorded = _num(data.get("eosLaborLaw"))
+        if data.get("eosCategory"):
+            eos = recorded
+        elif recorded > 0:
+            eos = recorded
+        else:
+            eos_base, y = basic + housing, max(0.0, years)
+            eos = round(((eos_base / 2) * min(y, 5) + eos_base * max(0.0, y - 5)) * 100) / 100
         result.append({"id": emp["employee_id"], "emp_no": emp["emp_no"], "name_ar": emp["name_ar"],
                        "workplace": emp["employer"], "department": emp["department"], "job_title": emp["job_title"],
                        "nationality": emp["nationality"], "is_saudi": bool(data.get("isSaudi")), "birth_date": emp["dob"],
-                       "category": data.get("empType", "active"), "wps_type": data.get("wpsType", "wps"),
+                       "category": data.get("empType", "active"), "excel_category": data.get("excelCategory"), "wps_type": data.get("wpsType", "wps"),
                        "gosi_system": data.get("insSystem"), "join_date": emp["join_date"],
                        "contract_duration_months": data.get("contractDuration"), "contract_end_date": data.get("contractEnd"),
                        "annual_leave_days": data.get("leaveDaysContract", 21), "basic_salary": basic, "housing_allowance": housing,
@@ -1784,6 +1993,44 @@ def hr_leave_requests(actor: dict[str, Any] = Depends(current_actor), db: Sessio
     return _rows(db, "SELECT * FROM public.workflow_requests WHERE request_type NOT LIKE 'template:%' ORDER BY created_at DESC")
 
 
+_LAW_DAYS = {"marriage": (5, "م.113"), "death": (5, "م.113"), "paternity": (3, "م.113"), "maternity": (84, "م.151")}
+
+
+def _law_note(db: Session, row: dict[str, Any], f: date | None, days: int) -> str | None:
+    """A labour-law reminder for HR on a pending leave (docs/LOGIC_AUDIT.md section 4, E/F): the request is kept, the
+    note says what the law pays. Sick leave (art. 117, a rolling year): 30 days full pay, 60 at three quarters, 30
+    unpaid; marriage / death 5 days, paternity 3 (art. 113); maternity 12 weeks (art. 151); hajj (art. 114): after two
+    years of service, once, 10–15 days."""
+    t = row["request_type"]
+    if row.get("status") != "pending" or not f or days <= 0:
+        return None
+    if t in _LAW_DAYS:
+        cap, art = _LAW_DAYS[t]
+        return f"المدة النظامية {cap} يوم ({art}) — الطلب {days} يوم، والزيادة تُعامل بدون أجر أو من الرصيد السنوي" if days > cap else None
+    if t == "sick":
+        prior = _row(db, """SELECT coalesce(sum(coalesce(nullif(payload->>'days','')::int, (nullif(payload->>'to','')::date - nullif(payload->>'from','')::date) + 1)),0) AS n
+            FROM public.workflow_requests WHERE employee_id=:e AND request_type='sick' AND status='approved' AND id<>:id
+            AND nullif(payload->>'from','')::date >= :a AND nullif(payload->>'from','')::date < :f""", e=row["employee_id"], id=row["id"], a=f - timedelta(days=365), f=f)
+        before = int((prior or {}).get("n") or 0)
+        total = before + days
+        if total <= 30:
+            return None
+        part = lambda lo, hi: max(0, min(total, hi) - max(before, lo))  # noqa: E731
+        bits = [f"{n} يوم {label}" for n, label in ((part(30, 90), "بثلاثة أرباع الأجر"), (part(90, 120), "بدون أجر"), (part(120, 10**6), "تتجاوز 120 يوم في السنة")) if n]
+        return f"مرضية آخر 12 شهر: {total} يوم (م.117: 30 بأجر كامل، 60 بثلاثة أرباعه، 30 بدون أجر) — من هذا الطلب " + "، ".join(bits)
+    if t == "hajj":
+        emp = _row(db, "SELECT join_date FROM public.employee_directory WHERE employee_id=:e", e=row["employee_id"]) or {}
+        notes = []
+        if emp.get("join_date") and (f - emp["join_date"]).days < 730:
+            notes.append("الخدمة أقل من سنتين")
+        if _row(db, "SELECT 1 AS x FROM public.workflow_requests WHERE employee_id=:e AND request_type='hajj' AND status='approved' AND id<>:id LIMIT 1", e=row["employee_id"], id=row["id"]):
+            notes.append("سبق له إجازة حج معتمدة")
+        if days > 15:
+            notes.append(f"المدة {days} يوم أكثر من 15")
+        return ("إجازة الحج (م.114): " + "، ".join(notes)) if notes else None
+    return None
+
+
 def _workflow_out(db: Session, row: dict[str, Any]) -> dict[str, Any]:
     payload = row.get("payload") or {}
     leave = _row(db, "SELECT * FROM public.leave_requests WHERE workflow_request_id=:id", id=row["id"])
@@ -1794,7 +2041,8 @@ def _workflow_out(db: Session, row: dict[str, Any]) -> dict[str, Any]:
             "days": (leave or {}).get("days") or payload.get("days"), "on_date": payload.get("date"),
             "time_from": payload.get("time"), "time_to": payload.get("time2"), "hours": payload.get("hours") or payload.get("dur"),
             "amount": payload.get("amount"), "punch_kind": payload.get("kind"), "notes": (leave or {}).get("notes") or payload.get("notes"),
-            "rejection_reason": row.get("rejection_reason"), "attachment_id": None, "created_at": row["created_at"]}
+            "rejection_reason": row.get("rejection_reason"), "attachment_id": None, "created_at": row["created_at"],
+            "law_note": _law_note(db, row, cdata._d((leave or {}).get("from_date") or payload.get("from")), int((leave or {}).get("days") or payload.get("days") or 0))}
 
 
 @router.get("/requests")
@@ -1862,7 +2110,10 @@ def _hr_decide(db: Session, actor: dict[str, Any], request: Request, request_id:
         raise ApiError(403, "forbidden", "This request is not at the HR stage")
     if actor["role"] not in HR_ROLES:
         raise ApiError(403, "forbidden", "Not authorized")
-    _advance(db, actor, item, action, reason)
+    if allow_override and action == "approve":
+        _override(db, actor, item, reason)
+    else:
+        _advance(db, actor, item, action, reason)
     _write_audit(db, actor, request, "workflow", action, "workflow_request", request_id, details={"stage": stage, "override": allow_override})
     return _workflow_out(db, _row(db, "SELECT * FROM public.workflow_requests WHERE id=:id", id=request_id))
 
@@ -1888,9 +2139,9 @@ def hr_final_approve(request_id: uuid.UUID, body: dict[str, Any], request: Reque
     if not item or item["status"] != "pending":
         raise ApiError(404, "not_found", "Pending request not found")
     result = None
-    for _ in range(4):
-        item = _row(db, "SELECT current_stage FROM public.workflow_requests WHERE id=:id", id=request_id)
-        result = _hr_decide(db, actor, request, request_id, "approve", body.get("reason"), True)
+    reason = str(body.get("reason") or "").strip() or "اعتماد نهائي من الموارد البشرية"
+    for _ in range(4):  # legacy ariba_hr_final_approve: override stage after stage until it is decided
+        result = _hr_decide(db, actor, request, request_id, "approve", reason, True)
         if result["status"] != "pending":
             break
     db.commit()

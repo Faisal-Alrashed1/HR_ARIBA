@@ -174,7 +174,9 @@ export default function Page() {
         const ws = current.filter((e) => !(e.exclude_from_payroll || consultant(e) || e.wps_type === "external" || e.wps_type === "consultant"));
         const tot = ws.reduce((s, e) => s + Number(e.total_salary), 0);
         const ins = ws.reduce((s, e) => s + Number(e.gosi_employee), 0);
-        const net = ws.reduce((s, e) => s + Number(e.net_salary), 0);
+        // legacy V42 rptPay recomputes the net: total − employee GOSI − other deductions (never the stored value)
+        const netOf = (e: SalaryBasisRow) => Math.round((Number(e.total_salary) - Number(e.gosi_employee) - Number(e.other_deductions || 0)) * 100) / 100;
+        const net = ws.reduce((s, e) => s + netOf(e), 0);
         return {
           title: "تقرير الرواتب",
           body: (
@@ -187,7 +189,7 @@ export default function Page() {
                     <td>{fN(e.basic_salary)} ر.س</td>
                     <td style={{ color: "var(--gr)" }}>{fN(e.total_salary)} ر.س</td>
                     <td style={{ color: "var(--rd)" }}>{e.is_saudi ? "-" + fN(e.gosi_employee) : "لا يوجد"}</td>
-                    <td style={{ color: "var(--cy)", fontWeight: 700 }}>{fN(e.net_salary)} ر.س</td>
+                    <td style={{ color: "var(--cy)", fontWeight: 700 }}>{fN(netOf(e))} ر.س</td>
                   </tr>
                 ))}
               </tbody>

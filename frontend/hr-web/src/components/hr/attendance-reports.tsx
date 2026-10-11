@@ -5,103 +5,21 @@
 // detail, print on the letterhead and spreadsheet export.
 import { useMemo, useState } from "react";
 import { useToast } from "@/components/common/toast";
-import { listAttendanceRange, type AttendanceRecord } from "@/lib/attendance";
-import { listHolidays, listRequests, type Holiday } from "@/lib/leave";
+import { listAttendanceRange } from "@/lib/attendance";
+import { listHolidays, listRequests } from "@/lib/leave";
 import { printDoc, tfWrap } from "@/lib/calc/forms";
 import type { EmployeeListItem } from "@/lib/api";
 import { DateField } from "@/components/common/date-time-field";
+import { computeReport, ymd, type Cls, type Day, type Sum as SumOf } from "@/lib/calc/att-reports";
 
-type Cls = "present" | "late" | "absent" | "leave" | "remote" | "off" | "pending";
 const ST_AR: Record<Cls, string> = { present: "حاضر", late: "متأخر", absent: "غائب", leave: "إجازة", remote: "عن بعد", off: "عطلة", pending: "لم يُسجَّل بعد" };
-const pad = (n: number) => (n < 10 ? "0" : "") + n;
-const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const parseD = (s: string) => {
-  const p = s.slice(0, 10).split("-");
-  return new Date(+p[0], +p[1] - 1, +p[2]);
-};
-const secs = (t: string | null) => {
-  if (!t) return null;
-  const p = String(t).split(":");
-  return +p[0] * 3600 + (+p[1] || 0) * 60 + (parseFloat(p[2]) || 0);
-};
 const hm = (t: string | null) => (t ? String(t).slice(0, 5) : "");
-const r2 = (n: number) => Math.round(n * 100) / 100;
 const dispD = (s: string) => {
   const p = s.split("-");
   return `${p[2]}/${p[1]}/${p[0]}`;
 };
 const dayName = (d: Date) => d.toLocaleDateString("ar-SA", { weekday: "long" });
-
-interface Grp { in: string | null; out: string | null; status: string; late: number; early: number; hours: number; noOut: boolean; auto: boolean; sessions: number }
-interface Day { date: string; dow: string; cls: Cls; rec: Grp | null }
-interface Sum { e: EmployeeListItem; expected: number; present: number; late: number; absent: number; leave: number; remote: number; lateMin: number; early: number; earlyDays: number; noOut: number; hours: number; rate: number | null; days: Day[] }
-
-function groupRows(rows: AttendanceRecord[]): Map<string, Grp> {
-  const g = new Map<string, AttendanceRecord[]>();
-  rows.forEach((r) => {
-    const k = r.employee_id + "|" + r.work_date.slice(0, 10);
-    g.set(k, [...(g.get(k) ?? []), r]);
-  });
-  const out = new Map<string, Grp>();
-  g.forEach((list, k) => {
-    let rs = [...list].sort((a, b) => (secs(a.time_in) ?? 1e9) - (secs(b.time_in) ?? 1e9));
-    const seen = new Map<string, number>();
-    const uniq: AttendanceRecord[] = [];
-    rs.forEach((r) => {
-      if (r.time_in && seen.has(r.time_in)) {
-        const i = seen.get(r.time_in)!;
-        if ((secs(r.time_out) || 0) > (secs(uniq[i].time_out) || 0)) uniq[i] = r;
-      } else {
-        if (r.time_in) seen.set(r.time_in, uniq.length);
-        uniq.push(r);
-      }
-    });
-    rs = uniq;
-    const first = rs[0];
-    const withIn = rs.filter((r) => r.time_in);
-    const isAuto = (r: AttendanceRecord) => /إغلاق تلقائي|auto/i.test(r.notes ?? "");
-    let hours = 0;
-    let anyAuto = false;
-    withIn.forEach((r) => {
-      const au = isAuto(r);
-      if (au) anyAuto = true;
-      if (r.time_out && !au) {
-        const dd = ((secs(r.time_out) ?? 0) - (secs(r.time_in) ?? 0)) / 3600;
-        if (dd > 0) hours += dd;
-      }
-    });
-    const lastS = withIn.length ? withIn[withIn.length - 1] : first;
-    const finalReal = !!(lastS && lastS.time_out && !isAuto(lastS));
-    const anyLate = rs.some((r) => r.status === "late");
-    const st = first.status || "present";
-    out.set(k, {
-      in: first.time_in,
-      out: finalReal ? lastS.time_out : null,
-      status: st === "absent" || st === "leave" || st === "remote" ? st : first.status === "late" || (anyLate && withIn.length <= 1) ? "late" : "present",
-      late: first.status === "late" ? first.late_minutes || 0 : 0,
-      early: finalReal ? lastS.early_minutes || 0 : 0,
-      hours: r2(hours),
-      noOut: !!first.time_in && !finalReal,
-      auto: anyAuto,
-      sessions: withIn.length,
-    });
-  });
-  return out;
-}
-
-function holidaySet(hols: Holiday[], y1: number, y2: number) {
-  const set = new Set<string>();
-  for (let y = y1; y <= y2; y++)
-    hols.forEach((h) => {
-      const b = parseD(h.start_date);
-      let s: Date;
-      if (h.is_recurring) s = new Date(y, b.getMonth(), b.getDate());
-      else if (b.getFullYear() !== y) return;
-      else s = b;
-      for (let i = 0; i < Math.max(1, h.days || 1); i++) set.add(ymd(new Date(s.getFullYear(), s.getMonth(), s.getDate() + i)));
-    });
-  return set;
-}
+type Sum = SumOf<EmployeeListItem>;
 
 const FILTERS: Record<string, { ar: string; f: (s: Sum, n: number) => boolean }> = {
   all: { ar: "كل الموظفين", f: () => true },
@@ -115,6 +33,7 @@ const FILTERS: Record<string, { ar: string; f: (s: Sum, n: number) => boolean }>
 };
 
 const HDR = ["#", "الموظف", "أيام العمل", "حاضر", "متأخر", "غائب", "إجازة", "عن بعد", "دقائق التأخير", "خروج مبكر (د)", "بدون انصراف", "الساعات", "نسبة الحضور"];
+const XLS_HDR = [...HDR.slice(1), "متوسط وقت الدخول"];
 const DET_HDR = ["التاريخ", "اليوم", "الحالة", "دخول", "خروج", "تأخير (د)", "خروج مبكر (د)", "الساعات", "ملاحظات"];
 const sumRow = (s: Sum, i: number) => [i + 1, s.e.name_ar, s.expected, s.present, s.late, s.absent, s.leave, s.remote, s.lateMin, s.early, s.noOut, s.hours, s.rate ?? ""];
 function detRow(d: Day) {
@@ -166,48 +85,10 @@ export function AttendanceReports({ emps }: { emps: EmployeeListItem[] }) {
     setBusy(true);
     try {
       const [rows, hols, reqs] = await Promise.all([listAttendanceRange(f, t), listHolidays(), listRequests({ status: "approved" })]);
-      const grp = groupRows(rows);
-      const off = holidaySet(hols, +f.slice(0, 4), +t.slice(0, 4));
-      const lv = new Map<string, string>();
-      reqs.forEach((l) => {
-        if (!l.from_date) return;
-        for (let d = parseD(l.from_date); d <= parseD(l.to_date || l.from_date); d.setDate(d.getDate() + 1))
-          lv.set(l.employee_id + "|" + ymd(d), l.type === "remote" ? "remote" : "leave");
-      });
-      const today = ymd(new Date());
       const list = sel ? emps.filter((e) => sel.has(e.id)) : emps;
-      const out: Sum[] = list.map((e) => {
-        const s: Sum = { e, expected: 0, present: 0, late: 0, absent: 0, leave: 0, remote: 0, lateMin: 0, early: 0, earlyDays: 0, noOut: 0, hours: 0, rate: null, days: [] };
-        for (let d = parseD(f); d <= parseD(t); d.setDate(d.getDate() + 1)) {
-          const ds = ymd(d);
-          if (ds > today) break;
-          if (e.join_date && ds < e.join_date.slice(0, 10)) continue;
-          const g = grp.get(e.id + "|" + ds) ?? null;
-          const isOff = d.getDay() === 5 || d.getDay() === 6 || off.has(ds);
-          let cls: Cls;
-          if (g) cls = g.status as Cls;
-          else if (isOff) cls = "off";
-          else if (lv.has(e.id + "|" + ds)) cls = lv.get(e.id + "|" + ds) as Cls;
-          else if (ds === today) cls = "pending";
-          else cls = "absent";
-          if (cls !== "off" && cls !== "pending" && !(isOff && g)) s.expected++;
-          if (cls === "present") s.present++;
-          else if (cls === "late") s.late++;
-          else if (cls === "absent") s.absent++;
-          else if (cls === "leave") s.leave++;
-          else if (cls === "remote") s.remote++;
-          if (g) {
-            if (cls === "late") s.lateMin += g.late;
-            if (g.early > 0) { s.early += g.early; s.earlyDays++; }
-            if (g.noOut && ds < today) s.noOut++;
-            s.hours += g.hours;
-          }
-          s.days.push({ date: ds, dow: dayName(d), cls, rec: g });
-        }
-        s.hours = r2(s.hours);
-        const base = s.expected - s.leave;
-        s.rate = base > 0 ? Math.round(((s.present + s.late + s.remote) / base) * 1000) / 10 : null;
-        return s;
+      const out: Sum[] = computeReport({
+        rows, from: f, to: t, emps: list, hols, today: ymd(new Date()), dayName,
+        leaves: reqs.map((l) => ({ employee_id: l.employee_id, from_date: l.from_date, to_date: l.to_date, type: l.type })),
       }).filter((s) => FILTERS[fk].f(s, Math.max(1, n)));
       setRes(out);
       return out;
@@ -237,7 +118,7 @@ export function AttendanceReports({ emps }: { emps: EmployeeListItem[] }) {
 
   function doXls() {
     if (!res?.length) return toast("اعرض التقرير أولاً", "err");
-    const rows: unknown[][] = mode === "det" ? [["الموظف", ...DET_HDR], ...res.flatMap((s) => s.days.filter((d) => d.cls !== "off" || d.rec).map((d) => [s.e.name_ar, ...detRow(d)]))] : [HDR, ...res.map(sumRow)];
+    const rows: unknown[][] = mode === "det" ? [["الموظف", ...DET_HDR], ...res.flatMap((s) => s.days.filter((d) => d.cls !== "off" || d.rec).map((d) => [s.e.name_ar, ...detRow(d)]))] : [XLS_HDR, ...res.map((s, i) => [...sumRow(s, i).slice(1), s.avgIn])];
     const csv = "﻿" + rows.map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));

@@ -1,13 +1,15 @@
 // Settlement calculator — a line-for-line port of `sRun` in
 // frontend/legacy/hr-portal/js/calculations/07-settlement-calculator.js (docs section 4.8).
-// Keep the arithmetic and rounding exactly as the original.
+// Keep the arithmetic and rounding exactly as the original, except the documented labour-law corrections
+// (docs/LOGIC_AUDIT.md section 4): art. 85 at exactly 5 years = one third, art. 87 full award, art. 77 fixed-term.
 
-export type SettlementReason = "m84" | "m74" | "m85" | "m75" | "m77" | "m80" | "m53" | "m74r" | "m74d";
+export type SettlementReason = "m84" | "m74" | "m85" | "m75" | "m77" | "m80" | "m53" | "m74r" | "m74d" | "m87";
 
 export const REASONS: { value: SettlementReason; label: string }[] = [
   { value: "m84", label: "م.84 إنهاء الشركة" },
   { value: "m74", label: "م.74 اتفاق" },
   { value: "m85", label: "م.85 استقالة" },
+  { value: "m87", label: "م.87 استقالة بمكافأة كاملة" },
   { value: "m75", label: "م.75 قسرية" },
   { value: "m77", label: "م.77 تعسفي" },
   { value: "m80", label: "م.80 تأديبي" },
@@ -20,6 +22,7 @@ export const LAW_NAME: Record<SettlementReason, string> = {
   m84: "م.84",
   m74: "م.74",
   m85: "م.85",
+  m87: "م.87",
   m75: "م.75",
   m77: "م.77",
   m80: "م.80",
@@ -39,6 +42,8 @@ export interface SettlementInput {
   attendanceDays: number; // sAD
   extras: number[];
   deductions: { value: number; type: "amount" | "days" }[];
+  /** Art. 77 for a fixed-term contract: months left until its end (undefined / null = indefinite contract). */
+  fixedTermMonthsLeft?: number | null;
 }
 
 export interface SettlementResult {
@@ -93,11 +98,14 @@ export function runSettlement(i: SettlementInput): SettlementResult | null {
   if (r === "m84" || r === "m74" || r === "m74r" || r === "m74d") {
     ef = e84;
     ln = "نصف شهر × 5 سنوات أولى + شهر × ما بعدها.";
+  } else if (r === "m87") {
+    ef = e84;
+    ln = "م.87: قوة قاهرة، أو المرأة خلال 6 أشهر من الزواج أو 3 من الوضع — مكافأة كاملة.";
   } else if (r === "m85" || r === "m75") {
     if (ty < 2) {
       ef = 0;
       ln = "أقل من سنتين — لا تستحق.";
-    } else if (ty < 5) {
+    } else if (ty <= 5) {
       ef = r2(e84 / 3);
       ln = "ثلث م.84.";
     } else if (ty < 10) {
@@ -108,9 +116,11 @@ export function runSettlement(i: SettlementInput): SettlementResult | null {
       ln = "م.84 كاملة.";
     }
   } else if (r === "m77") {
-    const c77 = Math.max(Math.round(sal * 2), Math.round((sal / 30) * 15 * ty));
+    const left = i.fixedTermMonthsLeft;
+    const fixed = left !== undefined && left !== null && left >= 0;
+    const c77 = fixed ? Math.max(Math.round(sal * 2), Math.round(sal * left)) : Math.max(Math.round(sal * 2), Math.round((sal / 30) * 15 * ty));
     ef = e84 + c77;
-    ln = "تعويض + م.84.";
+    ln = fixed ? "تعويض (أجر المدة الباقية من العقد المحدد، شهرين على الأقل) + م.84." : "تعويض + م.84.";
   } else if (r === "m80" || r === "m53") {
     ef = 0;
     ln = "لا مكافأة.";

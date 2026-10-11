@@ -1,6 +1,6 @@
 # دليل مشروع أريبا للموارد البشرية — من البذرة إلى آخر تعديل
 
-> آخر تحديث: 2026-10-11، آخر commit منشور: `fe9c836`.
+> آخر تحديث: 2026-10-11، آخر commit منشور: `2dea04d`.
 > هذا الملف هو **المرجع الأول** لأي محادثة جديدة. اقرأه كامل قبل أي تعديل، وبعدها `docs/HANDOFF.md` و `docs/INTEGRATION_AUDIT.md` عند الحاجة.
 
 ---
@@ -132,10 +132,10 @@
   - `ariba_auth_accounts` و `ariba_sessions`: الحسابات والجلسات.
   - `ariba_app_settings`: الإعدادات كـ key/value، منها `ins_settings` للتأمينات والشعار.
   - `work_locations`، `public_holidays`، `ariba_documents`، `ariba_audit_log`، `ariba_deleted_items`.
-- **مراحل الموافقة:** `_stages()` في `canonical.py`:
-  - الإجازات والسلفة: مدير ← HR ← رئيس تنفيذي.
-  - الاستئذان والعمل الإضافي والمهمة: مدير ← HR.
+- **مراحل الموافقة:** `_stages()` في `canonical.py`، مثل القديم (`ariba_workflow_action`) بقرار صاحب المشروع:
+  - كل الأنواع: مدير ← HR ← رئيس تنفيذي (الموظف بدون مدير يبدأ من HR).
   - **نسيان البصمة: HR بس**، والموافقة عليه **تسجّل الحضور** في `attendance`.
+  - التحقق من رصيد الإجازة السنوية عند التقديم **باقي** (أشد من القديم)، بقرار صاحب المشروع.
 - **قواعد محلية على الجهاز** (Postgres في `/tmp`):
   - `ariba_demo`: نسخة العرض المحلية، فيها حسابات وطلبات تجربة.
   - `ariba_hr_dev` و `ariba_hr_test`: قديمة.
@@ -176,7 +176,7 @@
 | `alembic/` + `migrations.py` | **أرشيف**: migrations 0001–0008 لقاعدتنا القديمة. **ممنوع تشغيلها** على canonical |
 | `tools/create_account.py` | إنشاء حساب دخول بكلمة مرور مؤقتة. الاستخدام: `railway ssh -s HR_ARIBA -- python tools/create_account.py --username X --role employee --employee-id N` |
 | `tools/load_canonical.py` | تحميل تصدير Supabase في قاعدة فاضية |
-| `tests_canonical/` | **11 اختبار شغّالة** لعقد canonical (الجداول، والتشفير، وإخفاء الراتب والهوية). `pytest.ini` يشغّلها هي بس |
+| `tests_canonical/` | اختبارات عقد canonical (الجداول، والتشفير، وإخفاء الراتب والهوية) + **`test_legacy_parity.py`** (مطابقة النظام القديم، القسم 9). `pytest.ini` يشغّلها هي بس |
 | `tests/` | **≈70 اختبار معطّلة**: `conftest.py` يستورد `Credential` من `models.py` القديم اللي انحذف وقت الانتقال لـ canonical. فيها اختبارات حسابات قيّمة (التأمينات، ونهاية الخدمة، ومحرك الإجازات، وأيام العمل) تحتاج إنقاذ |
 | `railway.json` | أمر التشغيل `uvicorn` و healthcheck `/health` |
 | `requirements.txt` | المكتبات |
@@ -307,14 +307,23 @@
 - **الفحوصات:**
   - الموقع: `npx tsc --noEmit` و `npx eslint src --quiet`
   - التطبيق: `npx tsc --noEmit`
-  - الخادم: `.venv/bin/python -m pytest -q`
+  - الخادم: `.venv/bin/python -m pytest -q` (ومع `LEGACY_PARITY_PG` للمطابقة الكاملة)
+  - المطابقة مع الـ HTML: `cd tools/legacy-parity && npm test`
 
 ---
 
 ## 9. الاختبارات (الوضع الحالي)
-- **الخادم:** `tests_canonical`، فيها 11 اختبار، 10 تنجح و1 متجاوز.
+- **الخادم:** `tests_canonical`.
+  - `test_canonical_contract.py`: عقد canonical.
+  - **`test_legacy_parity.py`: مطابقة النظام القديم.**
+    - بقيم مرجعية من الـ HTML نفسه (`fixtures/legacy_*.json`): نهاية العقد (`addMonthsSafe`)، وإعفاء التأمينات (`kindOf`)، وإرجاع الموظف نشط.
+    - **بدوال SQL القديمة نفسها** على قاعدة مؤقتة تنبني وتنحذف تلقائياً (من `tools/legacy-parity/sql`: سكيما ودوال، بدون بيانات) وبيانات تجريبية: المضلّع، وموقع البصمة وقاعدة «عن بعد»، والتأخير والخروج المبكر، ورصيد التطبيق (`ariba_leave_calc`)، وإشعارات الطلب الجديد (`ariba_submit_request`).
+    - التشغيل الكامل: `LEGACY_PARITY_PG='postgresql:///postgres?host=/tmp' .venv/bin/python -m pytest -q`. بدون المتغير تتجاوز اختبارات القاعدة.
+- **الموقع مقابل الـ HTML:** `tools/legacy-parity` (Node): يشغّل بوابة HR القديمة في jsdom ويقارن معادلات `src/lib/calc` على مدخلات عشوائية: PAYX (20,000)، والمخالصة (3,000)، ونهاية الخدمة (840)، والتفقيط، وإعفاء التأمينات.
+  - `cd tools/legacy-parity && npm ci && npm test`.
+  - `npm run fixtures` يحدّث القيم المرجعية لاختبارات الخادم.
 - **معطّلة:** `tests/`، تقريباً 70 اختبار (السبب في القسم 6).
-- **الموقع والتطبيق:** **ما فيه اختبارات**، والتحقق يدوي في المتصفح.
+- **الواجهات:** ما فيه اختبارات واجهة، والتحقق يدوي في المتصفح.
 - **الخطة المقترحة (ما بدأت):**
   1. إنقاذ اختبارات الحسابات.
   2. اختبارات لمسار الطلبات على canonical.

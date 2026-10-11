@@ -112,7 +112,8 @@ def figures(data: dict, *, saudi: bool, rules: list, birth: date | None, on: dat
         g = gosi.GosiResult.zero()
     else:
         g = gosi.calculate(rules=rules, system=system, wps_type=WpsType(wps(v)), category=EmployeeCategory(category(v)),
-                           basic=basic, housing=housing, birth_date=birth, on=on, job_title=job, department=dept, workplace=employer)
+                           basic=basic, housing=housing, birth_date=birth, on=on, job_title=job, department=dept, workplace=employer,
+                           emp_type=str(v.get("empType") or ""), excel_category=str(v.get("excelCategory") or ""))
     net = (total - g.employee - num(v.get("otherDeductions"))).quantize(CENT, ROUND_HALF_UP)
     rate = Decimal(1) if CURRENCY.get(str(v.get("currency") or "ريال سعودي"), "SAR") == "SAR" else num(v.get("exchRate") or 1)
     return {"total": total, "gosi_employee": g.employee, "gosi_employer": g.employer, "net": net,

@@ -34,6 +34,7 @@ export function RequestItem({ r, onDelete }: { r: MyRequest; onDelete?: (r: MyRe
       </View>
       <T size={11} color={t.mu} style={{ marginTop: 4 }}>{requestDetail(r)}</T>
       {r.notes ? <T size={10} color={t.dm} style={{ marginTop: 3 }}>{r.notes}</T> : null}
+      {r.law_note ? <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 }}><Icon name="info" size={13} color={t.am} stroke={2} /><T size={10} color={t.am} style={{ flexShrink: 1 }}>{r.law_note}</T></View> : null}
       {r.rejection_reason ? <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 }}><Icon name="xCircle" size={13} color={t.rd} stroke={2} /><T size={11} color={t.rd} style={{ flexShrink: 1 }}>سبب الرفض: {r.rejection_reason}</T></View> : null}
     </View>
   );
