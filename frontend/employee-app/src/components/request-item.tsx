@@ -1,6 +1,7 @@
 // One request line (legacy renderLv item: type, status badge, 🗑, detail, notes) + the legacy type list.
 import { Pressable, View } from "react-native";
 import { Badge, T } from "./ui";
+import { Icon } from "./icons";
 import type { MyRequest, RequestType } from "@/lib/api";
 import { requestDetail, statusText } from "@/lib/labels";
 import { useTheme } from "@/theme";
@@ -25,15 +26,15 @@ export function RequestItem({ r, onDelete }: { r: MyRequest; onDelete?: (r: MyRe
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Badge text={st.text} tone={TONE[st.tone]} />
           {onDelete && r.status !== "approved" ? (
-            <Pressable onPress={() => onDelete(r)} style={{ borderWidth: 1, borderColor: "rgba(229,72,77,.5)", borderRadius: 9, paddingHorizontal: 8, paddingVertical: 2 }}>
-              <T size={11} color="#e5484d">🗑</T>
+            <Pressable onPress={() => onDelete(r)} style={{ borderWidth: 1, borderColor: t.rd, borderRadius: 9, paddingHorizontal: 8, paddingVertical: 2 }}>
+              <Icon name="trash" size={14} color={t.rd} stroke={2} />
             </Pressable>
           ) : null}
         </View>
       </View>
       <T size={11} color={t.mu} style={{ marginTop: 4 }}>{requestDetail(r)}</T>
       {r.notes ? <T size={10} color={t.dm} style={{ marginTop: 3 }}>{r.notes}</T> : null}
-      {r.rejection_reason ? <T size={11} color={t.rd} style={{ marginTop: 3 }}>❌ {r.rejection_reason}</T> : null}
+      {r.rejection_reason ? <T size={11} color={t.rd} style={{ marginTop: 3 }}>سبب الرفض: {r.rejection_reason}</T> : null}
     </View>
   );
 }

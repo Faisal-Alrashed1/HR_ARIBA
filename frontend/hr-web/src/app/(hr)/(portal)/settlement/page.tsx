@@ -126,8 +126,8 @@ export default function Page() {
 
   const sec = (t: string) => (
     <tr key={"s" + t}>
-      <td colSpan={2} style={{ background: "rgba(59,130,246,.08)", color: "var(--bl)", fontWeight: 700, fontSize: 11, padding: "6px 10px" }}>
-        📋 {t}
+      <td colSpan={2} style={{ background: "rgba(1,77,61,.07)", color: "#014D3D", fontWeight: 700, fontSize: 11, padding: "6px 10px" }}>
+        <i className="ti ti-clipboard-list" aria-hidden /> {t}
       </td>
     </tr>
   );
@@ -311,7 +311,7 @@ export default function Page() {
                   {sec("راتب الفترة")}
                   {row("الإجمالي", sNum(res.periodSalary) + " ر.س", "var(--cy)")}
                   <tr style={{ background: "rgba(16,185,129,.08)" }}>
-                    <td style={{ padding: "8px 10px", fontWeight: 700, fontSize: 13 }}>💰 صافي المخالصة</td>
+                    <td style={{ padding: "8px 10px", fontWeight: 700, fontSize: 13 }}><i className="ti ti-cash" aria-hidden /> صافي المخالصة</td>
                     <td style={{ padding: "8px 10px", textAlign: "left", fontSize: 14, fontWeight: 900, color: "var(--bl)" }}>{sNum(res.total)} ريال</td>
                   </tr>
                 </tbody>

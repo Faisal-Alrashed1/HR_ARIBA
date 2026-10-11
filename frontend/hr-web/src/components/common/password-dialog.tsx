@@ -72,7 +72,7 @@ export function PasswordDialog({ forced, onClose, onDone }: { forced: boolean; o
     >
       <div style={{ background: "#fff", color: "#111", maxWidth: 380, width: "100%", borderRadius: 14, padding: 20, boxShadow: "0 20px 50px rgba(0,0,0,.35)" }}>
         <div id="pw-title" style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>
-          🔒 {forced ? t("pw.forcedTitle") : t("pw.title")}
+          <i className="ti ti-lock" aria-hidden /> {forced ? t("pw.forcedTitle") : t("pw.title")}
         </div>
         <div style={{ fontSize: 12.5, color: "#555", lineHeight: 1.7, marginBottom: 14 }}>{forced ? t("pw.forcedIntro") : t("pw.intro")}</div>
         <input ref={first} type={type} placeholder={t("pw.current")} autoComplete="current-password" style={INP} value={old} onChange={(e) => setOld(e.target.value)} onKeyDown={onEnter} />
@@ -81,9 +81,9 @@ export function PasswordDialog({ forced, onClose, onDone }: { forced: boolean; o
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#444", marginBottom: 10, cursor: "pointer", marginTop: 0 }}>
           <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} style={{ width: "auto" }} /> {t("pw.show")}
         </label>
-        {error && <div role="alert" style={{ color: "#b91c1c", fontSize: 12.5, marginBottom: 10 }}>{error}</div>}
+        {error && <div role="alert" style={{ color: "#B54A4A", fontSize: 12.5, marginBottom: 10 }}>{error}</div>}
         <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" onClick={save} disabled={busy} style={{ flex: 1, padding: 11, border: 0, borderRadius: 8, background: "#0f766e", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+          <button type="button" onClick={save} disabled={busy} style={{ flex: 1, padding: 11, border: 0, borderRadius: 8, background: "#014D3D", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
             {busy ? t("pw.saving") : t("pw.save")}
           </button>
           {!forced && (

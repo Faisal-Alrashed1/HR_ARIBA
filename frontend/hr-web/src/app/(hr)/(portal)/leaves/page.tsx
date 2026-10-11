@@ -61,7 +61,7 @@ async function attach(employeeId: string, file: File | null): Promise<string | n
 function AttachField({ onFile }: { onFile: (f: File | null) => void }) {
   return (
     <div className="ff" style={{ gridColumn: "1/-1" }}>
-      <label>📎 مرفق الطلب <span style={{ color: "var(--mu)", fontWeight: 400 }}>(اختياري)</span></label>
+      <label><i className="ti ti-paperclip" aria-hidden /> مرفق الطلب <span style={{ color: "var(--mu)", fontWeight: 400 }}>(اختياري)</span></label>
       <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
       <div style={{ fontSize: 10, color: "var(--mu)", marginTop: 4 }}>المرفق اختياري — PDF / Word / JPG / PNG — حد أقصى 12 MB.</div>
     </div>
@@ -111,7 +111,7 @@ export default function Page() {
       toast(e instanceof Error ? e.message : String(e), "err");
     }
   }
-  const approve = (r: HrRequest) => act(() => approveRequest(r.id), "✓ تمت الموافقة");
+  const approve = (r: HrRequest) => act(() => approveRequest(r.id), "تمت الموافقة");
   const reject = (r: HrRequest) => {
     const reason = window.prompt("سبب الرفض:");
     if (reason === null) return;
@@ -122,11 +122,11 @@ export default function Page() {
     const reason = window.prompt("سبب الاعتماد نيابة عن المدير:");
     if (reason === null) return;
     if (!reason.trim()) return toast("السبب مطلوب", "err");
-    act(() => overrideRequest(r.id, reason), "✓ تم الاعتماد نيابة");
+    act(() => overrideRequest(r.id, reason), "تم الاعتماد نيابة");
   };
   const finalApprove = (r: HrRequest) => {
     if (!window.confirm("اعتماد نهائي لكل المراحل المتبقية؟")) return;
-    act(() => finalApproveRequest(r.id), "✓ تم الاعتماد النهائي");
+    act(() => finalApproveRequest(r.id), "تم الاعتماد النهائي");
   };
   const remove = (r: HrRequest) => {
     if (!window.confirm(r.status === "approved" && r.type === "annual" ? "حذف الإجازة المعتمدة؟ سيرجع رصيدها للموظف." : "حذف الطلب؟")) return;
@@ -152,10 +152,10 @@ export default function Page() {
         {r.stage === "hr" ? (
           <>
             <button type="button" className="btn bgl bsm" onClick={() => approve(r)}>
-              ✓{compact ? "" : " موافقة"}
+              <i className="ti ti-check" aria-hidden />{compact ? "" : " موافقة"}
             </button>{" "}
             <button type="button" className="btn bsm" style={{ color: "var(--rd)" }} onClick={() => reject(r)}>
-              ✗{compact ? "" : " رفض"}
+              <i className="ti ti-x" aria-hidden />{compact ? "" : " رفض"}
             </button>
           </>
         ) : (
@@ -164,8 +164,8 @@ export default function Page() {
             <button type="button" className="btn bsm" onClick={() => onBehalf(r)}>
               اعتماد نيابة عن المدير
             </button>{" "}
-            <button type="button" className="btn bsm" style={{ color: "var(--rd)" }} onClick={() => reject(r)}>
-              ✗
+            <button type="button" className="btn bsm" style={{ color: "var(--rd)" }} onClick={() => reject(r)} aria-label="رفض">
+              <i className="ti ti-x" aria-hidden />
             </button>
           </>
         )}{" "}
@@ -224,7 +224,7 @@ function Pending({ list, actions }: { list: HrRequest[]; actions: (r: HrRequest)
         </div>
         <div id="LVP">
           {list.length === 0 ? (
-            <div style={{ color: "var(--mu)", textAlign: "center", padding: 24, fontSize: 13 }}>✓ لا توجد طلبات معلقة حالياً</div>
+            <div style={{ color: "var(--mu)", textAlign: "center", padding: 24, fontSize: 13 }}>لا توجد طلبات معلقة حالياً</div>
           ) : (
             list.map((r) => (
               <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderBottom: "1px solid rgba(36,48,68,.5)", flexWrap: "wrap" }}>
@@ -333,7 +333,7 @@ function NewRequest({ emps, hols, bal, onDone }: { emps: EmployeeListItem[]; hol
     try {
       const attachment_id = await attach(empId, file);
       await createRequest({ employee_id: empId, type, from_date: from, to_date: to, notes: notes || null, attachment_id });
-      toast("✓ تم إرسال الطلب" + (attachment_id ? " — تم إرفاق الملف" : ""), "ok");
+      toast("تم إرسال الطلب" + (attachment_id ? " — تم إرفاق الملف" : ""), "ok");
       setFile(null);
       setFrom("");
       setTo("");
@@ -680,7 +680,7 @@ function BalanceEditor({ employeeId, emps, onClose, onSaved }: { employeeId: str
           return o;
         }),
       });
-      toast("✓ تم حفظ واستبدال أرصدة كل السنوات ومزامنتها", "ok");
+      toast("تم حفظ واستبدال أرصدة كل السنوات ومزامنتها", "ok");
       onSaved();
     } catch (e) {
       toast(e instanceof Error ? e.message : String(e), "err");
@@ -783,7 +783,7 @@ function Holidays({ hols, onChange }: { hols: Holiday[]; onChange: () => void })
       setName("");
       setDate("");
       setDays("1");
-      toast("✓", "ok");
+      toast("", "ok");
       onChange();
     } catch (e) {
       toast(e instanceof Error ? e.message : String(e), "err");
@@ -898,7 +898,7 @@ function Overtime({ emps, reqs, actions, onDone }: { emps: EmployeeListItem[]; r
       const attachment_id = await attach(emp, file);
       await createRequest({ employee_id: emp, type: "overtime", on_date: date, hours: parseFloat(hours), notes: notes || null, attachment_id });
       setFile(null);
-      toast("✓ تم إرسال طلب العمل الإضافي", "ok");
+      toast("تم إرسال طلب العمل الإضافي", "ok");
       setDate("");
       setHours("1");
       setNotes("");

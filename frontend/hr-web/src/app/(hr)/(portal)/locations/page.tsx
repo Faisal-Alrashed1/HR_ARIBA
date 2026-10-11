@@ -11,7 +11,7 @@ import { createLocation, deleteLocation, listLocations, updateLocation, type Loc
 
 const TYPE_LABEL: Record<LocationType, string> = { hq: "مقر رئيسي", project: "مشروع", remote: "عن بعد" };
 const TYPE_ICON: Record<LocationType, string> = { hq: "ti-building", project: "ti-crane", remote: "ti-home-laptop" };
-const TYPE_COLOR: Record<LocationType, string> = { hq: "#0ea5e9", project: "#f59e0b", remote: "#10b981" };
+const TYPE_COLOR: Record<LocationType, string> = { hq: "#014D3D", project: "#9B7A32", remote: "#29B35E" };
 
 const mapsLink = (lat: string, lng: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
 const mapsEmbed = (lat: string, lng: string) => `https://www.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&output=embed`;
@@ -78,7 +78,7 @@ export default function Page() {
       (p) => {
         setLat(p.coords.latitude.toFixed(6));
         setLng(p.coords.longitude.toFixed(6));
-        toast("✓ تم تحديد موقعك", "ok");
+        toast("تم تحديد موقعك", "ok");
       },
       () => toast("تعذر تحديد موقعك", "err"),
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
@@ -99,7 +99,7 @@ export default function Page() {
     try {
       if (editId) await updateLocation(editId, body);
       else await createLocation(body);
-      toast(editId ? "✓ تم حفظ الموقع" : "✓ تم إضافة الموقع", "ok");
+      toast(editId ? "تم حفظ الموقع" : "تم إضافة الموقع", "ok");
       setOpen(false);
       setReloadTick((t) => t + 1);
     } catch (e) {
@@ -111,7 +111,7 @@ export default function Page() {
     if (!window.confirm(`حذف الموقع «${l.name}»؟`)) return;
     try {
       await deleteLocation(l.id);
-      toast("✓ تم حذف الموقع", "ok");
+      toast("تم حذف الموقع", "ok");
       setReloadTick((t) => t + 1);
     } catch (e) {
       toast(e instanceof Error ? e.message : String(e), "err");
@@ -155,7 +155,7 @@ export default function Page() {
                   </div>
                 </div>
                 <div style={{ fontSize: 11, color: "var(--mu)", marginBottom: 8 }}>
-                  {l.type === "remote" ? "بدون قيد موقع" : `📍 ${Number(l.latitude).toFixed(6)}, ${Number(l.longitude).toFixed(6)} | النطاق: ${l.radius_m}م`}
+                  {l.type === "remote" ? "بدون قيد موقع" : `${Number(l.latitude).toFixed(6)}, ${Number(l.longitude).toFixed(6)} | النطاق: ${l.radius_m}م`}
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
                   {l.type !== "remote" && (

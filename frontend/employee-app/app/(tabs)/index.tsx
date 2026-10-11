@@ -166,7 +166,7 @@ function Hero({ onForgot }: { onForgot: () => void }) {
       ) : null}
       {state === "done" ? (
         <Pressable onPress={() => punch("in")} disabled={busy} style={[styles.back, { borderColor: fg }]}>
-          <T size={12.5} weight={800} color={fg}>↩ رجوع للعمل — تسجيل حضور مرة أخرى</T>
+          <T size={12.5} weight={800} color={fg}>رجوع للعمل — تسجيل حضور مرة أخرى</T>
         </Pressable>
       ) : null}
       {lastOut && open && rows.length > 1 ? <T size={11} color={fg} center style={{ marginTop: 6, opacity: 0.8 }}>رجعت للعمل بعد انصراف الساعة {lastOut}</T> : null}

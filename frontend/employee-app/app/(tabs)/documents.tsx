@@ -19,7 +19,7 @@ function Doc({ x, onDone }: { x: Letter; onDone: () => Promise<void> }) {
     setBusy(true);
     try {
       await letters.respond(x.id, action, action === "rejected" ? reason.trim() : undefined);
-      toast(action === "approved" ? "✅ تمت الموافقة" : "تم إرسال الرفض", "ok");
+      toast(action === "approved" ? "تمت الموافقة" : "تم إرسال الرفض", "ok");
       await onDone();
     } catch (e) {
       toast(e instanceof ApiError ? e.message : "تعذر الإرسال", "err");
@@ -43,7 +43,7 @@ function Doc({ x, onDone }: { x: Letter; onDone: () => Promise<void> }) {
         <>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <Btn title="موافقة" icon={<Icon name="check" size={16} color="#fff" />} onPress={() => respond("approved")} busy={busy} style={{ flex: 1, backgroundColor: "#12b76a" }} kind="success" />
-            <Btn title="رفض" icon={<Icon name="x" size={16} color="#fff" />} onPress={() => setRejecting(true)} style={{ flex: 1, backgroundColor: "#e5484d" }} kind="danger" />
+            <Btn title="رفض" icon={<Icon name="x" size={16} color="#fff" />} onPress={() => setRejecting(true)} style={{ flex: 1, backgroundColor: t.rd }} kind="danger" />
           </View>
           {rejecting ? (
             <>
@@ -52,7 +52,7 @@ function Doc({ x, onDone }: { x: Letter; onDone: () => Promise<void> }) {
             </>
           ) : null}
         </>
-      ) : x.rejection_reason ? <T size={11} color={t.rd} style={{ marginTop: 6 }}>❌ {x.rejection_reason}</T> : null}
+      ) : x.rejection_reason ? <T size={11} color={t.rd} style={{ marginTop: 6 }}>سبب الرفض: {x.rejection_reason}</T> : null}
     </Card>
   );
 }
@@ -62,7 +62,7 @@ export default function Documents() {
   return (
     <Page onRefresh={refresh}>
       <Card>
-        <CardTitle>📄 مستندات بانتظار توقيعي</CardTitle>
+        <CardTitle icon="file">مستندات بانتظار توقيعي</CardTitle>
         {!list.length ? <Empty text="لا توجد مستندات" /> : null}
         {list.map((x) => <Doc key={x.id} x={x} onDone={refresh} />)}
       </Card>

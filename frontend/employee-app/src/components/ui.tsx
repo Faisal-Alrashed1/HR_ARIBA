@@ -6,7 +6,8 @@ import {
   type StyleProp, type TextInputProps, type TextStyle, type ViewStyle, RefreshControl,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { fonts, useTheme } from "@/theme";
+import { brand, fonts, useTheme } from "@/theme";
+import { Icon, type IconName } from "./icons";
 
 export function T({ children, size = 13, weight = 500, color, style, numberOfLines, center }: {
   children: ReactNode; size?: number; weight?: 300 | 500 | 600 | 700 | 800 | 900; color?: string; style?: StyleProp<TextStyle>;
@@ -47,10 +48,11 @@ export function Card({ children, style }: { children: ReactNode; style?: StylePr
   );
 }
 
-export function CardTitle({ children, icon }: { children: ReactNode; icon?: ReactNode }) {
+export function CardTitle({ children, icon }: { children: ReactNode; icon?: ReactNode | IconName }) {
+  const t = useTheme();
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12 }}>
-      {icon}
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 12 }}>
+      {typeof icon === "string" ? <Icon name={icon} size={18} color={t.dark ? brand.green : brand.dark} stroke={2} /> : icon}
       <T size={14} weight={800}>{children}</T>
     </View>
   );
@@ -58,10 +60,10 @@ export function CardTitle({ children, icon }: { children: ReactNode; icon?: Reac
 
 type BtnKind = "success" | "danger" | "primary" | "ghost" | "teal";
 export function Btn({ title, onPress, kind = "primary", busy, disabled, icon, style }: {
-  title: string; onPress: () => void; kind?: BtnKind; busy?: boolean; disabled?: boolean; icon?: ReactNode; style?: StyleProp<ViewStyle>;
+  title: string; onPress: () => void; kind?: BtnKind; busy?: boolean; disabled?: boolean; icon?: ReactNode | IconName; style?: StyleProp<ViewStyle>;
 }) {
   const t = useTheme();
-  const bg = { success: t.gr, danger: t.rd, primary: t.dark ? "#29B35E" : "#014D3D", ghost: t.c2, teal: "#0f766e" }[kind];
+  const bg = { success: t.gr, danger: t.rd, primary: t.dark ? "#29B35E" : "#014D3D", ghost: t.c2, teal: "#014D3D" }[kind];
   const fg = kind === "ghost" ? t.tx : (kind === "success" || kind === "primary") && t.dark ? "#013D31" : "#fff";
   return (
     <Pressable
@@ -70,7 +72,7 @@ export function Btn({ title, onPress, kind = "primary", busy, disabled, icon, st
       style={({ pressed }) => [styles.btn, { backgroundColor: bg, opacity: disabled ? 0.5 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
         kind === "ghost" && { borderWidth: 1, borderColor: t.bd, shadowOpacity: 0 }, style]}
     >
-      {busy ? <ActivityIndicator color={fg} /> : <>{icon}<T size={13} weight={800} color={fg}>{title}</T></>}
+      {busy ? <ActivityIndicator color={fg} /> : <>{typeof icon === "string" ? <Icon name={icon} size={17} color={fg} stroke={2} /> : icon}<T size={13} weight={800} color={fg}>{title}</T></>}
     </Pressable>
   );
 }
@@ -210,7 +212,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {msg ? (
         <Animated.View pointerEvents="none" style={[styles.toast, { opacity: fade, backgroundColor: t.c, borderColor: msg.kind === "err" ? t.rd : msg.kind === "ok" ? t.gr : t.bd }]}>
-          <T size={13} center>{msg.text}</T>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 }}>
+            {msg.kind !== "info" ? <Icon name={msg.kind === "err" ? "xCircle" : "checkCircle"} size={18} color={msg.kind === "err" ? t.rd : t.gr} stroke={2} /> : null}
+            <T size={13} center style={{ flexShrink: 1 }}>{msg.text}</T>
+          </View>
         </Animated.View>
       ) : null}
     </ToastCtx.Provider>

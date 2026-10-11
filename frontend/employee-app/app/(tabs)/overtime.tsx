@@ -25,7 +25,7 @@ export default function Overtime() {
     setBusy(true);
     try {
       await requests.submit({ type: "overtime", on_date: date, hours: String(Number(hours)), notes: reason.trim() || undefined });
-      toast("✅ تم إرسال الطلب", "ok");
+      toast("تم إرسال الطلب", "ok");
       setReason("");
       await refresh();
     } catch (e) {
@@ -47,7 +47,7 @@ export default function Overtime() {
         <Btn kind="primary" title="⏱️ إرسال الطلب" onPress={submit} busy={busy} />
       </Card>
       <Card>
-        <CardTitle>📋 طلبات العمل الإضافي</CardTitle>
+        <CardTitle icon="clipboard">طلبات العمل الإضافي</CardTitle>
         {!ot.length ? <Empty text="لا توجد طلبات" /> : null}
         {ot.map((r) => (
           <View key={r.id} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: t.bd }}>

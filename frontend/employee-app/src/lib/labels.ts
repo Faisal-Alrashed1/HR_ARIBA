@@ -1,23 +1,23 @@
-// Request type names and status text of the legacy employee app (LVL + V114 forgot_punch + V21 overtime).
+// Request type names (colours: ARIBA brand palette) and status text of the legacy employee app (LVL + V114 forgot_punch + V21 overtime).
 import type { MyRequest, RequestType } from "./api";
 
 export const REQUEST_TYPES: { key: RequestType; ar: string; color: string }[] = [
-  { key: "annual", ar: "سنوية", color: "#f59e0b" },
-  { key: "sick", ar: "مرضية", color: "#ef4444" },
-  { key: "emergency", ar: "اضطرارية", color: "#f97316" },
-  { key: "death", ar: "وفاة", color: "#6366f1" },
-  { key: "marriage", ar: "زواج", color: "#ec4899" },
-  { key: "maternity", ar: "أمومة", color: "#ec4899" },
-  { key: "paternity", ar: "أبوة", color: "#8b5cf6" },
-  { key: "umrah", ar: "عمرة", color: "#10b981" },
-  { key: "hajj", ar: "حج", color: "#8b5cf6" },
-  { key: "remote", ar: "عن بعد", color: "#3b82f6" },
-  { key: "permission", ar: "استئذان", color: "#06b6d4" },
-  { key: "maternity_permission", ar: "استئذان أمومة", color: "#f472b6" },
-  { key: "early_leave", ar: "خروج مبكر", color: "#f97316" },
-  { key: "advance", ar: "سلفة", color: "#10b981" },
-  { key: "mission", ar: "مهمة خارجية", color: "#8b5cf6" },
-  { key: "forgot_punch", ar: "نسيان بصمة", color: "#0ea5e9" },
+  { key: "annual", ar: "سنوية", color: "#29B35E" },
+  { key: "sick", ar: "مرضية", color: "#B54A4A" },
+  { key: "emergency", ar: "اضطرارية", color: "#9B7A32" },
+  { key: "death", ar: "وفاة", color: "#414042" },
+  { key: "marriage", ar: "زواج", color: "#6B5B73" },
+  { key: "maternity", ar: "أمومة", color: "#6B5B73" },
+  { key: "paternity", ar: "أبوة", color: "#6B5B73" },
+  { key: "umrah", ar: "عمرة", color: "#1F8D49" },
+  { key: "hajj", ar: "حج", color: "#1F8D49" },
+  { key: "remote", ar: "عن بعد", color: "#014D3D" },
+  { key: "permission", ar: "استئذان", color: "#9B7A32" },
+  { key: "maternity_permission", ar: "استئذان أمومة", color: "#6B5B73" },
+  { key: "early_leave", ar: "خروج مبكر", color: "#9B7A32" },
+  { key: "advance", ar: "سلفة", color: "#1F8D49" },
+  { key: "mission", ar: "مهمة خارجية", color: "#014D3D" },
+  { key: "forgot_punch", ar: "نسيان بصمة", color: "#414042" },
   { key: "overtime", ar: "عمل إضافي", color: "#014D3D" },
 ];
 

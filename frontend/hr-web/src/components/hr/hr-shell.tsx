@@ -73,7 +73,7 @@ export function HrShell({ children }: { children: React.ReactNode }) {
   const switchLang = () => {
     const next = lang === "ar" ? "en" : "ar";
     setLang(next);
-    toast(next === "ar" ? "✓ اللغة العربية" : "✓ English Mode", "info");
+    toast(next === "ar" ? "اللغة العربية" : "English Mode", "info");
   };
 
   return (

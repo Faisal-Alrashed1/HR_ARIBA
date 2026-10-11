@@ -52,12 +52,12 @@ export default function Attendance() {
   const date = now.toLocaleDateString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", weekday: "long", year: "numeric", month: "long", day: "numeric" });
   const badge = (() => {
     switch (loc.kind) {
-      case "inside": return { dot: t.gr, text: `📍 ${loc.name}`, color: t.gr };
-      case "outside": return { dot: t.rd, text: `❌ خارج النطاق — أقرب موقع ${loc.name} (${distanceText(loc.distance)})`, color: t.rd };
-      case "none": return { dot: t.am, text: "⚠️ لا يوجد موقع عمل", color: t.am };
-      case "unset": return { dot: t.am, text: "⚠️ إحداثيات موقع عملك غير مضبوطة", color: t.am };
-      case "denied": return { dot: t.rd, text: "❌ فعّل صلاحية الموقع", color: t.rd };
-      case "error": return { dot: t.rd, text: "❌ تعذر تحديد الموقع", color: t.rd };
+      case "inside": return { dot: t.gr, text: loc.name, color: t.gr };
+      case "outside": return { dot: t.rd, text: `خارج النطاق — أقرب موقع ${loc.name} (${distanceText(loc.distance)})`, color: t.rd };
+      case "none": return { dot: t.am, text: "لا يوجد موقع عمل", color: t.am };
+      case "unset": return { dot: t.am, text: "إحداثيات موقع عملك غير مضبوطة", color: t.am };
+      case "denied": return { dot: t.rd, text: "فعّل صلاحية الموقع", color: t.rd };
+      case "error": return { dot: t.rd, text: "تعذر تحديد الموقع", color: t.rd };
       default: return { dot: t.mu, text: "جاري تحديد الموقع...", color: t.mu };
     }
   })();
@@ -90,32 +90,32 @@ export default function Attendance() {
       </View>
 
       <Card>
-        <CardTitle>📌 حالة الحضور اليوم</CardTitle>
+        <CardTitle icon="fingerprint">حالة الحضور اليوم</CardTitle>
         {!rows.length ? (
           <>
             <Status kind="none" text="لم تسجل حضورك بعد" />
-            <Btn kind="success" title="📍 تسجيل الحضور" onPress={() => punch("in")} busy={busy} />
+            <Btn kind="success" title="تسجيل الحضور" icon="login" onPress={() => punch("in")} busy={busy} />
           </>
         ) : open ? (
           <>
-            <Status kind="in" text={`✅ حضور — ${rows[0].time_in}${rows.length > 1 ? ` (جلسة حالية من ${open.time_in})` : ""}`} />
+            <Status kind="in" text={`حضور — ${rows[0].time_in}${rows.length > 1 ? ` (جلسة حالية من ${open.time_in})` : ""}`} />
             {lastOut && rows.length > 1 ? <T size={11} color={t.mu} center style={{ marginVertical: 4 }}>رجعت للعمل بعد انصراف الساعة {lastOut}</T> : null}
-            <Btn kind="danger" title="🚪 تسجيل الانصراف" onPress={() => punch("out")} busy={busy} />
+            <Btn kind="danger" title="تسجيل الانصراف" icon="logout" onPress={() => punch("out")} busy={busy} />
           </>
         ) : (
           <>
-            <Status kind="in" text={`🚪 آخر انصراف — ${lastOut ?? ""}`} />
-            <Btn kind="success" title="↩ رجوع للعمل — تسجيل حضور مرة أخرى" onPress={() => punch("in")} busy={busy} />
+            <Status kind="in" text={`آخر انصراف — ${lastOut ?? ""}`} />
+            <Btn kind="success" title="رجوع للعمل — تسجيل حضور مرة أخرى" icon="back" onPress={() => punch("in")} busy={busy} />
           </>
         )}
         {rows.length > 1 ? (
           <T size={11} color={t.mu} style={{ marginTop: 8 }}>جلسات اليوم: {rows.map((r) => `${r.time_in} → ${r.time_out ?? "…"}`).join("  |  ")}</T>
         ) : null}
-        <Btn kind="ghost" title="⚠️ نسيت البصمة" onPress={() => setForgot(true)} style={{ marginTop: 8, paddingVertical: 8 }} />
+        <Btn kind="ghost" title="نسيت البصمة" icon="alert" onPress={() => setForgot(true)} style={{ marginTop: 8, paddingVertical: 8 }} />
       </Card>
 
       <Card>
-        <CardTitle>📅 سجل آخر 31 يوم</CardTitle>
+        <CardTitle icon="calendar">سجل آخر 31 يوم</CardTitle>
         {!days.length ? <Empty text="لا يوجد سجل" /> : null}
         {days.map((d) => {
           const rs = byDay.get(d)!.slice().sort((a, b) => String(a.time_in).localeCompare(String(b.time_in)));
@@ -131,7 +131,7 @@ export default function Attendance() {
       </Card>
 
       <Card>
-        <CardTitle>🔍 استعلام عن حضور بفترة محددة</CardTitle>
+        <CardTitle icon="search">استعلام عن حضور بفترة محددة</CardTitle>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <PickerField label="من" value={from} onChange={setFrom} mode="date" />
           <PickerField label="إلى" value={to} onChange={setTo} mode="date" />
@@ -143,7 +143,7 @@ export default function Attendance() {
             <T size={11}>{r.work_date}</T>
             <T size={11}>{`${r.time_in ?? "—"} → ${r.time_out ?? "—"}`}</T>
             <T size={11}>{hours(r)}</T>
-            <T size={11} color={r.status === "late" ? "#c0392b" : "#0a7a3f"}>{r.status === "late" ? "متأخر" : "حاضر"}</T>
+            <T size={11} color={r.status === "late" ? "#B54A4A" : "#1F8D49"}>{r.status === "late" ? "متأخر" : "حاضر"}</T>
           </View>
         ))}
       </Card>

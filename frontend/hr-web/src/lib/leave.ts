@@ -90,7 +90,7 @@ export const LVL: Record<string, { ar: string; icon: string; color: string }> = 
   annual: { ar: "سنوية", icon: "ti-sun", color: "#E4E4BC" },
   sick: { ar: "مرضية", icon: "ti-stethoscope", color: "#6B7280" },
   emergency: { ar: "اضطرارية", icon: "ti-urgent", color: "#E4E4BC" },
-  death: { ar: "وفاة", icon: "ti-candle", color: "#6366f1" },
+  death: { ar: "وفاة", icon: "ti-candle", color: "#414042" },
   marriage: { ar: "زواج", icon: "ti-heart", color: "#E4E4BC" },
   paternity: { ar: "أبوة", icon: "ti-baby-carriage", color: "#014D3D" },
   maternity: { ar: "أمومة", icon: "ti-baby", color: "#E4E4BC" },

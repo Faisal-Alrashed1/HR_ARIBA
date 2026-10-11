@@ -36,17 +36,25 @@ const paths: Record<string, string[]> = {
   invoice: ["M14 3v4a1 1 0 0 0 1 1h4", "M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z", "M9 7h1", "M9 13h6", "M13 17h2"],
   lock: ["M5 13a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z", "M8 11V7a4 4 0 1 1 8 0v4"],
   back: ["M9 14l-4-4 4-4", "M5 10h11a4 4 0 1 1 0 8h-1"],
+  search: ["M21 21l-6-6"],
+  alert: ["M12 9v4", "M12 17h.01", "M10.24 3.957l-8.422 14.06a1.989 1.989 0 0 0 1.7 2.983h16.845a1.989 1.989 0 0 0 1.7-2.983L13.64 3.957a1.989 1.989 0 0 0-3.4 0z"],
+  clipboard: ["M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2", "M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z", "M9 12h6", "M9 16h6"],
+  login: ["M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2", "M21 12H9", "M12 9l-3 3 3 3"],
+  info: ["M12 9h.01", "M11 12h1v4h1"],
 };
+
+export type IconName = keyof typeof paths;
 
 export function Icon({ name, size = 22, color, stroke = 1.9 }: P & { name: keyof typeof paths | "clockFace" }) {
   const common = { stroke: color, strokeWidth: stroke, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
-      {name === "clock" || name === "checkCircle" || name === "xCircle" || name === "history" ? <Circle cx={12} cy={12} r={9} {...common} /> : null}
+      {name === "clock" || name === "checkCircle" || name === "xCircle" || name === "history" || name === "info" ? <Circle cx={12} cy={12} r={9} {...common} /> : null}
       {name === "stopwatch" ? <Circle cx={12} cy={13} r={8} {...common} /> : null}
       {name === "calendar" ? <Rect x={4} y={5} width={16} height={16} rx={2} {...common} /> : null}
       {name === "cash" ? <><Rect x={3} y={6} width={18} height={12} rx={2} {...common} /><Circle cx={12} cy={12} r={2.5} {...common} /></> : null}
       {name === "users" ? <Circle cx={9} cy={7} r={4} {...common} /> : null}
+      {name === "search" ? <Circle cx={10} cy={10} r={7} {...common} /> : null}
       {name === "user" ? <Circle cx={12} cy={7} r={4} {...common} /> : null}
       {name === "pin" ? <Circle cx={12} cy={10} r={2.6} {...common} /> : null}
       {name === "key" ? <Circle cx={15} cy={7} r={0.5} {...common} /> : null}

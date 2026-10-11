@@ -62,7 +62,7 @@ export default function Profile() {
       </Card>
       {s ? (
         <Card>
-          <CardTitle>💰 الراتب</CardTitle>
+          <CardTitle icon="wallet">الراتب</CardTitle>
           <PayRow label="الراتب الأساسي" value={sar(s.basic_salary)} />
           <PayRow label="بدل السكن" value={sar(s.housing_allowance)} />
           <PayRow label="بدل النقل" value={sar(s.transport_allowance)} />
@@ -71,15 +71,15 @@ export default function Profile() {
         </Card>
       ) : null}
       <Card>
-        <CardTitle>🏦 بيانات البنك</CardTitle>
+        <CardTitle icon="bank">بيانات البنك</CardTitle>
         <View style={{ flexDirection: "row" }}><InfoBox label="الإيبان" value={s?.iban} /></View>
       </Card>
       <Card>
-        <CardTitle>🔒 الأمان</CardTitle>
-        <Btn kind="teal" title="🔑 تغيير كلمة المرور" onPress={() => setPw(true)} style={{ borderRadius: 10, marginTop: 0 }} />
+        <CardTitle icon="lock">الأمان</CardTitle>
+        <Btn kind="teal" title="تغيير كلمة المرور" icon="key" onPress={() => setPw(true)} style={{ borderRadius: 10, marginTop: 0 }} />
       </Card>
       <LocationsCard />
-      <PasswordSheet visible={pw} onClose={() => setPw(false)} onDone={() => toast("✅ تم تغيير كلمة المرور", "ok")} />
+      <PasswordSheet visible={pw} onClose={() => setPw(false)} onDone={() => toast("تم تغيير كلمة المرور", "ok")} />
     </Page>
   );
 }

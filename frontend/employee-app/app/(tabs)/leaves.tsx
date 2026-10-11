@@ -48,7 +48,7 @@ export default function Leaves() {
     setBusy(true);
     try {
       await requests.submit(body);
-      toast("✅ تم إرسال الطلب", "ok");
+      toast("تم إرسال الطلب", "ok");
       setFrom(""); setTo(""); setTime(""); setAmount(""); setNotes("");
       await refresh();
     } catch (e) {
@@ -70,7 +70,7 @@ export default function Leaves() {
   return (
     <Page onRefresh={refresh}>
       <Card>
-        <CardTitle>📋 طلباتي</CardTitle>
+        <CardTitle icon="clipboard">طلباتي</CardTitle>
         {!mine.length ? <Empty text="لا توجد طلبات" /> : null}
         {mine.map((r) => <RequestItem key={r.id} r={r} onDelete={remove} />)}
       </Card>

@@ -11,7 +11,7 @@ import { listDocRegistry, type DocRow } from "@/lib/registry";
 
 type Tab = "dc1" | "dc2" | "dc3" | "dc4";
 const TABS: [Tab, string][] = [
-  ["dc1", "🪪 الإقامات"],
+  ["dc1", "الإقامات"],
   ["dc2", "الجوازات"],
   ["dc3", "التأمين الطبي"],
   ["dc4", "العقود"],
@@ -54,15 +54,15 @@ export default function Page() {
 
   const refresh = useCallback(() => {
     setTick((t) => t + 1);
-    toast("✓ تم تحديث بيانات الوثائق", "info");
+    toast("تم تحديث بيانات الوثائق", "info");
   }, [toast]);
 
   const printTab = () => {
     const t = tables.current[tab];
-    if (t) printHtml(TABS.find((x) => x[0] === tab)![1].replace("🪪 ", ""), t.outerHTML);
+    if (t) printHtml(TABS.find((x) => x[0] === tab)![1], t.outerHTML);
   };
   const printAll = () => {
-    const html = TABS.map(([k, l]) => (tables.current[k] ? `<h3>${l.replace("🪪 ", "")}</h3>${tables.current[k]!.outerHTML}` : "")).join("");
+    const html = TABS.map(([k, l]) => (tables.current[k] ? `<h3>${l}</h3>${tables.current[k]!.outerHTML}` : "")).join("");
     printHtml("وثائق الموظفين", html);
   };
 

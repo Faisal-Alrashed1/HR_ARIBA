@@ -86,7 +86,7 @@ function Header({ title }: { title: string }) {
           </Animated.View>
         </Pressable>
       </View>
-      <PasswordSheet visible={pw} onClose={() => setPw(false)} onDone={() => toast("✅ تم تغيير كلمة المرور", "ok")} />
+      <PasswordSheet visible={pw} onClose={() => setPw(false)} onDone={() => toast("تم تغيير كلمة المرور", "ok")} />
       <BellPanel visible={panel} onClose={() => setPanel(false)} top={insets.top + 58} />
     </View>
   );
@@ -95,8 +95,8 @@ function Header({ title }: { title: string }) {
 const KIND = {
   template: { bg: "rgba(66,133,244,.14)", fg: "#3b7ddd", icon: "file" },
   request: { bg: "rgba(214,158,46,.17)", fg: "#b9811a", icon: "clock" },
-  ok: { bg: "rgba(41,179,94,.17)", fg: "#1f9a4f", icon: "checkCircle" },
-  no: { bg: "rgba(214,69,69,.15)", fg: "#d64545", icon: "xCircle" },
+  ok: { bg: "rgba(41,179,94,.17)", fg: "#1F8D49", icon: "checkCircle" },
+  no: { bg: "rgba(181,74,74,.15)", fg: "#B54A4A", icon: "xCircle" },
 } as const;
 
 function ago(ts: string) {
@@ -119,7 +119,7 @@ function BellPanel({ visible, onClose, top }: { visible: boolean; onClose: () =>
         <Pressable onPress={() => {}} style={[styles.panel, { top, backgroundColor: t.c, borderColor: t.bd }]}>
           <View style={[styles.panelHead, { borderBottomColor: t.bd }]}>
             <T size={14} weight={800} style={{ flex: 1 }}>الإشعارات</T>
-            {unread > 0 ? <View style={styles.newPill}><T size={11} weight={800} color="#d64545">{unread} جديد</T></View> : null}
+            {unread > 0 ? <View style={styles.newPill}><T size={11} weight={800} color="#B54A4A">{unread} جديد</T></View> : null}
             <Pressable disabled={!unread} onPress={markAllRead} style={{ opacity: unread ? 1 : 0.4, paddingHorizontal: 4 }}>
               <T size={11.5} weight={800} color={t.gr}>تعليم الكل كمقروء</T>
             </Pressable>
@@ -173,7 +173,7 @@ function BottomNav({ state, navigation }: BottomTabBarProps) {
               style={[styles.bni, on && { backgroundColor: t.dark ? "rgba(41,179,94,.20)" : "rgba(1,77,61,.10)" }]}>
               <View style={on ? { transform: [{ translateY: -1 }, { scale: 1.08 }] } : undefined}><Icon name={tab.icon} size={22} color={color} /></View>
               <T size={10} weight={700} color={color} numberOfLines={1}>{tab.label}</T>
-              {count > 0 ? <View style={[styles.navBadge, { backgroundColor: tab.name === "approvals" ? t.rd : "#e5484d" }]}><T size={9} weight={700} color="#fff">{count}</T></View> : null}
+              {count > 0 ? <View style={[styles.navBadge, { backgroundColor: tab.name === "approvals" ? t.rd : "#B54A4A" }]}><T size={9} weight={700} color="#fff">{count}</T></View> : null}
             </Pressable>
           );
         })}
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   hdr: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, paddingHorizontal: 14, paddingBottom: 10, borderBottomWidth: 1,
     shadowColor: "#014D3D", shadowOpacity: 0.06, shadowRadius: 7, shadowOffset: { width: 0, height: 2 }, elevation: 2, zIndex: 10 },
   ib: { width: 36, height: 36, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  badge: { position: "absolute", top: -6, right: -6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: "#d64545", alignItems: "center", justifyContent: "center", paddingHorizontal: 4, borderWidth: 2 },
+  badge: { position: "absolute", top: -6, right: -6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: "#B54A4A", alignItems: "center", justifyContent: "center", paddingHorizontal: 4, borderWidth: 2 },
   mode: { height: 36, minWidth: 36, paddingHorizontal: 10, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   refresh: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   bnav: { position: "absolute", left: 10, right: 10, borderRadius: 24, borderWidth: 1, paddingVertical: 6,
@@ -213,5 +213,5 @@ const styles = StyleSheet.create({
   newPill: { backgroundColor: "rgba(214,69,69,.13)", borderRadius: 999, paddingHorizontal: 9, paddingVertical: 2 },
   item: { flexDirection: "row", gap: 10, paddingVertical: 11, paddingHorizontal: 14, borderBottomWidth: 1, alignItems: "flex-start" },
   kind: { width: 34, height: 34, borderRadius: 11, alignItems: "center", justifyContent: "center" },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#d64545", marginTop: 7 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#B54A4A", marginTop: 7 },
 });

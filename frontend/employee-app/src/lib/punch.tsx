@@ -52,16 +52,16 @@ export function PunchProvider({ children }: { children: ReactNode }) {
     try {
       const f = await locate();
       if (!f) {
-        toast("❌ فعّل صلاحية الموقع", "err");
+        toast("فعّل صلاحية الموقع", "err");
         return;
       }
       const s = await attendance.punch(action, f.lat, f.lng);
-      if (action === "in") toast(`✅ تم تسجيل الحضور${s.late_minutes > 0 ? ` — تأخير ${s.late_minutes} دقيقة` : ""}`, "ok");
-      else toast(`🚪 تم تسجيل الانصراف${s.early_minutes > 0 ? ` — قبل الموعد المتوقع بـ ${s.early_minutes} دقيقة` : ""}`, "ok");
+      if (action === "in") toast(`تم تسجيل الحضور${s.late_minutes > 0 ? ` — تأخير ${s.late_minutes} دقيقة` : ""}`, "ok");
+      else toast(`تم تسجيل الانصراف${s.early_minutes > 0 ? ` — قبل الموعد المتوقع بـ ${s.early_minutes} دقيقة` : ""}`, "ok");
       await refreshAtt();
     } catch (e) {
       const code = e instanceof ApiError ? e.code : "";
-      toast(code === "outside_geofence" ? "❌ خارج نطاق العمل" : e instanceof ApiError ? `❌ ${e.message}` : "❌ تعذر الاتصال بالإنترنت", "err");
+      toast(code === "outside_geofence" ? "خارج نطاق العمل" : e instanceof ApiError ? e.message : "تعذر الاتصال بالإنترنت", "err");
     } finally {
       setTimeout(() => setBusy(false), 1500); // legacy V117: block double taps
     }

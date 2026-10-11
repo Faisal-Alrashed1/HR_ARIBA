@@ -177,7 +177,7 @@ export default function Page() {
           type="button"
           className="btn bpl"
           style={{ marginTop: 12 }}
-          onClick={() => run(async () => { await putCompany(company); await putAttendanceSettings(att); }, "✓ تم حفظ الإعدادات")}
+          onClick={() => run(async () => { await putCompany(company); await putAttendanceSettings(att); }, "تم حفظ الإعدادات")}
         >
           <i className="ti ti-check" /> <span>حفظ</span>
         </button>
@@ -206,7 +206,7 @@ export default function Page() {
                 if (!f) return;
                 try {
                   const data = await readImage(f, 600);
-                  await run(() => putSheet("company_logo", data), "✓ اتغيّر الشعار");
+                  await run(() => putSheet("company_logo", data), "اتغيّر الشعار");
                 } catch (x) {
                   toast(x instanceof Error ? x.message : String(x), "err");
                 }
@@ -261,7 +261,7 @@ export default function Page() {
           <button
             type="button"
             className="btn bpl"
-            onClick={() => run(() => putAttendanceSettings({ ...att, flexible_enabled: true }), `✓ اتفعّلت الساعة المرنة (${Number(att.shift_hours)} ساعات)`)}
+            onClick={() => run(() => putAttendanceSettings({ ...att, flexible_enabled: true }), `اتفعّلت الساعة المرنة (${Number(att.shift_hours)} ساعات)`)}
           >
             تفعيل الساعة المرنة
           </button>
@@ -316,7 +316,7 @@ function ListsCard({ lookups, run }: { lookups: Lookups; run: Run }) {
           <label>الأقسام</label>
           <div style={{ display: "flex", gap: 6 }}>
             <input value={dep} onChange={(e) => setDep(e.target.value)} placeholder="اسم القسم" />
-            <button type="button" className="btn bpl bsm" onClick={() => dep.trim() && run(() => addListItem("departments", dep.trim()), "✓ تمت الإضافة").then(() => setDep(""))}>
+            <button type="button" className="btn bpl bsm" onClick={() => dep.trim() && run(() => addListItem("departments", dep.trim()), "تمت الإضافة").then(() => setDep(""))}>
               إضافة
             </button>
           </div>
@@ -326,7 +326,7 @@ function ListsCard({ lookups, run }: { lookups: Lookups; run: Run }) {
           <label>جهات العمل</label>
           <div style={{ display: "flex", gap: 6 }}>
             <input value={wp} onChange={(e) => setWp(e.target.value)} placeholder="اسم جهة العمل" />
-            <button type="button" className="btn bpl bsm" onClick={() => wp.trim() && run(() => addListItem("workplaces", wp.trim()), "✓ تمت الإضافة").then(() => setWp(""))}>
+            <button type="button" className="btn bpl bsm" onClick={() => wp.trim() && run(() => addListItem("workplaces", wp.trim()), "تمت الإضافة").then(() => setWp(""))}>
               إضافة
             </button>
           </div>
@@ -358,7 +358,7 @@ function GosiCard({ initial, run }: { initial: GosiSettings; run: Run }) {
         .sort((a, b) => String(a.date).localeCompare(String(b.date)))
         .map((r) => ({ ...r, ...Object.fromEntries(GOSI_KEYS.map((k) => [k, Number(r[k]) || 0])) })),
     };
-    run(() => putGosi(body), "✓ تم حفظ إعدادات التأمينات");
+    run(() => putGosi(body), "تم حفظ إعدادات التأمينات");
   }
   return (
     <div className="card" style={card}>
@@ -444,7 +444,7 @@ function RolesCard({ emps, accounts, run }: { emps: EmployeeListItem[]; accounts
       }
       if (userId) await setRole(userId, role);
       else await createAccount(emp, role as never);
-    }, "✓ تم ضبط الصلاحية: " + ROLE_LABELS[role]);
+    }, "تم ضبط الصلاحية: " + ROLE_LABELS[role]);
   }
   return (
     <div className="card" style={{ ...card, maxWidth: 900 }}>
@@ -479,7 +479,7 @@ function RolesCard({ emps, accounts, run }: { emps: EmployeeListItem[]; accounts
       </button>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
         <div className="ct" style={{ fontSize: 12 }}>الصلاحيات الحالية لكل المستخدمين</div>
-        <button type="button" className="btn bsm" onClick={() => run(async () => undefined, "✓ تم تحديث القائمة")}>تحديث القائمة</button>
+        <button type="button" className="btn bsm" onClick={() => run(async () => undefined, "تم تحديث القائمة")}>تحديث القائمة</button>
       </div>
       <div className="tw" style={{ marginTop: 6 }}>
         <table>
@@ -567,7 +567,7 @@ function PasswordsCard({ emps }: { emps: EmployeeListItem[] }) {
           </button>
         </div>
       </div>
-      {mine && <PasswordDialog forced={false} onClose={() => setMine(false)} onDone={() => { setMine(false); toast("✓ تم تغيير كلمة المرور", "ok"); }} />}
+      {mine && <PasswordDialog forced={false} onClose={() => setMine(false)} onDone={() => { setMine(false); toast("تم تغيير كلمة المرور", "ok"); }} />}
       {reveal && <PasswordReveal password={reveal.password} username={reveal.username} onClose={() => setReveal(null)} />}
     </div>
   );
@@ -682,7 +682,7 @@ function SignerCard({ signer, emps, run }: { signer: Signer; emps: EmployeeListI
           </button>
         )}
       </div>
-      <button type="button" className="btn bpl" style={{ marginTop: 10 }} onClick={() => run(() => putSheet("hr_signer", s), "✓ اتحفظ على السيرفر")}>
+      <button type="button" className="btn bpl" style={{ marginTop: 10 }} onClick={() => run(() => putSheet("hr_signer", s), "اتحفظ على السيرفر")}>
         حفظ
       </button>
     </div>

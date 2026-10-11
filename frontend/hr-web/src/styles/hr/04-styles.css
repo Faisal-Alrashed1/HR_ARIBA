@@ -50,13 +50,13 @@ td{padding:8px 10px;border-bottom:1px solid rgba(36,48,68,.5);vertical-align:mid
 tr:hover td{background:rgba(59,130,246,.04)}
 tfoot td{background:var(--c2);font-weight:700;border-top:2px solid var(--bd)}
 .b{display:inline-flex;align-items:center;padding:2px 8px;border-radius:9px;font-size:10px;font-weight:700;white-space:nowrap}
-.bg{background:rgba(16,185,129,.15);color:#34d399}.br{background:rgba(239,68,68,.15);color:#6B7280}
+.bg{background:rgba(16,185,129,.15);color:#1F8D49}.br{background:rgba(239,68,68,.15);color:#6B7280}
 .ba{background:rgba(245,158,11,.15);color:#E4E4BC}.bb{background:rgba(59,130,246,.15);color:#60a5fa}
 .bp{background:rgba(139,92,246,.15);color:#a78bfa}.bk{background:rgba(80,96,128,.2);color:var(--mu)}
 .bc{background:rgba(6,182,212,.15);color:#22d3ee}
 .btn{padding:6px 12px;border-radius:7px;border:1px solid var(--bd);background:transparent;cursor:pointer;font-size:12px;color:var(--tx);font-family:inherit;transition:all .12s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .btn:hover{background:var(--c2)}
-.bpl{background:var(--bl);color:#fff;border-color:var(--bl)}.bpl:hover{background:#2563eb}
+.bpl{background:var(--bl);color:#fff;border-color:var(--bl)}.bpl:hover{background:#1F8D49}
 .bgl{background:var(--gr);color:#000;border-color:var(--gr)}
 .brl{background:var(--rd);color:#fff;border-color:var(--rd)}
 .bsm{padding:3px 8px;font-size:11px;border-radius:5px}
@@ -90,7 +90,7 @@ select option{background:var(--c)}
 .al i{flex-shrink:0;font-size:16px;margin-top:1px}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--c);border:1px solid var(--bd);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;z-index:500;opacity:0;transition:all .3s;pointer-events:none;max-width:320px}
 .toast.on{opacity:1}
-.tok{border-color:var(--gr);color:#34d399}.ter{border-color:var(--rd);color:#6B7280}.tin{border-color:var(--bl);color:#93c5fd}
+.tok{border-color:var(--gr);color:#1F8D49}.ter{border-color:var(--rd);color:#6B7280}.tin{border-color:var(--bl);color:#014D3D}
 .prog{height:5px;background:var(--bd);border-radius:3px;flex:1;overflow:hidden}
 .pf{height:100%;border-radius:3px;transition:width .5s}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}

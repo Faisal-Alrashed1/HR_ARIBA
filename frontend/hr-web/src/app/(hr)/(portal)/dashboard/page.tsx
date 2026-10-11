@@ -67,13 +67,13 @@ export default function DashboardPage() {
             <div style={{ fontSize: 12, color: "var(--mu)", marginBottom: 14, fontWeight: 600 }}>{t("dash.gender")}</div>
             <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", height: "calc(100% - 36px)" }}>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 36, marginBottom: 6 }}>👨</div>
+                <div style={{ fontSize: 34, marginBottom: 6, color: "#014D3D" }}><i className="ti ti-man" aria-hidden /></div>
                 <div className="ariba-male-number" style={{ fontSize: 28, fontWeight: 900, color: "#014D3D", lineHeight: 1 }}>{d.male}</div>
                 <div style={{ fontSize: 12, color: "var(--mu)", marginTop: 4 }}>{t("dash.male", { pct: malePct })}</div>
               </div>
               <div style={{ width: 1, height: 60, background: "var(--bd)" }} />
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 36, marginBottom: 6 }}>👩</div>
+                <div style={{ fontSize: 34, marginBottom: 6, color: "#29B35E" }}><i className="ti ti-woman" aria-hidden /></div>
                 <div className="ariba-male-number" style={{ fontSize: 28, fontWeight: 900, color: "#014D3D", lineHeight: 1 }}>{d.female}</div>
                 <div style={{ fontSize: 12, color: "var(--mu)", marginTop: 4 }}>{t("dash.female", { pct: known ? 100 - malePct : 0 })}</div>
               </div>

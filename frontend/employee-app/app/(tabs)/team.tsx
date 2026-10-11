@@ -10,7 +10,7 @@ export default function Team() {
   return (
     <Page onRefresh={refresh}>
       <Card>
-        <CardTitle>👥 فريقي</CardTitle>
+        <CardTitle icon="users">فريقي</CardTitle>
         {!team.length ? <Empty text="لا يوجد موظفين" /> : null}
         {team.map((m) => (
           <View key={m.id} style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: t.bd }}>

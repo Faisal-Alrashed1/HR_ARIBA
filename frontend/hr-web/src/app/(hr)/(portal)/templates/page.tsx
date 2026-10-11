@@ -47,8 +47,8 @@ const TYPE_AR: Record<string, string> = {
 };
 const STATUS: Record<string, React.ReactNode> = {
   pending: <span className="b ba">⏳ بانتظار الموظف</span>,
-  approved: <span className="b bg">✅ تمت الموافقة</span>,
-  rejected: <span className="b br">⚠️ معترَض عليه</span>,
+  approved: <span className="b bg">تمت الموافقة</span>,
+  rejected: <span className="b br">معترَض عليه</span>,
 };
 
 interface LetterRow { id: string; employee_name: string; type: string; title: string; status: string; rejection_reason: string | null; created_at: string }
@@ -236,11 +236,11 @@ export default function Page() {
     if (!window.confirm(`هيتبعت "${b.title}" لـ ${emp?.nameAr ?? ""} في تطبيقه عشان يوافق أو يعترض. متأكد؟`)) return;
     request("/letters", { method: "POST", body: { employee_id: empId, type: b.type, title: b.title, html: emp ? withEnglish(b, emp) : b.html } })
       .then(() => {
-        toast("✅ اتبعت للموظف وبيقدر يوافق أو يعترض من تطبيقه", "ok");
+        toast("اتبعت للموظف وبيقدر يوافق أو يعترض من تطبيقه", "ok");
         if (b.type === "salary_cert") consumeRef();
         refresh();
       })
-      .catch((x) => toast("⚠️ " + (x instanceof Error ? x.message : String(x)), "err"));
+      .catch((x) => toast(x instanceof Error ? x.message : String(x), "err"));
   }
 
   const builders: Record<string, () => Built | string | null> = {
@@ -343,7 +343,7 @@ export default function Page() {
       }
       setStat(`تم ${ok} من ${ids.length}`);
     }
-    setStat(`✅ اتبعت لـ ${ok} موظف` + (fail.length ? ` — ⚠️ تعذر ${fail.length}: ${fail.join(" | ")}` : ""));
+    setStat(`اتبعت لـ ${ok} موظف` + (fail.length ? ` — تعذر ${fail.length}: ${fail.join(" | ")}` : ""));
     refresh();
   }
 

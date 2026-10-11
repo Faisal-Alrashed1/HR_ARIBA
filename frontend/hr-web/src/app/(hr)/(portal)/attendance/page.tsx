@@ -109,7 +109,7 @@ export default function Page() {
     const body = { employee_id: empId, work_date: workDate, time_in: timeIn || null, time_out: timeOut || null, location_id: locId || null, status };
     try {
       await upsertAttendance(body);
-      toast("✓ تم حفظ سجل الحضور", "ok");
+      toast("تم حفظ سجل الحضور", "ok");
       setOpen(false);
       setReloadTick((t) => t + 1);
     } catch (e) {
@@ -164,7 +164,7 @@ export default function Page() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 11, color: "var(--mu)" }}>{r ? `${r.time_in ?? ""} → ${r.time_out ?? "..."}` : "—"}</div>
                     {r?.late_minutes ? <div style={{ fontSize: 10, color: "var(--am)" }}>⏰ تأخير {r.late_minutes} دقيقة</div> : null}
-                    {r?.early_minutes ? <div style={{ fontSize: 10, color: "var(--rd)" }}>🚪 خروج مبكر {r.early_minutes} دقيقة</div> : null}
+                    {r?.early_minutes ? <div style={{ fontSize: 10, color: "var(--rd)" }}>خروج مبكر {r.early_minutes} دقيقة</div> : null}
                   </div>
                   <span className={st.cls}>{st.label}</span>
                   {r && <button type="button" className="btn bsm" onClick={() => openEdit(r)}><i className="ti ti-edit" style={{ fontSize: 12 }} /></button>}

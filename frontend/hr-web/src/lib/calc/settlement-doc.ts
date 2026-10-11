@@ -31,14 +31,14 @@ export function settlementDocHtml(d: SettlementDocInput): string {
   const sec = (t: string) => `<tr><td colspan="3" style="background:#e8f0ee;color:#014D3D;font-weight:800;padding:3px 7px;font-size:10px">${t}</td></tr>`;
   const row = (a: string, b: string, c: string, color = "#1a1a1a") => `<tr><td>${a}</td><td style="color:#666">${b}</td><td style="text-align:left;font-weight:700;color:${color}">${c}</td></tr>`;
 
-  let rows = sec("📅 مدة الخدمة") + row(`من ${tfD(d.start)} إلى ${tfD(d.end)}`, `${res.years} سنة ${res.months} شهر ${res.days} يوم`, "");
-  rows += sec(`🏆 مكافأة نهاية الخدمة (${esc(d.lawLabel)})`) + row("المستحق نظاماً", esc(res.lawNote), res.award > 0 ? num(res.award) + " ر.س" : "لا تستحق", res.award > 0 ? "#0a7a3f" : "#c0392b");
-  rows += sec("🌴 بدل الإجازة") + row(`الرصيد المتبقي: ${res.leaveRemaining} يوم`, "", num(res.leaveComp) + " ر.س", "#0a7a3f");
+  let rows = sec("مدة الخدمة") + row(`من ${tfD(d.start)} إلى ${tfD(d.end)}`, `${res.years} سنة ${res.months} شهر ${res.days} يوم`, "");
+  rows += sec(`مكافأة نهاية الخدمة (${esc(d.lawLabel)})`) + row("المستحق نظاماً", esc(res.lawNote), res.award > 0 ? num(res.award) + " ر.س" : "لا تستحق", res.award > 0 ? "#0a7a3f" : "#c0392b");
+  rows += sec("بدل الإجازة") + row(`الرصيد المتبقي: ${res.leaveRemaining} يوم`, "", num(res.leaveComp) + " ر.س", "#0a7a3f");
   if (res.leaveExcess > 0) rows += row(`إجازة زائدة عن المستحق: ${res.leaveExcess} يوم`, `المستحق ${res.leaveDue} يوم — المأخوذ ${d.leaveTaken} يوم`, "-" + num(res.leaveExcessDeduction) + " ر.س", "#c0392b");
-  rows += sec("💰 راتب آخر فترة عمل") + row(periodText, "", num(res.periodSalary) + " ر.س", "#0a7a3f");
+  rows += sec("راتب آخر فترة عمل") + row(periodText, "", num(res.periodSalary) + " ر.س", "#0a7a3f");
   const extras = d.extras.filter((x) => x.amount);
-  if (extras.length) rows += sec("➕ استحقاقات إضافية") + extras.map((x) => row(esc(x.label || "استحقاق"), "", "+" + num(x.amount) + " ر.س", "#0a7a3f")).join("");
-  rows += sec("➖ الاستقطاعات");
+  if (extras.length) rows += sec("استحقاقات إضافية") + extras.map((x) => row(esc(x.label || "استحقاق"), "", "+" + num(x.amount) + " ر.س", "#0a7a3f")).join("");
+  rows += sec("الاستقطاعات");
   const deds = d.deductions.filter((x) => x.value);
   rows += deds.length
     ? deds
@@ -51,7 +51,7 @@ export function settlementDocHtml(d: SettlementDocInput): string {
         .join("")
     : row("لا توجد استقطاعات", "", "—", "#888");
   const words = aribaTafqeet(res.total);
-  rows += `<tr style="background:#014D3D"><td colspan="2" style="color:#fff;font-weight:900;padding:6px 7px">💵 صافي مبلغ المخالصة المستحق</td><td style="color:#fff;font-weight:900;text-align:left;padding:6px 7px">${num(res.total)} ر.س</td></tr>`;
+  rows += `<tr style="background:#014D3D"><td colspan="2" style="color:#fff;font-weight:900;padding:6px 7px">صافي مبلغ المخالصة المستحق</td><td style="color:#fff;font-weight:900;text-align:left;padding:6px 7px">${num(res.total)} ر.س</td></tr>`;
   rows += `<tr><td colspan="3" style="background:#f7f9f8;text-align:center;font-size:10px;padding:3px 7px;color:#014D3D">فقط: ${words}</td></tr>`;
 
   const isAriba = /اريبا|أريبا/.test(e.employer || "");
@@ -70,7 +70,7 @@ export function settlementDocHtml(d: SettlementDocInput): string {
     '<div style="text-align:center;font-size:13.5px;color:#555;margin-bottom:8px">مخالصة نهاية خدمة — إقرار واستلام مستحقات</div>' +
     `<div class="info-grid"><div><b>الاسم:</b> ${esc(e.nameAr || "—")}</div><div><b>الجنسية:</b> ${esc(e.nationality || "—")}</div><div><b>رقم الهوية/الإقامة:</b> ${esc(e.iqamaNo || "—")}</div><div><b>الرقم الوظيفي:</b> ${esc(e.empNo || "—")}</div><div><b>الوظيفة:</b> ${esc(e.jobTitle || "—")}</div><div><b>جهة العمل:</b> ${esc(e.employer || "—")}</div></div>` +
     `<table class="doc-table"><tr><th>البيان</th><th>التفاصيل</th><th>المبلغ</th></tr>${rows}</table>` +
-    '<h3 class="sec">📜 إقرار وتعهد</h3>' +
+    '<h3 class="sec">إقرار وتعهد</h3>' +
     `<div class="legal"><div>أنا الموقع أدناه / ${esc(e.nameAr)}، ${esc(e.nationality)} الجنسيــة – هــوية وطنيــة رقم (${esc(e.iqamaNo)})، أقر بموجب هذا بالآتي:</div><ul>` +
     `<li>أقر باستلامي كامل حقوقي ومستحقاتي القانونية بموجب عقد العمل الخاص بي وذلك عن مدة خدمتي مع شركة حلول أريبا لخدمات الأعمال، كما هو منصوص عليه في نظام العمل السعودي والتي انتهت مع الشركة بتاريخ (${tfD(d.end)})م.</li>` +
     `<li>أوافق على تحويــل مســتحقاتي المتبقية لدي شركة حلول أريبـا لخدمات الأعمال بمبلغ إجمالي قدرة (${words}) إلى حســابي الشخصـي فـي (${esc(e.bank || "—")}) رقم (${esc(e.iban || "—")}).</li>` +

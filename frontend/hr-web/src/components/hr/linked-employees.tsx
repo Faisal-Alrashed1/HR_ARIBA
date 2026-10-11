@@ -34,7 +34,7 @@ export function LinkedEmployees({ locs }: { locs: Location[] }) {
     if (!emp) return toast("اختر الموظف أولاً", "err");
     try {
       await request(`/employees/${emp}/work-locations`, { method: "PUT", body: { location_ids: pick } });
-      toast("✓ تم حفظ مواقع العمل", "ok");
+      toast("تم حفظ مواقع العمل", "ok");
       load();
     } catch (e) {
       toast(e instanceof Error ? e.message : String(e), "err");

@@ -30,6 +30,7 @@ export function ToastProvider({ variant, children }: { variant: "hr" | "emp"; ch
       {children}
       {variant === "hr" ? (
         <div className={`toast ${hrClass} ${state.on ? "on" : ""}`} role="status" aria-live="polite">
+          {state.kind !== "info" && <i className={`ti ${state.kind === "err" ? "ti-circle-x" : "ti-circle-check"}`} aria-hidden style={{ marginInlineEnd: 6 }} />}
           {state.message}
         </div>
       ) : (

@@ -158,7 +158,7 @@ export default function Page() {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       putSheet(key, next)
-        .then(() => toast("✓ تم حفظ المسير", "ok"))
+        .then(() => toast("تم حفظ المسير", "ok"))
         .catch((e) => toast(e instanceof Error ? e.message : String(e), "err"));
     }, 500);
   }
@@ -265,7 +265,7 @@ export default function Page() {
       const s = await approveSheet(key);
       setApproved(true);
       setApprovedAt(s.approved_at);
-      toast("✓ تم اعتماد مسير الرواتب", "ok");
+      toast("تم اعتماد مسير الرواتب", "ok");
     } catch (e) {
       toast(e instanceof Error ? e.message : String(e), "err");
     }
@@ -289,7 +289,7 @@ export default function Page() {
     setRows(fresh);
     try {
       await putSheet(key, fresh);
-      toast("✓ تم إعادة بناء المسير", "ok");
+      toast("تم إعادة بناء المسير", "ok");
     } catch (e) {
       toast(e instanceof Error ? e.message : String(e), "err");
     }
@@ -453,7 +453,7 @@ export default function Page() {
 
   const reset = (r: PayRow, field: string, title: string) => (
     <button type="button" title={title} onClick={() => update(r.id, field, "auto")} style={{ color: "var(--cy)", textDecoration: "none", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-      ↺
+      <i className="ti ti-arrow-back-up" aria-hidden />
     </button>
   );
 
@@ -600,7 +600,7 @@ export default function Page() {
         <div id="payStatus">
           {approved ? (
             <span style={{ background: "rgba(16,185,129,.15)", color: "var(--gr)", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-              ✓ معتمد {approvedAt ? `— ${approvedAt.slice(0, 10)}` : ""}
+              معتمد {approvedAt ? `— ${approvedAt.slice(0, 10)}` : ""}
             </span>
           ) : (
             <span style={{ background: "rgba(245,158,11,.1)", color: "var(--am)", padding: "3px 10px", borderRadius: 6, fontSize: 11 }}>⏳ غير معتمد</span>
@@ -643,9 +643,9 @@ export default function Page() {
                   <option key={e.id} value={e.id}>{e.name_ar}</option>
                 ))}
               </select>
-              <button type="button" className="btn bsm" style={{ fontSize: 11, padding: "3px 9px" }} onClick={() => bulk("workDays")}>↺ أيام العمل تلقائي</button>
+              <button type="button" className="btn bsm" style={{ fontSize: 11, padding: "3px 9px" }} onClick={() => bulk("workDays")}><i className="ti ti-arrow-back-up" aria-hidden /> أيام العمل تلقائي</button>
               <button type="button" className="btn bsm" style={{ fontSize: 11, padding: "3px 9px" }} onClick={() => bulk("insDays")}>أيام التأمينات = أيام العمل</button>
-              <button type="button" className="btn bsm" style={{ fontSize: 11, padding: "3px 9px" }} onClick={() => { if (!approved) { const next = rows.map(cloneRow); for (const r of next) { if (r.manualEdits) delete r.manualEdits.insDays; r.insDays = defaultInsDays(r, empMap.get(String(r.id)), m); r.edited = true; recalc(r, empMap.get(String(r.id)), m, rates!); } setRows(next); scheduleSave(next); } }}>↺ أيام التأمينات تلقائي</button>
+              <button type="button" className="btn bsm" style={{ fontSize: 11, padding: "3px 9px" }} onClick={() => { if (!approved) { const next = rows.map(cloneRow); for (const r of next) { if (r.manualEdits) delete r.manualEdits.insDays; r.insDays = defaultInsDays(r, empMap.get(String(r.id)), m); r.edited = true; recalc(r, empMap.get(String(r.id)), m, rates!); } setRows(next); scheduleSave(next); } }}><i className="ti ti-arrow-back-up" aria-hidden /> أيام التأمينات تلقائي</button>
             </div>
           )}
 

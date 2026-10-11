@@ -19,7 +19,7 @@ function Item({ r, onDone }: { r: MyRequest; onDone: () => Promise<void> }) {
     setBusy(true);
     try {
       await requests.decide(r.id, action, action === "reject" ? reason.trim() : undefined);
-      toast(action === "approve" ? "✅ تمت الموافقة وانتقل الطلب للمرحلة التالية" : "❌ تم رفض الطلب", "ok");
+      toast(action === "approve" ? "تمت الموافقة وانتقل الطلب للمرحلة التالية" : "تم رفض الطلب", "ok");
       await onDone();
     } catch (e) {
       toast(e instanceof ApiError ? e.message : "تعذر تنفيذ العملية", "err");
@@ -37,8 +37,8 @@ function Item({ r, onDone }: { r: MyRequest; onDone: () => Promise<void> }) {
       {r.notes ? <T size={11} color={t.dm} style={{ marginTop: 2 }}>{r.notes}</T> : null}
       {rejecting ? <Input value={reason} onChangeText={setReason} placeholder="سبب الرفض:" /> : null}
       <View style={{ flexDirection: "row", gap: 8 }}>
-        <Btn kind="success" title="✓ موافقة" onPress={() => decide("approve")} busy={busy} style={{ flex: 1 }} />
-        <Btn kind="danger" title={rejecting ? "تأكيد الرفض" : "✗ رفض"} onPress={() => (rejecting ? decide("reject") : setRejecting(true))} style={{ flex: 1 }} />
+        <Btn kind="success" title="موافقة" icon="check" onPress={() => decide("approve")} busy={busy} style={{ flex: 1 }} />
+        <Btn kind="danger" title={rejecting ? "تأكيد الرفض" : "رفض"} icon="x" onPress={() => (rejecting ? decide("reject") : setRejecting(true))} style={{ flex: 1 }} />
       </View>
     </View>
   );

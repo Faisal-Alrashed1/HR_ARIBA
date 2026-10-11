@@ -50,12 +50,12 @@ export function PasswordSheet({ visible, forced, onClose, onDone }: { visible: b
 
   return (
     <Sheet visible={visible} onClose={forced ? () => {} : onClose}>
-      <T size={17} weight={700} color="#111" style={{ marginBottom: 6 }}>🔒 {forced ? "غيّر كلمة المرور" : "تغيير كلمة المرور"}</T>
+      <T size={17} weight={700} color="#111" style={{ marginBottom: 6 }}>{forced ? "غيّر كلمة المرور" : "تغيير كلمة المرور"}</T>
       {forced ? <T size={12.5} color="#555" style={{ marginBottom: 10, lineHeight: 20 }}>حسابك <T size={12.5} weight={700} color="#111">{user?.username}</T> — غيّر كلمة المرور الافتراضية</T> : null}
       <PwInput value={oldPw} onChange={setOld} placeholder="كلمة المرور الحالية" />
       <PwInput value={pw} onChange={setPw} placeholder="كلمة المرور الجديدة" />
       <PwInput value={pw2} onChange={setPw2} placeholder="أعد كتابة كلمة المرور الجديدة" />
-      {err ? <T size={12.5} color="#b91c1c" style={{ marginBottom: 8 }}>{err}</T> : null}
+      {err ? <T size={12.5} color="#B54A4A" style={{ marginBottom: 8 }}>{err}</T> : null}
       <View style={{ flexDirection: "row", gap: 8 }}>
         <Btn title="حفظ كلمة المرور" kind="teal" onPress={save} busy={busy} style={{ flex: 1, borderRadius: 8 }} />
         {!forced ? <Btn title="إلغاء" kind="ghost" onPress={onClose} style={{ borderRadius: 8, backgroundColor: "#f3f4f6", borderColor: "#ccc" }} /> : null}
