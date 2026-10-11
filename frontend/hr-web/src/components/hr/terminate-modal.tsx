@@ -7,6 +7,7 @@ import { terminateEmployee } from "@/lib/employees";
 import { todayIso } from "@/lib/format";
 import { useLocale } from "@/lib/i18n/locale";
 import { Modal } from "./modal";
+import { DateField } from "@/components/common/date-time-field";
 
 // Same article list and order as the prototype's EOS page.
 const ARTICLES: TerminationArticle[] = ["art_84", "art_74", "art_85", "art_75", "art_77", "art_80", "art_53", "art_74_retirement", "art_74_death"];
@@ -45,7 +46,7 @@ export function TerminateModal({ id, name, onClose, onDone }: { id: string; name
       }
     >
       <div className="fg">
-        <div><label htmlFor="td">{t("term.date")}</label><input id="td" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+        <div><label htmlFor="td">{t("term.date")}</label><DateField id="td" value={date} onChange={(v) => setDate(v)} /></div>
         <div>
           <label htmlFor="ta">{t("term.article")}</label>
           <select id="ta" value={article} onChange={(e) => setArticle(e.target.value as TerminationArticle)}>

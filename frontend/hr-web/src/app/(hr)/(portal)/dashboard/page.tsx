@@ -101,7 +101,7 @@ export default function DashboardPage() {
               ] as [MessageKey, number][]
             ).map(([k, v]) => (
               <div key={k} style={ROW}>
-                <span style={{ fontSize: 12, color: "var(--mu)", display: "inline-flex", alignItems: "center", gap: 4 }}>{k === "dash.tamheer" ? <img src="/icons/tamheer.png" alt="" width={16} height={16} /> : <i className={`ti ${DASH_ICON[k] ?? "ti-point"}`} aria-hidden />} {t(k)}</span>
+                <span style={{ fontSize: 12, color: "var(--mu)", display: "inline-flex", alignItems: "center", gap: 6 }}>{k === "dash.tamheer" ? <img src="/icons/tamheer.png" alt="" width={22} height={22} /> : <i className={`ti ${DASH_ICON[k] ?? "ti-point"}`} aria-hidden style={{ fontSize: 20 }} />} {t(k)}</span>
                 <span className="ariba-pending-number" style={{ fontSize: 26, fontWeight: 900, color: "#014D3D" }}>{v}</span>
               </div>
             ))}

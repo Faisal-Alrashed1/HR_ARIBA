@@ -31,6 +31,7 @@ import {
   type FormEmp,
   type Signer,
 } from "@/lib/calc/forms";
+import { DateField } from "@/components/common/date-time-field";
 
 const STY: React.CSSProperties = { padding: 6, border: "1px solid var(--bd)", borderRadius: 6, background: "var(--c2)", color: "var(--tx)", fontSize: 12, width: "100%" };
 const DEFAULT_SIGNER: Signer = { name_ar: "عبد الله العنبر", title_ar: "مدير الموارد البشرية", title_en: "HR Manager", signature: null, stamp: null };
@@ -366,7 +367,7 @@ export default function Page() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 12 }}>
         <Card title="مباشرة عمل" icon="ti-login-2">
           <Field label="اسم المدير المباشر"><input id="TF1_MGR" style={STY} value={f1.manager} onChange={(e) => setF1({ ...f1, manager: e.target.value })} /></Field>
-          <Field label="تاريخ المباشرة"><input type="date" id="TF1_JOIN" style={STY} value={f1.join} onChange={(e) => setF1({ ...f1, join: e.target.value })} /></Field>
+          <Field label="تاريخ المباشرة"><DateField id="TF1_JOIN" style={STY} value={f1.join} onChange={(v) => setF1({ ...f1, join: v })} /></Field>
           <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
             <input type="checkbox" checked={f1.first} onChange={(e) => setF1({ ...f1, first: e.target.checked })} /> مباشرة لأول مرة
           </label>
@@ -394,20 +395,20 @@ export default function Page() {
         </Card>
 
         <Card title="تمديد فترة التجربة" icon="ti-calendar-plus">
-          <Field label="تاريخ بداية العقد"><input type="date" style={STY} value={f3.join} onChange={(e) => setF3({ ...f3, join: e.target.value })} /></Field>
-          <Field label="تاريخ نهاية التمديد الجديد"><input type="date" style={STY} value={f3.end} onChange={(e) => setF3({ ...f3, end: e.target.value })} /></Field>
+          <Field label="تاريخ بداية العقد"><DateField style={STY} value={f3.join} onChange={(v) => setF3({ ...f3, join: v })} /></Field>
+          <Field label="تاريخ نهاية التمديد الجديد"><DateField style={STY} value={f3.end} onChange={(v) => setF3({ ...f3, end: v })} /></Field>
           <Buttons label="طباعة إشعار التمديد" onPrint={() => out(builders.extension(), "print")} onSend={() => out(builders.extension(), "send")} />
         </Card>
 
         <Card title="إشعار بإنتهاء التعاقد (فترة التجربة)" icon="ti-calendar-x">
-          <Field label="تاريخ بداية العقد"><input type="date" style={STY} value={f4.join} onChange={(e) => setF4({ ...f4, join: e.target.value })} /></Field>
-          <Field label="تاريخ آخر يوم عمل"><input type="date" style={STY} value={f4.last} onChange={(e) => setF4({ ...f4, last: e.target.value })} /></Field>
+          <Field label="تاريخ بداية العقد"><DateField style={STY} value={f4.join} onChange={(v) => setF4({ ...f4, join: v })} /></Field>
+          <Field label="تاريخ آخر يوم عمل"><DateField style={STY} value={f4.last} onChange={(v) => setF4({ ...f4, last: v })} /></Field>
           <Buttons label="طباعة إشعار الإنهاء" onPrint={() => out(builders.termination(), "print")} onSend={() => out(builders.termination(), "send")} />
         </Card>
 
         <Card title="إخلاء طرف" icon="ti-logout">
-          <Field label="تاريخ المباشرة"><input type="date" style={STY} value={f5.join} onChange={(e) => setF5({ ...f5, join: e.target.value })} /></Field>
-          <Field label="تاريخ آخر يوم عمل"><input type="date" style={STY} value={f5.last} onChange={(e) => setF5({ ...f5, last: e.target.value })} /></Field>
+          <Field label="تاريخ المباشرة"><DateField style={STY} value={f5.join} onChange={(v) => setF5({ ...f5, join: v })} /></Field>
+          <Field label="تاريخ آخر يوم عمل"><DateField style={STY} value={f5.last} onChange={(v) => setF5({ ...f5, last: v })} /></Field>
           <Field label="سبب إخلاء الطرف">
             <select style={STY} value={f5.reason} onChange={(e) => setF5({ ...f5, reason: e.target.value })}>
               <option value="resign">استقالة</option>
@@ -420,19 +421,19 @@ export default function Page() {
         </Card>
 
         <Card title="شهادة خبرة" icon="ti-certificate">
-          <Field label="تاريخ بداية التعاقد"><input type="date" style={STY} value={f6.start} onChange={(e) => setF6({ ...f6, start: e.target.value })} /></Field>
+          <Field label="تاريخ بداية التعاقد"><DateField style={STY} value={f6.start} onChange={(v) => setF6({ ...f6, start: v })} /></Field>
           <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 6, margin: "4px 0" }}>
             <input type="checkbox" checked={f6.still} onChange={(e) => setF6({ ...f6, still: e.target.checked })} /> لا يزال على رأس العمل
           </label>
-          <Field label="تاريخ نهاية التعاقد (لو انتهى)"><input type="date" disabled={f6.still} style={STY} value={f6.end} onChange={(e) => setF6({ ...f6, end: e.target.value })} /></Field>
+          <Field label="تاريخ نهاية التعاقد (لو انتهى)"><DateField disabled={f6.still} style={STY} value={f6.end} onChange={(v) => setF6({ ...f6, end: v })} /></Field>
           <Field label="طبيعة التعاقد"><input style={STY} value={f6.nature} onChange={(e) => setF6({ ...f6, nature: e.target.value })} /></Field>
           <Field label="رقم الشهادة الصادر"><input placeholder="AR-000-2026" style={STY} value={f6.no} onChange={(e) => setF6({ ...f6, no: e.target.value })} /></Field>
           <Buttons label="طباعة شهادة الخبرة" onPrint={() => out(builders.experience(), "print")} onSend={() => out(builders.experience(), "send")} />
         </Card>
 
         <Card title="نموذج تقييم فترة التجربة" icon="ti-clipboard-check">
-          <Field label="تاريخ بداية العقد"><input type="date" style={STY} value={f7.join} onChange={(e) => setF7({ ...f7, join: e.target.value })} /></Field>
-          <Field label="تاريخ نهاية فترة التجربة"><input type="date" style={STY} value={f7.end} onChange={(e) => setF7({ ...f7, end: e.target.value })} /></Field>
+          <Field label="تاريخ بداية العقد"><DateField style={STY} value={f7.join} onChange={(v) => setF7({ ...f7, join: v })} /></Field>
+          <Field label="تاريخ نهاية فترة التجربة"><DateField style={STY} value={f7.end} onChange={(v) => setF7({ ...f7, end: v })} /></Field>
           <div id="TF7_ROWS" style={{ marginTop: 6 }}>
             {EVAL_CRITERIA.map((c, i) => (
               <div key={c} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
@@ -459,8 +460,8 @@ export default function Page() {
         </Card>
 
         <Card title="إشعار انتهاء عقد العمل" icon="ti-file-off">
-          <Field label="تاريخ بداية العقد (لو فاضي ياخده من ملف الموظف)"><input type="date" style={STY} value={ce.join} onChange={(e) => setCe({ ...ce, join: e.target.value })} /></Field>
-          <Field label="تاريخ آخر يوم عمل"><input type="date" style={STY} value={ce.last} onChange={(e) => setCe({ ...ce, last: e.target.value })} /></Field>
+          <Field label="تاريخ بداية العقد (لو فاضي ياخده من ملف الموظف)"><DateField style={STY} value={ce.join} onChange={(v) => setCe({ ...ce, join: v })} /></Field>
+          <Field label="تاريخ آخر يوم عمل"><DateField style={STY} value={ce.last} onChange={(v) => setCe({ ...ce, last: v })} /></Field>
           <Field label="السند النظامي (من مواد نظام العمل)">
             <select style={STY} value={ce.law} onChange={(e) => setCe({ ...ce, law: e.target.value })}>
               <option value="">— اختر —</option>
@@ -473,7 +474,7 @@ export default function Page() {
             </select>
           </Field>
           {ce.law === "other" && <Field label="المادة / السند (نص حر)"><input style={STY} value={ce.other} onChange={(e) => setCe({ ...ce, other: e.target.value })} /></Field>}
-          <Field label="تاريخ الاستقالة / الاتفاق (اختياري)"><input type="date" style={STY} value={ce.ref} onChange={(e) => setCe({ ...ce, ref: e.target.value })} /></Field>
+          <Field label="تاريخ الاستقالة / الاتفاق (اختياري)"><DateField style={STY} value={ce.ref} onChange={(v) => setCe({ ...ce, ref: v })} /></Field>
           <Field label="ملاحظات (اختياري)"><textarea rows={2} style={STY} value={ce.notes} onChange={(e) => setCe({ ...ce, notes: e.target.value })} /></Field>
           <Buttons label="طباعة إشعار انتهاء العقد" onPrint={() => out(builders.contract_end(), "print")} onSend={() => out(builders.contract_end(), "send")} />
         </Card>

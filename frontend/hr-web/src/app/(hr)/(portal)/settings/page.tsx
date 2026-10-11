@@ -32,6 +32,7 @@ import {
   type Company,
   type GosiSettings,
 } from "@/lib/settings";
+import { DateField, TimeField } from "@/components/common/date-time-field";
 
 const ROLE_LABELS: Record<string, string> = {
   employee: "موظف عادي",
@@ -162,7 +163,7 @@ export default function Page() {
           </div>
           <div>
             <label>وقت بدء العمل</label>
-            <input type="time" id="CO_ST" value={hhmm(att.work_start)} onChange={(e) => setAtt({ ...att, work_start: e.target.value })} />
+            <TimeField id="CO_ST" value={hhmm(att.work_start)} onChange={(v) => setAtt({ ...att, work_start: v })} />
           </div>
           <div>
             <label>هامش التأخير (دقيقة)</label>
@@ -246,11 +247,11 @@ export default function Page() {
         <div className="fg">
           <div>
             <label>من الساعة</label>
-            <input type="time" id="V86_FROM" value={hhmm(att.window_start)} onChange={(e) => setAtt({ ...att, window_start: e.target.value })} />
+            <TimeField id="V86_FROM" value={hhmm(att.window_start)} onChange={(v) => setAtt({ ...att, window_start: v })} />
           </div>
           <div>
             <label>إلى الساعة</label>
-            <input type="time" id="V86_TO" value={hhmm(att.window_end)} onChange={(e) => setAtt({ ...att, window_end: e.target.value })} />
+            <TimeField id="V86_TO" value={hhmm(att.window_end)} onChange={(v) => setAtt({ ...att, window_end: v })} />
           </div>
           <div>
             <label>عدد ساعات الدوام</label>
@@ -395,7 +396,7 @@ function GosiCard({ initial, run }: { initial: GosiSettings; run: Run }) {
               {s.effectiveRules.map((r, i) => (
                 <tr key={i}>
                   <td>
-                    <input type="date" value={String(r.date || "")} onChange={(e) => set(i, "date", e.target.value)} />
+                    <DateField value={String(r.date || "")} onChange={(v) => set(i, "date", v)} />
                   </td>
                   {GOSI_KEYS.map((k) => (
                     <td key={k}>

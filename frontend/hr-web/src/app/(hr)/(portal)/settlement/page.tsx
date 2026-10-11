@@ -8,6 +8,7 @@ import { printDoc } from "@/lib/calc/forms";
 import { settlementDocHtml } from "@/lib/calc/settlement-doc";
 import type { EmployeeListItem } from "@/lib/api";
 import { LAW_NAME, REASONS, runSettlement, sDt, sNum, type SettlementReason } from "@/lib/calc/settlement";
+import { DateField } from "@/components/common/date-time-field";
 
 const inp: React.CSSProperties = {
   padding: 6,
@@ -179,11 +180,11 @@ export default function Page() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
             <div>
               <label style={lbl}>تاريخ المباشرة</label>
-              <input type="date" id="sStart" value={start} onChange={(e) => setStart(e.target.value)} style={inp} />
+              <DateField id="sStart" value={start} onChange={(v) => setStart(v)} style={inp} />
             </div>
             <div>
               <label style={lbl}>تاريخ الإنهاء</label>
-              <input type="date" id="sEndDate" value={end} onChange={(e) => setEnd(e.target.value)} style={inp} />
+              <DateField id="sEndDate" value={end} onChange={(v) => setEnd(v)} style={inp} />
             </div>
             <div>
               <label style={lbl}>الراتب الإجمالي</label>

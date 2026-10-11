@@ -25,7 +25,7 @@ const NAV: NavEntry[] = [
   { href: "/attendance", id: "att", icon: "ti-map-pin", label: "nav.att" },
   { href: "/locations", id: "loc", icon: "ti-map-2", label: "nav.loc" },
   { sec: "nav.secLeaves" },
-  { href: "/leaves", id: "lv", icon: "ti-calendar-event", label: "nav.lv" },
+  { href: "/leaves", id: "lv", icon: "ti-clipboard-list", label: "nav.lv" },
   { sec: "nav.secFinance" },
   { href: "/payroll", id: "pay", icon: "ti-cash", label: "nav.pay" },
   { href: "/payslips", id: "slip", icon: "ti-receipt", label: "nav.slip" },

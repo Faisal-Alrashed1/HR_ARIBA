@@ -1,8 +1,10 @@
 "use client";
 
-// Leaves (الإجازات) — port of #pg-lv: معلقة · كل الطلبات · طلب جديد · الأرصدة · الإجازات الرسمية · عمل إضافي
+// الطلبات والإجازات — port of #pg-lv: بانتظار إجراء · كل الطلبات · طلب جديد · الأرصدة · الإجازات الرسمية · عمل إضافي.
+// Every request type the employee app sends (leaves, permissions, overtime, forgot punch, advance, mission) shows here.
 // (js/main/08-leaves-ui-pending-all.js, 09-leaves-ui-balances-holidays-requests.js, requests/014 secure workflow).
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Modal } from "@/components/hr/modal";
 import { PageState } from "@/components/hr/not-built";
 import { useToast } from "@/components/common/toast";
@@ -22,6 +24,7 @@ import {
   listHolidays,
   listRequests,
   LVL,
+  OTHER_TYPES,
   overrideRequest,
   rejectRequest,
   saveBalance,
@@ -31,11 +34,14 @@ import {
   type Holiday,
   type HrRequest,
 } from "@/lib/leave";
+import { DateField } from "@/components/common/date-time-field";
 
 type Tab = "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6";
 const fD = (d: string | null) => (d ? ddmmyyyy(d) : "—");
 const f2 = (n: number) => Number(n || 0).toFixed(2);
-const STAGE: Record<string, string> = { manager: "بانتظار المدير", ceo: "بانتظار الرئيس التنفيذي", hr: "معلق" };
+const STAGE: Record<string, string> = { manager: "بانتظار المدير", ceo: "بانتظار الرئيس التنفيذي", hr: "بانتظار الموارد البشرية" };
+const STAGE_ORDER: Record<string, number> = { hr: 0, manager: 1, ceo: 2 };
+const PUNCH: Record<string, string> = { in: "دخول", out: "خروج", both: "دخول وخروج" };
 const STB: Record<string, React.ReactNode> = {
   pending: <span className="b ba">معلق</span>,
   approved: <span className="b bg">موافق</span>,
@@ -45,7 +51,14 @@ const STB: Record<string, React.ReactNode> = {
 const PERM_LIKE = new Set(["permission", "maternity_permission", "early_leave", "advance"]);
 
 function detailOf(r: HrRequest) {
-  if (PERM_LIKE.has(r.type) || r.type === "overtime" || r.type === "forgot_punch")
+  if (r.type === "forgot_punch") {
+    const t1 = r.time_from ? r.time_from.slice(0, 5) : "";
+    const t2 = r.time_to ? r.time_to.slice(0, 5) : "";
+    const kind = PUNCH[r.punch_kind ?? ""] ?? "";
+    return `${fD(r.on_date)} — ${r.punch_kind === "both" ? `دخول ${t1} / خروج ${t2}` : `${kind} ${t1}`}`;
+  }
+  if (r.type === "advance") return `${Number(r.amount ?? 0).toLocaleString("en-US")} ر.س`;
+  if (PERM_LIKE.has(r.type) || r.type === "overtime")
     return `${fD(r.on_date)}${r.time_from ? " " + r.time_from.slice(0, 5) : ""}${r.hours ? ` (${Number(r.hours)} ساعة)` : ""}${r.amount ? ` — ${Number(r.amount).toLocaleString("en-US")} ر.س` : ""}`;
   return `${fD(r.from_date)} ← ${fD(r.to_date)} (${Number(r.days ?? 0)} أيام)`;
 }
@@ -69,8 +82,22 @@ function AttachField({ onFile }: { onFile: (f: File | null) => void }) {
 }
 
 export default function Page() {
+  return (
+    <Suspense>
+      <RequestsPage />
+    </Suspense>
+  );
+}
+
+const TABS: Tab[] = ["lv1", "lv2", "lv3", "lv4", "lv5", "lv6"];
+
+function RequestsPage() {
   const toast = useToast();
-  const [tab, setTab] = useState<Tab>("lv1");
+  // Deep link from the attendance page: /leaves?tab=lv1&type=forgot_punch
+  const params = useSearchParams();
+  const tq = params.get("tab") as Tab | null;
+  const [tab, setTab] = useState<Tab>(tq && TABS.includes(tq) ? tq : "lv1");
+  const [typeFilter, setTypeFilter] = useState(params.get("type") ?? "");
   const [emps, setEmps] = useState<EmployeeListItem[]>([]);
   const [reqs, setReqs] = useState<HrRequest[] | null>(null);
   const [hols, setHols] = useState<Holiday[]>([]);
@@ -96,10 +123,12 @@ export default function Page() {
     };
   }, [tick]);
 
-  const today = todayIso();
+  // Every pending request of every type and date (past-dated ones — forgot punch, sick leave — included),
+  // HR's own stage first; the badge counts exactly what the list shows.
   const pending = useMemo(
-    () => (reqs ?? []).filter((r) => r.status === "pending" && (r.to_date || r.on_date || today) >= today),
-    [reqs, today],
+    () => (reqs ?? []).filter((r) => r.status === "pending")
+      .sort((a, b) => (STAGE_ORDER[a.stage] ?? 9) - (STAGE_ORDER[b.stage] ?? 9) || a.created_at.localeCompare(b.created_at)),
+    [reqs],
   );
 
   async function act(fn: () => Promise<unknown>, ok: string) {
@@ -180,12 +209,12 @@ export default function Page() {
   };
 
   const tabs: [Tab, React.ReactNode][] = [
-    ["lv1", <>معلقة <span className="b ba" id="LVB">{pending.length}</span></>],
+    ["lv1", <>بانتظار إجراء <span className="b ba" id="LVB">{pending.length}</span></>],
     ["lv2", "كل الطلبات"],
     ["lv3", "طلب جديد"],
     ["lv4", "الأرصدة"],
     ["lv5", "الإجازات الرسمية"],
-    ["lv6", "⏱️ عمل إضافي"],
+    ["lv6", <><i className="ti ti-clock-plus" aria-hidden /> عمل إضافي</>],
   ];
 
   return (
@@ -201,8 +230,8 @@ export default function Page() {
         <PageState loading={!error} error={error} onRetry={reload} />
       ) : (
         <>
-          {tab === "lv1" && <Pending list={pending.filter((r) => r.type !== "overtime")} actions={actions} />}
-          {tab === "lv2" && <AllRequests reqs={reqs} emps={emps} actions={actions} />}
+          {tab === "lv1" && <Pending list={pending} actions={actions} type={typeFilter} onType={setTypeFilter} />}
+          {tab === "lv2" && <AllRequests reqs={reqs} emps={emps} actions={actions} initialType={typeFilter} />}
           {tab === "lv3" && <NewRequest emps={emps} hols={hols} bal={bal} onDone={reload} />}
           {tab === "lv4" && <Balances bal={bal} emps={emps} onSaved={reload} />}
           {tab === "lv5" && <Holidays hols={hols} onChange={reload} />}
@@ -213,14 +242,30 @@ export default function Page() {
   );
 }
 
-function Pending({ list, actions }: { list: HrRequest[]; actions: (r: HrRequest) => React.ReactNode }) {
+function TypeSelect({ value, onChange, id }: { value: string; onChange: (v: string) => void; id?: string }) {
+  return (
+    <select id={id} value={value} onChange={(e) => onChange(e.target.value)} style={{ maxWidth: 170 }}>
+      <option value="">كل الأنواع</option>
+      <optgroup label="الإجازات">
+        {Object.entries(LVL).map(([k, v]) => <option key={k} value={k}>{v.ar}</option>)}
+      </optgroup>
+      <optgroup label="طلبات أخرى">
+        {Object.entries(OTHER_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+      </optgroup>
+    </select>
+  );
+}
+
+function Pending({ list: all, actions, type, onType }: { list: HrRequest[]; actions: (r: HrRequest) => React.ReactNode; type: string; onType: (v: string) => void }) {
+  const list = type ? all.filter((r) => r.type === type) : all;
   return (
     <div id="lv1">
       <div className="card" style={{ marginBottom: 10 }}>
         <div className="ch">
           <div className="ct">
-            <i className="ti ti-clock" /> <span>الطلبات المعلقة</span>
+            <i className="ti ti-clock" /> <span>بانتظار إجراء</span>
           </div>
+          <TypeSelect value={type} onChange={onType} />
         </div>
         <div id="LVP">
           {list.length === 0 ? (
@@ -235,7 +280,7 @@ function Pending({ list, actions }: { list: HrRequest[]; actions: (r: HrRequest)
                   </div>
                   {r.notes && <div style={{ fontSize: 11, color: "var(--dm)" }}>{r.notes}</div>}
                 </div>
-                <span className="b ba">معلق</span>
+                {r.stage === "hr" && <span className="b ba">{STAGE.hr}</span>}
                 {actions(r)}
               </div>
             ))
@@ -246,11 +291,11 @@ function Pending({ list, actions }: { list: HrRequest[]; actions: (r: HrRequest)
   );
 }
 
-function AllRequests({ reqs, emps, actions }: { reqs: HrRequest[]; emps: EmployeeListItem[]; actions: (r: HrRequest, compact?: boolean) => React.ReactNode }) {
+function AllRequests({ reqs, emps, actions, initialType }: { reqs: HrRequest[]; emps: EmployeeListItem[]; actions: (r: HrRequest, compact?: boolean) => React.ReactNode; initialType: string }) {
   const [fe, setFe] = useState("");
-  const [ft, setFt] = useState("");
+  const [ft, setFt] = useState(initialType);
   const [fs, setFs] = useState("");
-  const list = reqs.filter((r) => (!fe || r.employee_id === fe) && (!ft || r.type === ft) && (!fs || r.status === fs) && r.type in LVL);
+  const list = reqs.filter((r) => (!fe || r.employee_id === fe) && (!ft || r.type === ft) && (!fs || r.status === fs));
   return (
     <div id="lv2">
       <div className="card">
@@ -263,14 +308,7 @@ function AllRequests({ reqs, emps, actions }: { reqs: HrRequest[]; emps: Employe
               </option>
             ))}
           </select>
-          <select id="LFT" value={ft} onChange={(e) => setFt(e.target.value)} style={{ maxWidth: 150 }}>
-            <option value="">كل الأنواع</option>
-            {Object.entries(LVL).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v.ar}
-              </option>
-            ))}
-          </select>
+          <TypeSelect id="LFT" value={ft} onChange={setFt} />
           <select id="LFS" value={fs} onChange={(e) => setFs(e.target.value)} style={{ maxWidth: 130 }}>
             <option value="">كل الحالات</option>
             <option value="pending">معلق</option>
@@ -284,9 +322,7 @@ function AllRequests({ reqs, emps, actions }: { reqs: HrRequest[]; emps: Employe
               <tr>
                 <th>الموظف</th>
                 <th>النوع</th>
-                <th>من</th>
-                <th>إلى</th>
-                <th>الأيام</th>
+                <th>التفاصيل</th>
                 <th>الحالة</th>
                 <th>إجراء</th>
               </tr>
@@ -296,9 +332,7 @@ function AllRequests({ reqs, emps, actions }: { reqs: HrRequest[]; emps: Employe
                 <tr key={r.id}>
                   <td style={{ fontWeight: 600 }}>{r.employee_name.split(" ").slice(0, 3).join(" ")}</td>
                   <td>{typeLabel(r.type)}</td>
-                  <td>{fD(r.from_date)}</td>
-                  <td>{fD(r.to_date)}</td>
-                  <td>{Number(r.days ?? 0)}</td>
+                  <td style={{ fontSize: 12 }}>{detailOf(r)}</td>
                   <td>
                     {STB[r.status]}
                     {r.rejection_reason && <div style={{ fontSize: 10, color: "var(--rd)" }}>{r.rejection_reason}</div>}
@@ -396,11 +430,11 @@ function NewRequest({ emps, hols, bal, onDone }: { emps: EmployeeListItem[]; hol
           </div>
           <div>
             <label>من تاريخ *</label>
-            <input type="date" id="NLF" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <DateField id="NLF" value={from} onChange={(v) => setFrom(v)} />
           </div>
           <div>
             <label>إلى تاريخ *</label>
-            <input type="date" id="NLT" value={to} onChange={(e) => setTo(e.target.value)} />
+            <DateField id="NLT" value={to} onChange={(v) => setTo(v)} />
           </div>
           <div className="ff" id="LVI">
             {from && to &&
@@ -716,7 +750,7 @@ function BalanceEditor({ employeeId, emps, onClose, onSaved }: { employeeId: str
         </div>
         <div>
           <label>تاريخ التعديل</label>
-          <input type="date" id="LBMDate" value={date} onChange={(e) => setDate(e.target.value)} />
+          <DateField id="LBMDate" value={date} onChange={(v) => setDate(v)} />
         </div>
         <div className="ff">
           <label>سبب / ملاحظة</label>
@@ -864,7 +898,7 @@ function Holidays({ hols, onChange }: { hols: Holiday[]; onChange: () => void })
             </div>
             <div>
               <label>التاريخ *</label>
-              <input type="date" id="HD" value={date} onChange={(e) => setDate(e.target.value)} />
+              <DateField id="HD" value={date} onChange={(v) => setDate(v)} />
             </div>
             <div>
               <label>عدد الأيام</label>
@@ -931,7 +965,7 @@ function Overtime({ emps, reqs, actions, onDone }: { emps: EmployeeListItem[]; r
           </div>
           <div>
             <label>التاريخ *</label>
-            <input type="date" id="HR_OT_DATE" value={date} onChange={(e) => setDate(e.target.value)} />
+            <DateField id="HR_OT_DATE" value={date} onChange={(v) => setDate(v)} />
           </div>
           <div>
             <label>عدد الساعات *</label>

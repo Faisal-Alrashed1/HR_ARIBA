@@ -5,9 +5,9 @@ import {
   ActivityIndicator, Animated, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
   type StyleProp, type TextInputProps, type TextStyle, type ViewStyle, RefreshControl,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { brand, fonts, useTheme } from "@/theme";
 import { Icon, type IconName } from "./icons";
+import { Calendar, TimeGrid } from "./date-time";
 
 export function T({ children, size = 13, weight = 500, color, style, numberOfLines, center }: {
   children: ReactNode; size?: number; weight?: 300 | 500 | 600 | 700 | 800 | 900; color?: string; style?: StyleProp<TextStyle>;
@@ -136,29 +136,34 @@ const pad = (n: number) => String(n).padStart(2, "0");
 export const isoDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 export const hhmm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-// <input type="date"> / <input type="time"> with the native pickers.
+// Date / time field: tap fills today / now and opens the app's own calendar or time grid (components/date-time.tsx).
 export function PickerField({ label, value, onChange, mode, maximumDate, placeholder }: {
   label?: string; value: string; onChange: (v: string) => void; mode: "date" | "time"; maximumDate?: Date; placeholder?: string;
 }) {
   const t = useTheme();
   const [open, setOpen] = useState(false);
-  const current = value ? (mode === "date" ? new Date(`${value}T12:00:00`) : new Date(`2000-01-01T${value}:00`)) : new Date();
-  const set = (_: unknown, d?: Date) => {
-    if (Platform.OS !== "ios") setOpen(false);
-    if (d) onChange(mode === "date" ? isoDate(d) : hhmm(d));
+  const [narrow, setNarrow] = useState(false);
+  const toggle = () => {
+    // First tap on an empty field fills today / now, so the picker opens on it.
+    if (!open && !value) onChange(mode === "date" ? isoDate(new Date()) : hhmm(new Date()));
+    setOpen((o) => !o);
   };
   return (
     <View style={{ flex: 1 }}>
       {label ? <Label>{label}</Label> : null}
-      <Pressable onPress={() => setOpen((o) => !o)} style={[styles.input, { borderColor: t.bd, backgroundColor: t.c2, justifyContent: "center" }]}>
-        <T size={13} color={value ? t.tx : t.dm}>{value || placeholder || (mode === "date" ? "yyyy-mm-dd" : "--:--")}</T>
+      <Pressable onPress={toggle} onLayout={(e) => setNarrow(e.nativeEvent.layout.width < 130)} style={[styles.input, { borderColor: open ? (t.dark ? brand.green : brand.dark) : t.bd, backgroundColor: t.c2, flexDirection: "row", alignItems: "center", gap: 8 }]}>
+        {narrow ? null : <Icon name={mode === "date" ? "calendar" : "clock"} size={17} color={t.dark ? brand.green : brand.dark} stroke={2} />}
+        <T size={narrow ? 12 : 13} weight={600} color={value ? t.tx : t.dm} style={{ flex: 1 }} numberOfLines={1}>{value || placeholder || (mode === "date" ? "اختر التاريخ" : "اختر الوقت")}</T>
       </Pressable>
-      {open ? (
-        <View>
-          <DateTimePicker value={current} mode={mode} display={Platform.OS === "ios" ? "spinner" : "default"} onChange={set} maximumDate={maximumDate} is24Hour locale="en-GB" />
-          {Platform.OS === "ios" ? <Btn title="تم" kind="ghost" onPress={() => setOpen(false)} style={{ marginTop: 0 }} /> : null}
-        </View>
-      ) : null}
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Pressable style={styles.pickOverlay} onPress={() => setOpen(false)}>
+          <Pressable style={{ width: "100%", maxWidth: 360 }} onPress={() => {}}>
+            {mode === "date"
+              ? <Calendar title={label} value={value} maximumDate={maximumDate} onPick={(d) => { onChange(d); setOpen(false); }} />
+              : <TimeGrid title={label} value={value} onPick={onChange} onDone={() => setOpen(false)} />}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -228,6 +233,7 @@ const styles = StyleSheet.create({
     shadowColor: "#014D3D", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 8, elevation: 2 },
   payRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10, paddingHorizontal: 2, borderBottomWidth: 1 },
   input: { borderWidth: 1, borderRadius: 8, padding: 9, fontSize: 13, minHeight: 40, textAlign: "right" },
+  pickOverlay: { flex: 1, backgroundColor: "rgba(1,32,26,.55)", alignItems: "center", justifyContent: "center", padding: 18 },
   overlay: { flex: 1, backgroundColor: "rgba(15,23,42,.72)", alignItems: "center", justifyContent: "center", padding: 16 },
   sheet: { backgroundColor: "#fff", borderRadius: 14, padding: 20, width: "100%", maxWidth: 400, maxHeight: "92%" },
   toast: { position: "absolute", top: 54, alignSelf: "center", maxWidth: "90%", borderWidth: 1, borderRadius: 20, paddingVertical: 10, paddingHorizontal: 18,

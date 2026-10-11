@@ -9,6 +9,7 @@ import { listAttendanceRange, type AttendanceRecord } from "@/lib/attendance";
 import { listHolidays, listRequests, type Holiday } from "@/lib/leave";
 import { printDoc, tfWrap } from "@/lib/calc/forms";
 import type { EmployeeListItem } from "@/lib/api";
+import { DateField } from "@/components/common/date-time-field";
 
 type Cls = "present" | "late" | "absent" | "leave" | "remote" | "off" | "pending";
 const ST_AR: Record<Cls, string> = { present: "حاضر", late: "متأخر", absent: "غائب", leave: "إجازة", remote: "عن بعد", off: "عطلة", pending: "لم يُسجَّل بعد" };
@@ -263,8 +264,8 @@ export function AttendanceReports({ emps }: { emps: EmployeeListItem[] }) {
         <i className="ti ti-report-analytics" /> تقارير الحضور والانصراف
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 8, alignItems: "end" }}>
-        {fld("من تاريخ", <input type="date" style={{ width: "100%" }} value={from} onChange={(e) => setFrom(e.target.value)} />)}
-        {fld("إلى تاريخ", <input type="date" style={{ width: "100%" }} value={to} onChange={(e) => setTo(e.target.value)} />)}
+        {fld("من تاريخ", <DateField style={{ width: "100%" }} value={from} onChange={(v) => setFrom(v)} />)}
+        {fld("إلى تاريخ", <DateField style={{ width: "100%" }} value={to} onChange={(v) => setTo(v)} />)}
         {fld("الفلتر", <select style={{ width: "100%" }} value={fk} onChange={(e) => setFk(e.target.value)}>{Object.entries(FILTERS).map(([v, x]) => <option key={v} value={v}>{x.ar}</option>)}</select>)}
         {fld("الحد الأدنى للأيام", <input type="number" min={1} style={{ width: "100%" }} value={n} onChange={(e) => setN(Number(e.target.value) || 1)} />)}
         {fld("نوع التقرير", <select style={{ width: "100%" }} value={mode} onChange={(e) => setMode(e.target.value as "sum" | "det")}><option value="sum">ملخص لكل موظف</option><option value="det">تفصيلي يومي</option></select>)}

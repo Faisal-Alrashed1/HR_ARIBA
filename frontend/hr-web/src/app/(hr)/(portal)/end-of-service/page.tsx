@@ -6,6 +6,7 @@ import { dmy } from "@/lib/format";
 import { calcByLaw, durationText, EOS_LAW_NAMES, EOS_LAWS, eosYears, type EosLaw } from "@/lib/calc/eos";
 import { current, fN, getSalaryBasis, type SalaryBasisRow } from "@/lib/salary";
 import { PageState } from "@/components/hr/not-built";
+import { DateField } from "@/components/common/date-time-field";
 
 const ths: React.CSSProperties = { padding: "7px 10px", textAlign: "right", fontSize: 10, fontWeight: 700, borderBottom: "2px solid var(--bl)", background: "var(--c2)" };
 const thl: React.CSSProperties = { padding: "7px 10px", textAlign: "center", fontSize: 10, fontWeight: 700, borderBottom: "2px solid var(--bl)", background: "rgba(59,130,246,.12)", color: "var(--bl)" };
@@ -101,7 +102,7 @@ export default function Page() {
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--c2)", padding: "6px 10px", borderRadius: 8, border: "1px solid var(--bd)" }}>
           <label style={{ fontSize: 11, color: "var(--mu)", fontWeight: 600 }}>تاريخ الإنهاء:</label>
-          <input type="date" id="eosEndDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ fontSize: 12, background: "transparent", border: "none", color: "var(--tx)" }} />
+          <DateField id="eosEndDate" style={{ width: "auto", fontSize: 12, background: "transparent", border: "none", minHeight: 0, padding: "2px 4px" }} value={endDate} onChange={(v) => setEndDate(v)} />
           <button type="button" onClick={() => setEndDate("")} style={{ background: "none", border: "none", color: "var(--mu)", cursor: "pointer", fontSize: 11 }}>
             اليوم
           </button>

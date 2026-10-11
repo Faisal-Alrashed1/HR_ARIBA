@@ -8,6 +8,7 @@ import { dmy } from "@/lib/format";
 import type { MessageKey } from "@/lib/i18n/ar";
 import { useLocale } from "@/lib/i18n/locale";
 import { useApi } from "@/lib/use-api";
+import { DateField } from "@/components/common/date-time-field";
 
 const RELATIONS: DependentRelation[] = ["wife", "husband", "son", "daughter", "father", "mother"];
 const EMPTY: Required<DependentInput> = {
@@ -58,7 +59,9 @@ export function DependentsTab({ employeeId, canEdit }: { employeeId: string; can
   const input = (k: keyof DependentInput, label: MessageKey, type = "text", ph?: MessageKey) => (
     <div>
       <label>{t(label)}</label>
-      <input type={type} placeholder={ph ? t(ph) : undefined} value={form?.[k] ?? ""} onChange={(e) => set(k, e.target.value)} style={{ width: "100%" }} />
+      {type === "date"
+        ? <DateField title={t(label)} value={form?.[k] ?? ""} onChange={(x) => set(k, x)} />
+        : <input type={type} placeholder={ph ? t(ph) : undefined} value={form?.[k] ?? ""} onChange={(e) => set(k, e.target.value)} style={{ width: "100%" }} />}
     </div>
   );
 

@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/hr/modal";
 import { AttendanceReports } from "@/components/hr/attendance-reports";
+import { ForgotPunchNotice } from "@/components/hr/forgot-punch-notice";
 import { PageState } from "@/components/hr/not-built";
 import { useToast } from "@/components/common/toast";
 import { listAllEmployees } from "@/lib/employees";
@@ -12,6 +13,7 @@ import { listLocations } from "@/lib/locations";
 import { todayIso, ddmmyyyy } from "@/lib/format";
 import { listAttendance, listAttendanceSummary, upsertAttendance, type AttendanceRecord, type AttendanceStatus } from "@/lib/attendance";
 import type { EmployeeListItem } from "@/lib/api";
+import { DateField, TimeField } from "@/components/common/date-time-field";
 
 const STATUS: Record<AttendanceStatus | "none", { cls: string; label: string }> = {
   present: { cls: "b bg", label: "حاضر" },
@@ -125,8 +127,9 @@ export default function Page() {
 
   return (
     <div className="pg on" id="pg-att">
+      <ForgotPunchNotice />
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, border: "1px solid var(--bd)", background: "var(--c2)", color: "var(--tx)" }} />
+        <DateField style={{ width: "auto", fontSize: 12, padding: "6px 10px" }} value={date} onChange={(v) => setDate(v)} />
         <button type="button" className="btn bgr" onClick={openAdd}><i className="ti ti-plus" /> تسجيل حضور</button>
         <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ fontSize: 12, maxWidth: 160, marginRight: "auto" }}>
           {Array.from({ length: 6 }, (_, i) => {
@@ -208,10 +211,10 @@ export default function Page() {
             ))}
           </select>
           <label style={lbl}>التاريخ</label>
-          <input type="date" value={workDate} onChange={(e) => setWorkDate(e.target.value)} style={inp} />
+          <DateField value={workDate} onChange={(v) => setWorkDate(v)} style={inp} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <div><label style={lbl}>الدخول</label><input type="time" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} style={inp} /></div>
-            <div><label style={lbl}>الانصراف</label><input type="time" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} style={inp} /></div>
+            <div><label style={lbl}>الدخول</label><TimeField value={timeIn} onChange={(v) => setTimeIn(v)} style={inp} /></div>
+            <div><label style={lbl}>الانصراف</label><TimeField value={timeOut} onChange={(v) => setTimeOut(v)} style={inp} /></div>
           </div>
           <label style={lbl}>الموقع</label>
           <select value={locId} onChange={(e) => setLocId(e.target.value)} style={inp}>

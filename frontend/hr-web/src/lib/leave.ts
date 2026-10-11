@@ -16,6 +16,7 @@ export interface HrRequest {
   days: string | null;
   on_date: string | null;
   time_from: string | null;
+  time_to?: string | null;
   hours: string | null;
   amount: string | null;
   punch_kind: string | null;

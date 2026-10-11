@@ -35,6 +35,7 @@ import {
 import { getGosiRates, getSalaryBasis, type SalaryBasisRow } from "@/lib/salary";
 import { approveSheet, getSheet, putSheet, unapproveSheet } from "@/lib/sheets";
 import { request } from "@/lib/api";
+import { DateField } from "@/components/common/date-time-field";
 
 const REASON_OPTS: [string, string][] = [["", "—"], ...PAYX.REASONS.map((r) => [r.k, r.ar] as [string, string])];
 const ST_OPTS: [string, string][] = [
@@ -422,6 +423,7 @@ export default function Page() {
   const input = (r: PayRow, field: keyof PayRow, w: number, type = "number", step = "0.01", showEmptyZero = false) => {
     const v = r[field] as number | string | null;
     if (locked) return type === "date" ? dmy(String(v ?? "")) : (v == null || v === "" ? "" : String(v));
+    if (type === "date") return <DateField value={v == null ? "" : String(v)} onChange={(x) => update(r.id, field as string, x)} placeholder="—" style={{ width: w, minHeight: 0, padding: "3px 6px", fontSize: 11 }} />;
     return (
       <input
         type={type}

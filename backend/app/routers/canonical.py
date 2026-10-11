@@ -1767,8 +1767,8 @@ def _workflow_out(db: Session, row: dict[str, Any]) -> dict[str, Any]:
             "type": row["request_type"], "status": row["status"], "stage": row["current_stage"],
             "from_date": (leave or {}).get("from_date") or payload.get("from"), "to_date": (leave or {}).get("to_date") or payload.get("to"),
             "days": (leave or {}).get("days") or payload.get("days"), "on_date": payload.get("date"),
-            "time_from": payload.get("time"), "hours": payload.get("hours"), "amount": payload.get("amount"),
-            "punch_kind": payload.get("kind"), "notes": (leave or {}).get("notes") or payload.get("notes"),
+            "time_from": payload.get("time"), "time_to": payload.get("time2"), "hours": payload.get("hours") or payload.get("dur"),
+            "amount": payload.get("amount"), "punch_kind": payload.get("kind"), "notes": (leave or {}).get("notes") or payload.get("notes"),
             "rejection_reason": row.get("rejection_reason"), "attachment_id": None, "created_at": row["created_at"]}
 
 

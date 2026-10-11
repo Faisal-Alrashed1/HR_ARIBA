@@ -12,6 +12,7 @@ import type { MessageKey } from "@/lib/i18n/ar";
 import { useLocale } from "@/lib/i18n/locale";
 import { useApi } from "@/lib/use-api";
 import { DependentsTab } from "./dependents-tab";
+import { DateField } from "@/components/common/date-time-field";
 
 type Tab = "ft1" | "ft2" | "ft3" | "ft4" | "ft5";
 type V = Record<string, string | boolean>;
@@ -125,7 +126,9 @@ export function EmployeeForm({
   const field = (k: string, label: MessageKey, type = "text", extra: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
     <div>
       <label htmlFor={`f-${k}`}>{t(label)}</label>
-      <input id={`f-${k}`} type={type} value={v[k] as string} onChange={(e) => set(k, e.target.value)} disabled={ro || extra.disabled} {...extra} />
+      {type === "date"
+        ? <DateField id={`f-${k}`} title={t(label)} value={(v[k] as string) ?? ""} onChange={(x) => set(k, x)} disabled={ro || !!extra.disabled} />
+        : <input id={`f-${k}`} type={type} value={v[k] as string} onChange={(e) => set(k, e.target.value)} disabled={ro || extra.disabled} {...extra} />}
       {err(k)}
     </div>
   );
@@ -312,7 +315,7 @@ export function EmployeeForm({
             {field("join_date", "form.cj", "date")}
             <div>
               <label>{t("form.ce")}</label>
-              <input type="date" value={employee?.contract_end_date ?? ""} disabled readOnly />
+              <DateField value={employee?.contract_end_date ?? ""} onChange={() => {}} disabled />
             </div>
             <div className="ff" style={{ fontSize: 10, color: "var(--mu)", padding: "4px 0" }}>
               {v.contract_nature === "fixed" ? t("form.cHintFixed") : t("form.cHintIndefinite")}
