@@ -57,9 +57,9 @@ hr,.divider{border-color:var(--ariba-gray2)!important}
 
 
 /* Dashboard gender avatars (components/hr/gender-icons.tsx, masks in public/icons) */
-.ariba-gender-ic.male{color:#014D3D}.ariba-gender-ic.female{color:#1F8D49}
+.ariba-gender-ic.male,.ariba-gender-ic.female{color:#014D3D}
 html[data-ariba-theme="dark"] .ariba-gender-ic.male,body.ariba-dark .ariba-gender-ic.male{color:#29B35E}
-html[data-ariba-theme="dark"] .ariba-gender-ic.female,body.ariba-dark .ariba-gender-ic.female{color:#E4E4BC}
+html[data-ariba-theme="dark"] .ariba-gender-ic.female,body.ariba-dark .ariba-gender-ic.female{color:#29B35E}
 
 /* Unified date / time picker (components/common/date-time-field.tsx) — same look as the employee app */
 :root{--ariba-dt-accent:#014D3D;--ariba-dt-on:#fff}
@@ -100,3 +100,10 @@ html[data-ariba-theme="dark"]{--ariba-dt-accent:#29B35E;--ariba-dt-on:#013D31}
 .ariba-dt-head .ym i{font-size:14px;color:var(--ariba-dt-accent)}
 .ariba-dt-chips.three{grid-template-columns:repeat(3,1fr)}
 .ariba-dt-chips.three button{padding:12px 0}
+
+/* Dashboard tweaks: KPI icons, payroll figure readable, department bars */
+#KR .ariba-kpi-icon{color:#014D3D}
+html[data-ariba-theme="dark"] #KR .ariba-kpi-icon{color:#29B35E}
+html[data-ariba-theme="light"] #KR#KR [data-ariba-kpi="payroll"] .ariba-kpi-value{color:#231F20!important}
+html[data-ariba-theme="dark"] #KR#KR [data-ariba-kpi="payroll"] .ariba-kpi-value{color:#F4F0E4!important}
+#KR .ariba-dept-bar{background:linear-gradient(90deg,#29B35E,#014D3D)}

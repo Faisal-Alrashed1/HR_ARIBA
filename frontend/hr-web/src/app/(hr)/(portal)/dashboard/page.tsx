@@ -11,7 +11,8 @@ import { useLocale } from "@/lib/i18n/locale";
 import { useApi } from "@/lib/use-api";
 import { FemaleIcon, MaleIcon } from "@/components/hr/gender-icons";
 
-const DASH_ICON: Partial<Record<MessageKey, string>> = { "dash.pending": "ti-bell", "dash.ended": "ti-user-off" };
+const DASH_ICON: Partial<Record<MessageKey, string>> = { "dash.pending": "ti-bell", "dash.ended": "ti-user-off", "dash.tamheer": "ti-school" };
+const KPI_ICON: React.CSSProperties = { fontSize: 24, display: "block", marginBottom: 6 };
 
 // Layout and inline styles reproduce the prototype dashboard (#pg-dash after its V42 patch).
 const TILE: React.CSSProperties = { background: "var(--c2)", borderRadius: 18, padding: "24px 20px", minHeight: 140 };
@@ -46,11 +47,13 @@ export default function DashboardPage() {
       <div className="kr" id="KR" style={{ width: "100%", marginBottom: 0 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1.5fr 1.5fr 0.8fr", gap: 14, marginBottom: 20, alignItems: "stretch", width: "100%", boxSizing: "border-box" }}>
           <div style={{ background: "#014D3D", borderRadius: 18, padding: "24px 20px", textAlign: "center", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 140 }}>
+            <i className="ti ti-users" aria-hidden style={{ ...KPI_ICON, opacity: 0.9 }} />
             <div style={{ fontSize: 12, opacity: 0.8, letterSpacing: 0.5, marginBottom: 8 }}>{t("dash.current")}</div>
             <div style={{ fontSize: 56, fontWeight: 900, lineHeight: 1, marginBottom: 8 }}>{d.current}</div>
             <div style={{ fontSize: 11, opacity: 0.7, borderTop: "1px solid rgba(255,255,255,.25)", paddingTop: 8 }}>{t("dash.saudiExpat", { saudi: d.saudi, expat: d.expat })}</div>
           </div>
           <div data-ariba-kpi="saudization" style={{ ...TILE, textAlign: "center", border: "2px solid #014D3D", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <i className="ti ti-flag ariba-kpi-icon" aria-hidden style={KPI_ICON} />
             <div className="ariba-kpi-label" style={{ fontSize: 12, color: "var(--mu)", marginBottom: 8 }}>{t("dash.saudization")}</div>
             <div className="ariba-kpi-value" style={{ fontSize: 52, fontWeight: 900, color: "#014D3D", lineHeight: 1, marginBottom: 10 }}>
               {num(pct)}<span style={{ fontSize: 22 }}>%</span>
@@ -60,6 +63,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <div data-ariba-kpi="payroll" style={{ ...TILE, textAlign: "center", border: "2px solid #B8BFBC", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <i className="ti ti-cash ariba-kpi-icon" aria-hidden style={KPI_ICON} />
             <div className="ariba-kpi-label" style={{ fontSize: 12, color: "var(--mu)", marginBottom: 8 }}>{t("dash.payroll")}</div>
             <div className="ariba-kpi-value" style={{ fontSize: 26, fontWeight: 900, color: "#B8BFBC", lineHeight: 1.2, marginBottom: 6 }}>
               {d.payroll_total === null ? "—" : num(d.payroll_total)}
@@ -85,12 +89,22 @@ export default function DashboardPage() {
           </div>
           <div data-ariba-kpi="departments" style={{ ...TILE, border: "2px solid #e5e7eb" }}>
             <div style={{ fontSize: 12, color: "var(--mu)", marginBottom: 12, fontWeight: 600 }}>{t("dash.departments")}</div>
-            {d.departments.slice(0, 4).map((x) => (
-              <div key={x.name_ar} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-                <span style={{ color: "var(--mu)" }}>{name(x)}</span>
-                <span className="ariba-dept-number" style={{ fontWeight: 900, color: "#014D3D" }}>{x.count}</span>
-              </div>
-            ))}
+            {(() => {
+              const top = d.departments.slice(0, 4);
+              const max = Math.max(1, ...top.map((x) => x.count));
+              return top.map((x) => (
+                <div key={x.name_ar} style={{ marginBottom: 9 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 12, marginBottom: 4 }}>
+                    <span style={{ color: "var(--mu)" }}>{name(x)}</span>
+                    <span className="ariba-dept-number" style={{ fontWeight: 900, color: "#014D3D" }}>{x.count}</span>
+                  </div>
+                  <div style={{ height: 7, borderRadius: 4, background: "var(--bd)" }}>
+                    <div className="ariba-dept-bar" style={{ height: 7, borderRadius: 4, width: `${Math.max(6, (x.count / max) * 100)}%` }} />
+                  </div>
+                </div>
+              ));
+            })()}
+            {d.departments.length > 4 && <div style={{ fontSize: 10, color: "var(--mu)" }}>+{d.departments.length - 4} أقسام أخرى</div>}
           </div>
           <div data-ariba-kpi="pending" style={{ ...TILE, padding: "20px 16px", border: "2px solid #e5e7eb", display: "flex", flexDirection: "column", gap: 10, justifyContent: "center" }}>
             {(
@@ -100,9 +114,10 @@ export default function DashboardPage() {
                 ["dash.tamheer", d.tamheer],
               ] as [MessageKey, number][]
             ).map(([k, v]) => (
-              <div key={k} style={ROW}>
-                <span style={{ fontSize: 12, color: "var(--mu)", display: "inline-flex", alignItems: "center", gap: 6 }}>{k === "dash.tamheer" ? <img src="/icons/tamheer.png" alt="" width={22} height={22} /> : <i className={`ti ${DASH_ICON[k] ?? "ti-point"}`} aria-hidden style={{ fontSize: 20 }} />} {t(k)}</span>
-                <span className="ariba-pending-number" style={{ fontSize: 26, fontWeight: 900, color: "#014D3D" }}>{v}</span>
+              <div key={k} style={{ ...ROW, justifyContent: "flex-start", gap: 10 }}>
+                <i className={`ti ${DASH_ICON[k] ?? "ti-point"} ariba-kpi-icon`} aria-hidden style={{ fontSize: 22 }} />
+                <span className="ariba-pending-number" style={{ fontSize: 26, fontWeight: 900, color: "#014D3D", lineHeight: 1, minWidth: 28, textAlign: "center" }}>{v}</span>
+                <span style={{ fontSize: 12, color: "var(--mu)" }}>{t(k)}</span>
               </div>
             ))}
           </div>
