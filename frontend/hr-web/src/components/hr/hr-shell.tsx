@@ -50,7 +50,12 @@ export function HrShell({ children }: { children: React.ReactNode }) {
   const { user, signOut, reload } = useAuth();
   const { t, lang, setLang } = useLocale();
   const { theme, toggle } = useTheme();
-  const { refresh } = useRefresh();
+  const { tick, refresh } = useRefresh();
+  // «تحديث البيانات»: remount the open page so every page re-fetches all its data (not only the useApi ones).
+  const reloadPage = () => {
+    refresh();
+    toast(t("hr.refreshed"), "ok");
+  };
   const toast = useToast();
   const [pwOpen, setPwOpen] = useState(false);
   const [today, setToday] = useState("");
@@ -132,7 +137,7 @@ export function HrShell({ children }: { children: React.ReactNode }) {
             <button className="ib" type="button" onClick={() => window.print()} aria-label="print">
               <i className="ti ti-printer" />
             </button>
-            <button className="btn bpl bsm" type="button" onClick={refresh} title={t("hr.refreshTitle")}>
+            <button className="btn bpl bsm" type="button" onClick={reloadPage} title={t("hr.refreshTitle")}>
               <i className="ti ti-refresh" /> {t("hr.refresh")}
             </button>
             <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "var(--c2)", border: "1px solid var(--bd)", borderRadius: 8, fontSize: 11 }}>
@@ -151,7 +156,7 @@ export function HrShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-        <div className="con">{children}</div>
+        <div className="con" key={tick}>{children}</div>
       </div>
 
       {(pwOpen || user?.must_change_password) && (

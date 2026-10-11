@@ -54,6 +54,7 @@ export const ar = {
   "hr.systemName": "نظام الموارد البشرية",
   "hr.company": "اريبا للاستشارات",
   "hr.refresh": "تحديث البيانات",
+  "hr.refreshed": "تم تحديث البيانات",
   "hr.refreshTitle": "تحديث البيانات وحفظها",
   "hr.langTitle": "تغيير اللغة",
   "hr.toLight": "التبديل إلى الوضع النهاري",

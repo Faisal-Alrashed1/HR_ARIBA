@@ -52,6 +52,7 @@ export const en: Record<MessageKey, string> = {
   "hr.systemName": "Human Resources System",
   "hr.company": "Ariba for Consulting",
   "hr.refresh": "Refresh data",
+  "hr.refreshed": "Data refreshed",
   "hr.refreshTitle": "Refresh and save data",
   "hr.langTitle": "Change language",
   "hr.toLight": "Switch to day mode",
