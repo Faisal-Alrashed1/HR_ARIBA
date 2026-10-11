@@ -229,6 +229,7 @@ export const en: Record<MessageKey, string> = {
   "form.createLogin": "Create employee-app login",
   "form.tempPassword": "Temporary employee-app password",
   "form.tempPasswordHint": "Username: {user}. Hand it over securely; it won't be shown again and must be changed at first sign-in.",
+  "form.missing": "Complete the required fields",
   "form.saved": "Employee saved",
   "form.idsMasked": "ID numbers are masked for your role.",
   "dep.title": "Dependents — family members",

@@ -2,7 +2,7 @@
 // .card, .card-title, .btn(-success|-danger|-primary), .b badges, label/input, .hr-pay-row, .profile-info, toast.
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 import {
-  ActivityIndicator, Animated, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Animated, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
   type StyleProp, type TextInputProps, type TextStyle, type ViewStyle, RefreshControl,
 } from "react-native";
 import { brand, fonts, useTheme } from "@/theme";
@@ -26,16 +26,19 @@ export function Page({ children, onRefresh }: { children: ReactNode; onRefresh?:
   const t = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <ScrollView
       style={{ flex: 1, backgroundColor: t.bg }}
       contentContainerStyle={{ padding: 14, paddingBottom: 110 }}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
       refreshControl={onRefresh ? (
         <RefreshControl refreshing={refreshing} tintColor={t.bl} onRefresh={async () => { setRefreshing(true); try { await onRefresh(); } finally { setRefreshing(false); } }} />
       ) : undefined}
     >
       {children}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -125,6 +128,7 @@ export function Input(props: TextInputProps & { label?: string }) {
       {label ? <Label>{label}</Label> : null}
       <TextInput
         placeholderTextColor={t.dm}
+        {...(props.multiline ? { returnKeyType: "done" as const, submitBehavior: "blurAndSubmit" as const } : null)}
         {...rest}
         style={[styles.input, { borderColor: t.bd, backgroundColor: t.c2, color: t.tx, fontFamily: fonts.medium }, props.multiline && { minHeight: 64, textAlignVertical: "top" }, style]}
       />
@@ -186,11 +190,13 @@ export function Empty({ text }: { text: string }) {
 export function Sheet({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: ReactNode }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={() => {}}>
-          <ScrollView keyboardShouldPersistTaps="handled">{children}</ScrollView>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <Pressable style={styles.overlay} onPress={onClose}>
+          <Pressable style={styles.sheet} onPress={Keyboard.dismiss}>
+            <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">{children}</ScrollView>
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

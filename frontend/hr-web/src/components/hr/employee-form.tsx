@@ -155,7 +155,10 @@ export function EmployeeForm({
     if (v.contract_nature === "fixed" && !Number(v.contract_duration_months)) local.contract_duration_months = "*";
     if (Object.keys(local).length) {
       setErrors(local);
-      setTab(local.join_date || local.contract_duration_months ? "ft3" : "ft1");
+      setTab(local.name_ar || local.workplace_id ? "ft1" : "ft3");
+      // Say which fields are missing (the red «*» alone looked like the button did nothing).
+      const LABEL: Record<string, MessageKey> = { name_ar: "form.nameAr", workplace_id: "form.employer", join_date: "form.cj", contract_duration_months: "form.dur" };
+      toast(`${t("form.missing")}: ${Object.keys(local).map((k) => t(LABEL[k]).replace(/\s*\*$/, "")).join("، ")}`, "err");
       return;
     }
     let keys = Object.keys(v);

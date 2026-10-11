@@ -450,6 +450,27 @@ def _employee_top_fields(body: dict[str, Any], data: dict[str, Any], active: boo
     }
 
 
+def _store_figures(db: Session, data: dict[str, Any], top: dict[str, Any], old: dict[str, Any] | None = None) -> None:
+    """Stored figures as the legacy HTML keeps them (sEmp in js/main/06-employees.js + refreshInsuranceDependentViews in
+    js/calculations/05-gosi-social-insurance.js, which recomputes with the full employee, birth date included):
+    salaryTotal = salary+housing+transport+project+other+extra; insuranceSub/Comp = calcIns(e, 31, 31, today) with the
+    V130 consultant/trainee exemption; netSalary = netSalaryLocal = total - insuranceSub - otherDeductions;
+    netSalarySAR = net x rate, rate = exchRate or defaultExchangeRate (USD 3.755).
+    Checked against the legacy-stored values of the production copy (all active employees match except stale rows).
+    The employee list, reports and settlement read these stored values."""
+    old = old or {}
+    if str(data.get("currency") or "ريال سعودي") != "ريال سعودي" and not emap.num(data.get("exchRate")):
+        data["exchRate"] = 3.755 if data.get("currency") == "دولار" else 1
+    nat = top.get("nationality") or old.get("nationality") or data.get("nationality")
+    f = emap.figures(data, saudi=emap.is_saudi(data, nat), rules=gosi_calc.rules_from_settings(_gosi_settings(db)),
+                     birth=emap.d(top.get("dob") or old.get("dob") or data.get("dob")), on=today_riyadh(), job=top.get("job_title") or old.get("job_title"),
+                     dept=top.get("department") or old.get("department"), employer=top.get("employer") or old.get("employer"))
+    data["salaryTotal"] = float(f["total"])
+    data["insuranceSub"], data["insuranceComp"] = float(f["gosi_employee"]), float(f["gosi_employer"])
+    data["netSalary"] = data["netSalaryLocal"] = float(f["net"])
+    data["netSalarySAR"] = float(f["net_sar"])
+
+
 @router.post("/employees", status_code=201)
 def create_employee(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     """New employee in employee_directory: legacy-style numeric id/empNo (next free number), username EMP###."""
@@ -463,6 +484,7 @@ def create_employee(body: dict[str, Any], request: Request, actor: dict[str, Any
     username = "EMP" + emp_no.zfill(3) if emp_no.isdigit() else emp_no.upper()
     data, top = emap.apply_input({"id": emp_no, "employee_id": emp_no, "employeeId": emp_no, "empNo": emp_no, "username": username,
                                   "u": username, "active": True, "isTerminated": False, "term": False}, body)
+    _store_figures(db, data, top)
     row = _row(db, """INSERT INTO public.employee_directory
         (employee_id,username,name_ar,name_en,employer,department,job_title,nationality,iqama_no,dob,join_date,manager_id,active,data)
         VALUES (:id,:username,:name_ar,:name_en,:employer,:department,:job_title,:nationality,:iqama_no,:dob,:join_date,:manager_id,true,CAST(:data AS jsonb))
@@ -479,6 +501,7 @@ def update_employee(employee_id: str, body: dict[str, Any], request: Request, ac
     _require(actor, *HR_ROLES)
     old = _employee_scope(db, actor, employee_id)
     data, top = emap.apply_input(dict(old.get("data") or {}), body)
+    _store_figures(db, data, top, old)
     sets = ["data=CAST(:data AS jsonb)", "updated_at=now()"] + [f"{c}=:{c}" for c in top]
     row = _row(db, f"UPDATE public.employee_directory SET {','.join(sets)} WHERE employee_id=:id RETURNING *",
                id=employee_id, data=json.dumps(data, ensure_ascii=False), **top)

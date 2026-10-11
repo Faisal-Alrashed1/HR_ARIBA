@@ -93,7 +93,7 @@ function Buttons({ label, onPrint, onSend }: { label: string; onPrint: () => voi
       <button type="button" className="btn bgr bsm" style={{ marginTop: 8 }} onClick={onPrint}>
         <i className="ti ti-printer" /> {label}
       </button>
-      <button type="button" className="btn bsm" style={{ background: "#0a5c9e", color: "#fff", marginTop: 6, width: "100%" }} onClick={onSend}>
+      <button type="button" className="btn bsm" style={{ background: "#014D3D", color: "#fff", marginTop: 6, width: "100%" }} onClick={onSend}>
         <i className="ti ti-send" /> إرسال للموظف للتوقيع
       </button>
     </>

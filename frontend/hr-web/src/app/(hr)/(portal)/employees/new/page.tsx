@@ -20,8 +20,9 @@ export default function NewEmployeePage() {
           managers={managers.data?.items ?? []}
           canEdit
           onSubmit={async (body) => {
-            const e = await createEmployee(body);
-            router.replace(`/employees/${e.id}`);
+            await createEmployee(body);
+            // Added: back to the employees list (the «تم حفظ» toast stays visible there).
+            router.replace("/employees");
           }}
         />
       )}
