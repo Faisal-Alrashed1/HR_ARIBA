@@ -373,7 +373,7 @@ def my_employee(actor: dict[str, Any] = Depends(current_actor), db: Session = De
 
 
 @router.get("/employees")
-def employees(tab: str = "all", q: str = "", page: int = 1, page_size: int = 100, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
+def employees(tab: str = "all", q: str = "", workplace_id: str | None = None, page: int = 1, page_size: int = 100, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     if actor["role"] == "finance":
         raise ApiError(403, "forbidden", "Not authorized")
     rows = _rows(db, "SELECT * FROM public.employee_directory ORDER BY employee_id")
@@ -384,6 +384,8 @@ def employees(tab: str = "all", q: str = "", page: int = 1, page_size: int = 100
     needle = q.strip().lower()
     if needle:
         items = [e for e in items if needle in " ".join(str(e.get(k) or "") for k in ("emp_no", "name_ar", "name_en", "job_title")).lower()]
+    if workplace_id:  # «كل جهات العمل» filter on the employees page (workplace id = employer name)
+        items = [e for e in items if str(e.get("employer") or "").strip() == workplace_id.strip()]
     if tab == "active":
         items = [e for e in items if e["active"]]
     elif tab == "terminated":
