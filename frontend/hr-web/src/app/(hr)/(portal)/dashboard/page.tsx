@@ -62,7 +62,7 @@ export default function DashboardPage() {
               <div style={{ height: 8, borderRadius: 4, background: "#014D3D", width: `${Math.min(100, pct)}%` }} />
             </div>
           </div>
-          <div data-ariba-kpi="payroll" style={{ ...TILE, textAlign: "center", border: "2px solid #B8BFBC", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <div data-ariba-kpi="payroll" style={{ ...TILE, textAlign: "center", border: "2px solid #014D3D", display: "flex", flexDirection: "column", justifyContent: "center" }}>
             <i className="ti ti-cash ariba-kpi-icon" aria-hidden style={KPI_ICON} />
             <div className="ariba-kpi-label" style={{ fontSize: 12, color: "var(--mu)", marginBottom: 8 }}>{t("dash.payroll")}</div>
             <div className="ariba-kpi-value" style={{ fontSize: 26, fontWeight: 900, color: "#B8BFBC", lineHeight: 1.2, marginBottom: 6 }}>
@@ -70,7 +70,7 @@ export default function DashboardPage() {
             </div>
             <div style={{ fontSize: 12, color: "var(--mu)" }}>{t("dash.payrollUnit")}</div>
           </div>
-          <div data-ariba-kpi="gender" style={{ ...TILE, border: "2px solid #e5e7eb" }}>
+          <div data-ariba-kpi="gender" style={{ ...TILE, border: "2px solid #014D3D" }}>
             <div style={{ fontSize: 12, color: "var(--mu)", marginBottom: 14, fontWeight: 600 }}>{t("dash.gender")}</div>
             <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", height: "calc(100% - 36px)" }}>
               <div style={{ textAlign: "center" }}>
@@ -87,7 +87,7 @@ export default function DashboardPage() {
             </div>
             {d.gender_unspecified > 0 && <div style={{ fontSize: 10, color: "var(--mu)", textAlign: "center" }}>{t("dash.genderUnknown", { n: d.gender_unspecified })}</div>}
           </div>
-          <div data-ariba-kpi="departments" style={{ ...TILE, border: "2px solid #e5e7eb" }}>
+          <div data-ariba-kpi="departments" style={{ ...TILE, border: "2px solid #014D3D" }}>
             <div style={{ fontSize: 12, color: "var(--mu)", marginBottom: 12, fontWeight: 600 }}>{t("dash.departments")}</div>
             {(() => {
               const top = d.departments.slice(0, 4);
@@ -106,7 +106,7 @@ export default function DashboardPage() {
             })()}
             {d.departments.length > 4 && <div style={{ fontSize: 10, color: "var(--mu)" }}>+{d.departments.length - 4} أقسام أخرى</div>}
           </div>
-          <div data-ariba-kpi="pending" style={{ ...TILE, padding: "20px 16px", border: "2px solid #e5e7eb", display: "flex", flexDirection: "column", gap: 10, justifyContent: "center" }}>
+          <div data-ariba-kpi="pending" style={{ ...TILE, padding: "20px 16px", border: "2px solid #014D3D", display: "flex", flexDirection: "column", gap: 10, justifyContent: "center" }}>
             {(
               [
                 ["dash.pending", d.pending_requests],
