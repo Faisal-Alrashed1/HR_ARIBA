@@ -573,3 +573,21 @@ def test_law_note_on_pending_leave(db):
     h = note(req("hajj", "2026-05-20", 16))  # under two years of service, and over 15 days
     assert "أقل من سنتين" in h and "16" in h
     assert note(req("marriage", "2026-11-01", 9, "approved")) is None  # decided requests carry no note
+
+
+def test_hr_delete_request_archives_and_removes(db):
+    """HR deletes a request (with an attachment): snapshot archived in deleted_items, request and its rows removed."""
+    _staff(db)
+    rid = uuid.uuid4()
+    _exec(db, "INSERT INTO public.workflow_requests(id,employee_id,request_type,payload,manager_id,current_stage,status) VALUES(:r,'610','sick','{}','87','hr','pending')", r=rid)
+    _exec(db, "INSERT INTO public.leave_requests(emp_id,type,from_date,to_date,days,status,workflow_request_id) VALUES('610','sick','2026-11-01','2026-11-01',1,'pending',:r)", r=rid)
+    _exec(db, "INSERT INTO public.ariba_documents(employee_id,request_id,document_type,file_name,file_data) VALUES('610',:r,'Leave Attachment','a.pdf','x')", r=rid)
+    def delete(s: Session) -> list:
+        c.hr_delete_request(rid, _Req(), {"employee_id": "40", "role": "hr"}, s)
+        return [s.execute(text(q), {"r": rid}).scalar() for q in (
+            "SELECT count(*) FROM public.workflow_requests WHERE id=:r", "SELECT count(*) FROM public.leave_requests WHERE workflow_request_id=:r",
+            "SELECT count(*) FROM public.ariba_documents WHERE request_id=:r",
+            "SELECT count(*) FROM public.ariba_deleted_items WHERE ref_id=CAST(:r AS text) AND jsonb_array_length(snapshot->'documents')=1")]
+
+    left, err = _ours(db, delete)
+    assert err is None and left == [0, 0, 0, 1]

@@ -2162,7 +2162,7 @@ def hr_delete_request(request_id: uuid.UUID, request: Request, actor: dict[str, 
     if not row:
         raise ApiError(404, "not_found", "Request not found")
     snapshot = _row(db, """SELECT jsonb_build_object('request',to_jsonb(r),'leave',coalesce((SELECT jsonb_agg(to_jsonb(l)) FROM public.leave_requests l WHERE l.workflow_request_id=r.id),'[]'::jsonb),
-        'documents',coalesce((SELECT jsonb_agg(jsonb_build_object('id',d.id,'document_type',d.document_type,'file_name',d.file_name,'mime_type',d.mime_type,'file_size',d.file_size,'file_data',encode(d.file_data,'base64')) FROM public.ariba_documents d WHERE d.request_id=r.id),'[]'::jsonb)) AS snapshot
+        'documents',coalesce((SELECT jsonb_agg(jsonb_build_object('id',d.id,'document_type',d.document_type,'file_name',d.file_name,'mime_type',d.mime_type,'file_size',d.file_size,'file_data',encode(d.file_data,'base64'))) FROM public.ariba_documents d WHERE d.request_id=r.id),'[]'::jsonb)) AS snapshot
         FROM public.workflow_requests r WHERE r.id=:id""", id=request_id)
     db.execute(text("INSERT INTO public.ariba_deleted_items(kind,ref_id,employee_id,snapshot,deleted_by,deleted_by_role) VALUES('workflow_request',:id,:eid,CAST(:snapshot AS jsonb),:actor,:role)"),
                {"id": str(request_id), "eid": row["employee_id"], "snapshot": json.dumps(snapshot["snapshot"], default=str), "actor": actor.get("employee_id"), "role": actor["role"]})
