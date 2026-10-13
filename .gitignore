@@ -33,3 +33,11 @@ next-env.d.ts
 supabase_*.sql
 # Exception: schema + legacy function code (no data) for the parity tests
 !tools/legacy-parity/sql/*.sql
+# Normalization: the colleague's migration scripts (schema only) and the Railway prep step
+!docs/db-normalization/railway_prep.sql
+!docs/db-normalization/preflight_checks.sql
+!docs/db-normalization/pre_migration_fixes.sql
+!docs/db-normalization/ariba_normalization.sql
+
+logs/
+*.bak

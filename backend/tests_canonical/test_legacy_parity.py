@@ -15,6 +15,7 @@ import json
 import os
 import random
 import uuid
+from contextlib import contextmanager
 from datetime import date, time, timedelta
 from pathlib import Path
 from typing import Any
@@ -75,6 +76,9 @@ def test_round_half_up_is_postgres_numeric_rounding():
 
 
 # --------------------------------------------------------------------------- part 2: legacy SQL functions
+# This fixture is intentionally pre-normalization. Its SQL routines reference old columns such as
+# attendance.emp_id/location_name, workflow_requests manager/approver fields, and leave approval flags.
+# The live canonical API has Python equivalents; do not migrate this fixture to the new schema.
 _LEGACY_FUNCS = ("ariba_point_in_polygon", "ariba_employee_location_ids", "ariba_punch_late", "ariba_punch_early",
                  "ariba_attendance", "ariba_leave_calc", "ariba_submit_request", "ariba_apply_forgot_punch", "ariba_workflow_action",
                  "ariba_can", "ariba_hr_override_workflow", "ariba_hr_final_approve", "ariba_delete_request")
@@ -168,6 +172,51 @@ def _ours(db: Session, fn) -> tuple[Any, str | None]:
         sp.rollback()
 
 
+def _script(name: str) -> str:
+    """A docs/db-normalization script without its own BEGIN/COMMIT, so it runs inside the test's savepoint."""
+    lines = (SQL.parents[2] / "docs" / "db-normalization" / name).read_text().splitlines()
+    return "\n".join(x for x in lines if x.strip().upper() not in {"BEGIN;", "COMMIT;"})
+
+
+_MIGRATION = None
+
+
+def _normalize(db: Session) -> None:
+    """Bring the seeded legacy rows to the normalized schema with the real scripts (pre-migration fixes, then the
+    migration, after the keys step), as production will be. The legacy functions run before this, ours after it, on the same rows."""
+    global _MIGRATION
+    _MIGRATION = _MIGRATION or tuple(map(_script, ("railway_prep.sql", "pre_migration_fixes.sql", "ariba_normalization.sql")))
+    for eid, role in (("40", "hr"), ("86", "ceo")):  # the configured approvers the migration requires
+        if not db.execute(text("SELECT 1 FROM public.employee_directory WHERE employee_id=:e"), {"e": eid}).first():
+            _employee(db, eid)
+        if not db.execute(text("SELECT 1 FROM public.ariba_auth_accounts WHERE employee_id=:e"), {"e": eid}).first():
+            _exec(db, "INSERT INTO public.ariba_auth_accounts(username,password_hash,role,employee_id) VALUES(:u,'x',:r,:e)", u=f"u{eid}", r=role, e=eid)
+    with db.connection().connection.dbapi_connection.cursor() as cur:
+        for sql in _MIGRATION:
+            cur.execute(sql)
+
+
+@contextmanager
+def _normalized(db: Session):
+    """Inside: the schema is normalized; on exit everything (migration included) is rolled back to the legacy shape."""
+    sp = db.begin_nested()
+    try:
+        _normalize(db)
+        yield
+    finally:
+        sp.rollback()
+
+
+def _lr_state(s: Session, rid: Any) -> tuple | None:
+    """The legacy leave_requests copy (status, mgr/hr/ceo status), rebuilt from the workflow like leave_requests_v."""
+    row = s.execute(text("""SELECT wr.status,
+        coalesce((SELECT a.action FROM public.workflow_actions a WHERE a.request_id=wr.id AND a.stage='manager' AND a.action IN ('approved','rejected') ORDER BY a.created_at DESC LIMIT 1),'pending'),
+        coalesce((SELECT a.action FROM public.workflow_actions a WHERE a.request_id=wr.id AND a.stage='hr' AND a.action IN ('approved','rejected') ORDER BY a.created_at DESC LIMIT 1),'pending'),
+        coalesce((SELECT a.action FROM public.workflow_actions a WHERE a.request_id=wr.id AND a.stage='ceo' AND a.action IN ('approved','rejected') ORDER BY a.created_at DESC LIMIT 1),'pending')
+        FROM public.workflow_requests wr WHERE wr.id=:r AND wr.request_type<>'forgot_punch'"""), {"r": rid}).one_or_none()
+    return tuple(row) if row else None
+
+
 POLYGONS = [
     [[24.70, 46.60], [24.75, 46.62], [24.74, 46.70], [24.69, 46.68]],
     [[21.0, 39.0], [22.0, 39.2], [21.8, 40.1], [21.2, 39.9], [21.5, 39.5]],  # concave
@@ -209,13 +258,16 @@ def test_punch_location_and_remote_rule_match_legacy_attendance(db):
     rng = random.Random(9)
     points = [(24.7136, 46.6753), (24.7200, 46.6800), (24.72, 46.65), (30.05, 31.05), (21.5, 39.2), (24.80, 46.90)]
     points += [(rng.uniform(24.65, 24.80), rng.uniform(46.55, 46.75)) for _ in range(120)]
-    bad = []
+    wants = {}
     for eid in ("501", "502", "503"):
         tok = _session(db, eid)
         for lat, lng in points:
             out, err = _legacy(db, "SELECT public.ariba_attendance(:t,'in',:a,:b)", t=tok, a=lat, b=lng)
-            want = (out or {}).get("location_id") if out else _ERR.get(err, err)
-            res, code = _ours(db, lambda s: c.punch({"action": "in", "lat": lat, "lng": lng}, _Req(), {"employee_id": eid, "role": "employee"}, s))
+            wants[eid, lat, lng] = (out or {}).get("location_id") if out else _ERR.get(err, err)
+    bad = []
+    with _normalized(db):
+        for (eid, lat, lng), want in wants.items():
+            res, code = _ours(db, lambda s: c.punch({"action": "in", "lat": lat, "lng": lng}, _Req(), {"employee_id": eid, "role": "employee", "account_id": None}, s))
             got = res["location_id"] if res else code
             if got != want:
                 bad.append((eid, lat, lng, want, got))
@@ -239,6 +291,7 @@ def test_late_and_early_minutes_match_legacy(db, cs):
     _exec(db, f"INSERT INTO public.company_settings(id,{cols}) VALUES('default',{','.join(':' + k for k in cs)})", **cs)
     full = {"work_start": time(8), "tolerance_minutes": 15, "flexible_enabled": False, "shift_hours": 8,
             "flex_window_start": time(8), "flex_window_end": time(17)} | cs
+    full["shift_duration_minutes"] = round(float(full["shift_hours"]) * 60)  # normalized schema: shift length in minutes only
     rng = random.Random(3)
     times = [time(h, m, s) for h in range(6, 20) for m in (0, 14, 15, 16, 29, 30, 31, 59) for s in (0, 29, 30, 31)]
     bad = []
@@ -304,18 +357,21 @@ def test_app_leave_balance_matches_legacy_leave_calc(db):
             _exec(db, """INSERT INTO public.leave_requests(emp_id,type,from_date,to_date,days,status,workflow_request_id)
                 VALUES(:e,'annual',:f,:t,:d,'approved',:r)""", e=eid, f=f, t=t, d=days, r=rid)
         ids.append(eid)
-    emps = [e for e in cdata.employees(db) if e.id in ids]
+    days = (date(2026, 1, 15), date(2026, 9, 22), date(2026, 10, 11), date(2026, 12, 31))
+    wants = {(asof, eid): db.execute(text("SELECT public.ariba_leave_calc(:e,:d)"), {"e": eid, "d": asof}).scalar() for asof in days for eid in ids}
     bad = []
-    for asof in (date(2026, 1, 15), date(2026, 9, 22), date(2026, 10, 11), date(2026, 12, 31)):
-        book = cdata.leave_book(db, asof, emps)
-        for e in emps:
-            s = book.summary(e)
-            ours = {"leaveBalance": round(book.app_current(e), 2), "leaveCarryover": s["carry"], "leaveYearEnd": round(book.app_year_end(e), 2)}
-            want = db.execute(text("SELECT public.ariba_leave_calc(:e,:d)"), {"e": e.id, "d": asof}).scalar()
-            for k, v in ours.items():
-                if abs(v - float(want[k])) > 0.011:
-                    bad.append((asof.isoformat(), e.id, k, float(want[k]), v))
-    assert not bad, f"{len(bad)} differ, e.g. {bad[:6]}"
+    with _normalized(db):
+        emps = [e for e in cdata.employees(db) if e.id in ids]
+        for asof in days:
+            book = cdata.leave_book(db, asof, emps)
+            for e in emps:
+                s = book.summary(e)
+                ours = {"leaveBalance": round(book.app_current(e), 2), "leaveCarryover": s["carry"], "leaveYearEnd": round(book.app_year_end(e), 2)}
+                want = wants[asof, e.id]
+                for k, v in ours.items():
+                    if abs(v - float(want[k])) > 0.011:
+                        bad.append((asof.isoformat(), e.id, k, float(want[k]), v))
+    assert len(emps) == len(ids) and not bad, f"{len(bad)} differ, e.g. {bad[:6]}"
 
 
 def test_new_request_notifications_match_legacy_submit_request(db):
@@ -331,22 +387,26 @@ def test_new_request_notifications_match_legacy_submit_request(db):
     body = lambda t, p: {"type": t, **p, "from_date": p.get("from"), "to_date": p.get("to")}  # noqa: E731
     notes = lambda rid: sorted((r[0], r[1]) for r in db.execute(  # noqa: E731
         text("SELECT recipient_employee_id,stage FROM public.workflow_notifications WHERE request_id=:r"), {"r": rid}))
-    bad = []
+    wants = {}
     for eid in ("601", "602", "603"):
         tok = _session(db, eid)
         for t, p in cases:
             sp = db.begin_nested()
             out = db.execute(text("SELECT public.ariba_submit_request(:k,:t,CAST(:p AS jsonb))"), {"k": tok, "t": t, "p": json.dumps(p)}).scalar()
-            want = (out["current_stage"], notes(out["request_id"]))
+            wants[eid, t] = (out["current_stage"], notes(out["request_id"]))
             sp.rollback()
-            def submit(s: Session, t=t, p=p, eid=eid):
-                res = c.submit_request(body(t, p), _Req(), {"employee_id": eid, "role": "employee"}, s)
-                stage = s.execute(text("SELECT current_stage FROM public.workflow_requests WHERE id=:r"), {"r": res["id"]}).scalar()
-                return stage, sorted((r[0], r[1]) for r in s.execute(
-                    text("SELECT recipient_employee_id,stage FROM public.workflow_notifications WHERE request_id=:r"), {"r": res["id"]}))
-            got, err = _ours(db, submit)
-            if got != want:
-                bad.append((eid, t, want, got))
+    bad = []
+    with _normalized(db):
+        for eid in ("601", "602", "603"):
+            for t, p in cases:
+                def submit(s: Session, t=t, p=p, eid=eid):
+                    res = c.submit_request(body(t, p), _Req(), {"employee_id": eid, "role": "employee", "account_id": None}, s)
+                    stage = s.execute(text("SELECT current_stage FROM public.workflow_requests WHERE id=:r"), {"r": res["id"]}).scalar()
+                    return stage, sorted((r[0], r[1]) for r in s.execute(
+                        text("SELECT recipient_employee_id,stage FROM public.workflow_notifications WHERE request_id=:r"), {"r": res["id"]}))
+                got, err = _ours(db, submit)
+                if got != wants[eid, t]:
+                    bad.append((eid, t, wants[eid, t], got, err))
     assert not bad, bad
 
 
@@ -364,16 +424,20 @@ def test_approval_flow_matches_legacy_workflow_action(db):
                 "advance": {"amount": 1000}, "forgot_punch": {"kind": "in", "date": "2026-10-08", "time": "08:00"}}
     approvers = {"manager": ("87", "manager"), "hr": ("40", "hr"), "ceo": ("86", "ceo")}
 
-    def state(s: Session, rid: Any) -> tuple:
+    def state(s: Session, rid: Any, legacy: bool) -> tuple:
         r = s.execute(text("SELECT current_stage,status FROM public.workflow_requests WHERE id=:r"), {"r": rid}).one()
-        lr = s.execute(text("SELECT status,mgr_status,hr_status,ceo_status FROM public.leave_requests WHERE workflow_request_id=:r"), {"r": rid}).one_or_none()
+        if legacy:
+            lr = s.execute(text("SELECT status,mgr_status,hr_status,ceo_status FROM public.leave_requests WHERE workflow_request_id=:r"), {"r": rid}).one_or_none()
+            lr = tuple(lr) if lr else None
+        else:
+            lr = _lr_state(s, rid)
         n = sorted((x[0], x[1]) for x in s.execute(text("SELECT recipient_employee_id,title FROM public.workflow_notifications WHERE request_id=:r"), {"r": rid}))
-        return tuple(r), tuple(lr) if lr else None, n
+        return tuple(r), lr, n
 
-    bad = []
+    wants = {}
     for t, p in payloads.items():
         p = {**p, "notes": "x"}
-        # legacy: submit, then approve at each stage until done
+        # legacy: submit, then approve at each stage until done (every request gets the leave_requests copy it compares)
         sp = db.begin_nested()
         rid = db.execute(text("SELECT public.ariba_submit_request(:k,:t,CAST(:p AS jsonb))"), {"k": _session(db, "610"), "t": t, "p": json.dumps(p)}).scalar()["request_id"]
         _exec(db, "INSERT INTO public.leave_requests(emp_id,type,from_date,to_date,days,status,workflow_request_id) SELECT '610',:t,'2026-11-01','2026-11-01',1,'pending',:r WHERE :t<>'forgot_punch' AND NOT EXISTS (SELECT 1 FROM public.leave_requests WHERE workflow_request_id=:r)", t=t, r=rid)
@@ -384,29 +448,36 @@ def test_approval_flow_matches_legacy_workflow_action(db):
                 break
             who, role = approvers[stage]
             db.execute(text("SELECT public.ariba_workflow_action(:k,:r,'approved',NULL)"), {"k": _session(db, who, role), "r": rid})
-            legacy.append((stage,) + state(db, rid)[:2])
-        legacy_notes = state(db, rid)[2]
+            legacy.append((stage,) + state(db, rid, True)[:2])
+        wants[t] = legacy, state(db, rid, True)[2]
         sp.rollback()
 
-        def ours(s: Session, t=t, p=p):
-            res = c.submit_request({"type": t, **p, "from_date": p.get("from"), "to_date": p.get("to"), "on_date": p.get("date")}, _Req(), {"employee_id": "610", "role": "employee"}, s)
-            rid = res["id"]
-            s.execute(text("INSERT INTO public.leave_requests(emp_id,type,from_date,to_date,days,status,workflow_request_id) SELECT '610',:t,'2026-11-01','2026-11-01',1,'pending',:r WHERE :t<>'forgot_punch' AND NOT EXISTS (SELECT 1 FROM public.leave_requests WHERE workflow_request_id=:r)"), {"t": t, "r": rid})
-            steps = []
-            for _ in range(4):
-                stage = s.execute(text("SELECT current_stage FROM public.workflow_requests WHERE id=:r"), {"r": rid}).scalar()
-                if stage not in approvers:
-                    break
-                who, role = approvers[stage]
-                c.decide_request(rid, {"action": "approve"}, _Req(), {"employee_id": who, "role": role, "account_id": None}, s)
-                steps.append((stage,) + state(s, rid)[:2])
-            return steps, state(s, rid)[2]
+    bad = []
+    with _normalized(db):
+        for t, p in payloads.items():
+            p = {**p, "notes": "x"}
 
-        (steps, notes), err = _ours(db, ours)
-        if err or steps != legacy:
-            bad.append((t, "steps", legacy, steps, err))
-        elif notes != legacy_notes:
-            bad.append((t, "notifications", legacy_notes, notes))
+            def ours(s: Session, t=t, p=p):
+                res = c.submit_request({"type": t, **p, "from_date": p.get("from"), "to_date": p.get("to"), "on_date": p.get("date")}, _Req(),
+                                       {"employee_id": "610", "role": "employee", "account_id": None}, s)
+                rid = res["id"]
+                steps = []
+                for _ in range(4):
+                    stage = s.execute(text("SELECT current_stage FROM public.workflow_requests WHERE id=:r"), {"r": rid}).scalar()
+                    if stage not in approvers:
+                        break
+                    who, role = approvers[stage]
+                    c.decide_request(rid, {"action": "approve"}, _Req(), {"employee_id": who, "role": role, "account_id": None}, s)
+                    steps.append((stage,) + state(s, rid, False)[:2])
+                return steps, state(s, rid, False)[2]
+
+            legacy, legacy_notes = wants[t]
+            got, err = _ours(db, ours)
+            steps, notes = got or (None, None)
+            if err or steps != legacy:
+                bad.append((t, "steps", legacy, steps, err))
+            elif notes != legacy_notes:
+                bad.append((t, "notifications", legacy_notes, notes))
     assert not bad, "\n".join(map(str, bad))
 
 
@@ -418,12 +489,20 @@ def _staff(db: Session) -> None:
     _employee(db, "610", manager="87")
 
 
-def _wf_state(s: Session, rid: Any) -> tuple:
+def _wf_state(s: Session, rid: Any, legacy: bool) -> tuple:
+    """Request stage/status, the leave_requests copy, notifications (read or not) and the approve/reject actions. The
+    normalized schema keeps the read time only and records an HR override under the plain stage (hr_override_x -> x)."""
     r = s.execute(text("SELECT current_stage,status FROM public.workflow_requests WHERE id=:r"), {"r": rid}).one()
-    lr = s.execute(text("SELECT status,mgr_status,hr_status,ceo_status FROM public.leave_requests WHERE workflow_request_id=:r"), {"r": rid}).one_or_none()
-    n = sorted(tuple(x) for x in s.execute(text("SELECT recipient_employee_id,title,body,is_read FROM public.workflow_notifications WHERE request_id=:r"), {"r": rid}))
-    a = sorted((x[0], x[1]) for x in s.execute(text("SELECT stage,action FROM public.workflow_actions WHERE request_id=:r"), {"r": rid}))
-    return tuple(r), tuple(lr) if lr else None, n, a
+    if legacy:
+        lr = s.execute(text("SELECT status,mgr_status,hr_status,ceo_status FROM public.leave_requests WHERE workflow_request_id=:r"), {"r": rid}).one_or_none()
+        lr = tuple(lr) if lr else None
+    else:
+        lr = _lr_state(s, rid)
+    read = "is_read" if legacy else "read_at IS NOT NULL"
+    n = sorted(tuple(x) for x in s.execute(text(f"SELECT recipient_employee_id,title,body,{read} FROM public.workflow_notifications WHERE request_id=:r"), {"r": rid}))
+    a = sorted((x[0].replace("hr_override_", ""), x[1]) for x in s.execute(
+        text("SELECT stage,action FROM public.workflow_actions WHERE request_id=:r AND action IN ('approved','rejected')"), {"r": rid}))
+    return tuple(r), lr, n, a
 
 
 _FP = {"kind": "in", "date": "2026-10-08", "time": "08:00", "notes": "x"}
@@ -431,11 +510,13 @@ _FP = {"kind": "in", "date": "2026-10-08", "time": "08:00", "notes": "x"}
 
 @pytest.mark.parametrize("final", [False, True])
 def test_hr_override_and_final_approve_match_legacy(db, final):
-    """HR «اعتماد نيابة» (ariba_hr_override_workflow) and «اعتماد نهائي» (ariba_hr_final_approve) from every stage."""
+    """HR «اعتماد نيابة» (ariba_hr_override_workflow) and «اعتماد نهائي» (ariba_hr_final_approve) from every stage.
+    The attendance a forgot-punch adds is compared without location_name (dropped by the normalization)."""
     _staff(db)
     _exec(db, "INSERT INTO public.company_settings(id) VALUES('default')")
     hr_tok = _session(db, "40", "hr")
-    bad = []
+    fn = "ariba_hr_final_approve" if final else "ariba_hr_override_workflow"
+    wants = {}
     for t, p in (("annual", {"from": "2026-11-01", "to": "2026-11-02"}), ("permission", {"date": "2026-11-03", "time": "10:00", "dur": 2}),
                  ("advance", {"amount": 1000}), ("forgot_punch", _FP)):
         for start in (("hr",) if t == "forgot_punch" else ("manager", "hr", "ceo")):
@@ -445,32 +526,48 @@ def test_hr_override_and_final_approve_match_legacy(db, final):
             if t != "forgot_punch":
                 _exec(db, "INSERT INTO public.leave_requests(emp_id,type,from_date,to_date,days,status,workflow_request_id) VALUES('610',:t,'2026-11-01','2026-11-01',1,'pending',:r)", t=t, r=rid)
             _exec(db, "INSERT INTO public.workflow_notifications(recipient_employee_id,request_id,title,body,stage,kind) VALUES('87',:r,'old','old',:s,'request')", r=rid, s=start)
-            fn = "ariba_hr_final_approve" if final else "ariba_hr_override_workflow"
             sp = db.begin_nested()
             db.execute(text(f"SELECT public.{fn}(:k,:r,NULL)"), {"k": hr_tok, "r": rid})
-            want = _wf_state(db, rid)
-            want_att = db.execute(text("SELECT time_in,late_minutes,status,location_name FROM public.attendance WHERE emp_id='610'")).all()
+            att = db.execute(text("SELECT time_in,late_minutes,status FROM public.attendance WHERE emp_id='610'")).all()
+            wants[t, start, rid] = _wf_state(db, rid, True), att
             sp.rollback()
-            route = c.hr_final_approve if final else c.hr_override_request
-
-            def ours(s: Session, rid=rid, route=route):
+    route = c.hr_final_approve if final else c.hr_override_request
+    bad = []
+    with _normalized(db):
+        for (t, start, rid), want in wants.items():
+            def ours(s: Session, rid=rid):
                 route(rid, {}, _Req(), {"employee_id": "40", "role": "hr", "account_id": None}, s)
-                return _wf_state(s, rid), s.execute(text("SELECT time_in,late_minutes,status,location_name FROM public.attendance WHERE emp_id='610'")).all()
+                return _wf_state(s, rid, False), s.execute(text("SELECT time_in,late_minutes,status FROM public.attendance WHERE employee_id='610'")).all()
 
             got, err = _ours(db, ours)
-            if err or got != (want, want_att):
-                bad.append((t, start, want, want_att, got, err))
+            if err or got != want:
+                bad.append((t, start, want, got, err))
     assert not bad, "\n".join(map(str, bad))
 
 
 _DAY = date(2026, 10, 8)
 
 
+def _day_early(rows: list, flex: bool) -> list:
+    """Correction K (normalization): with several sessions in a flexible day the early leave is the day's — first check-in
+    + shift hours (capped at the window end when that check-in was late) against the last check-out — kept on the last
+    session only, as the live check-out computes it. The legacy forgot-punch measured each session from its own check-in.
+    rows: (time_in, time_out, status, late, early, notes)."""
+    if not flex or len(rows) < 2:
+        return list(rows)
+    rows = sorted(rows, key=lambda r: (r[0] is None, r[0]))
+    first, last = rows[0], max(rows, key=lambda r: (r[0] is not None, r[0]))
+    cs = {"flexible_enabled": True, "shift_duration_minutes": 480, "flex_window_end": time(17)}
+    early = c._punch_early(cs, first[0], int(first[3] or 0), last[1]) if first[0] and last[1] else 0
+    return [r[:4] + ((early if r is last else 0),) + r[5:] for r in rows]
+
+
 @pytest.mark.parametrize("flex", [False, True])
 def test_forgot_punch_is_applied_like_legacy(db, flex):
     """Approved «نسيان بصمة» merged into that day's attendance (ariba_apply_forgot_punch) for every kind, against no record,
-    an open session, a closed one, an auto-closed one and two sessions."""
-    _exec(db, "INSERT INTO public.company_settings(id,work_start,tolerance_minutes,flexible_enabled,shift_hours,flex_window_start,flex_window_end) VALUES('default','08:00',15,:f,8,'07:00','17:00')", f=flex)
+    an open session, a closed one, an auto-closed one and two sessions. Compared without location_name (dropped by the
+    normalization): ours runs on the same rows after the migration."""
+    _exec(db, "INSERT INTO public.company_settings(id,work_start,tolerance_minutes,flexible_enabled,shift_hours,shift_duration_minutes,flex_window_start,flex_window_end) VALUES('default','08:00',15,:f,8,480,'07:00','17:00')", f=flex)
     _employee(db, "620")
     existing = {
         "none": [],
@@ -481,7 +578,7 @@ def test_forgot_punch_is_applied_like_legacy(db, flex):
     }
     asks = [("in", "07:30", None), ("in", "08:20", None), ("in", "09:10", None), ("out", "15:00", None), ("out", "17:30", None),
             ("both", "07:40", "16:00"), ("both", "08:50", "17:10")]
-    cols = "time_in,time_out,status,late_minutes,early_minutes,location_name,notes"
+    cols = "time_in,time_out,status,late_minutes,early_minutes,notes"
     bad = []
     for name, rows in existing.items():
         for kind, t1, t2 in asks:
@@ -495,11 +592,12 @@ def test_forgot_punch_is_applied_like_legacy(db, flex):
                   r=rid, p=json.dumps(payload))
             sp = db.begin_nested()
             db.execute(text("SELECT public.ariba_apply_forgot_punch(:r)"), {"r": rid})
-            want = sorted(map(tuple, db.execute(text(f"SELECT {cols} FROM public.attendance WHERE emp_id='620'")).all()), key=str)
+            want = sorted(map(tuple, _day_early(db.execute(text(f"SELECT {cols} FROM public.attendance WHERE emp_id='620'")).all(), flex)), key=str)
             sp.rollback()
-            item = dict(db.execute(text("SELECT * FROM public.workflow_requests WHERE id=:r"), {"r": rid}).mappings().one())
-            c._apply_forgot_punch(db, item)
-            got = sorted(map(tuple, db.execute(text(f"SELECT {cols} FROM public.attendance WHERE emp_id='620'")).all()), key=str)
+            with _normalized(db):
+                item = dict(db.execute(text("SELECT * FROM public.workflow_requests WHERE id=:r"), {"r": rid}).mappings().one())
+                c._apply_forgot_punch(db, item)
+                got = sorted(map(tuple, db.execute(text(f"SELECT {cols} FROM public.attendance WHERE employee_id='620'")).all()), key=str)
             sp0.rollback()
             if got != want:
                 bad.append((name, kind, t1, t2, want, got))
@@ -513,7 +611,8 @@ def test_employee_delete_matches_legacy_delete_request(db):
     bad = []
     for status in ("pending", "rejected", "approved"):
         rid = uuid.uuid4()
-        _exec(db, "INSERT INTO public.workflow_requests(id,employee_id,request_type,payload,manager_id,current_stage,status) VALUES(:r,'610','sick','{}','87','manager',:s)", r=rid, s=status)
+        stage = {"pending": "manager", "rejected": "rejected", "approved": "completed"}[status]  # the normalized status follows the stage
+        _exec(db, "INSERT INTO public.workflow_requests(id,employee_id,request_type,payload,manager_id,current_stage,status) VALUES(:r,'610','sick','{}','87',:st,:s)", r=rid, st=stage, s=status)
         _exec(db, "INSERT INTO public.leave_requests(emp_id,type,from_date,to_date,days,status,workflow_request_id) VALUES('610','sick','2026-11-01','2026-11-01',1,:s,:r)", s=status, r=rid)
         _exec(db, "INSERT INTO public.ariba_documents(employee_id,request_id,document_type,file_name,file_data) VALUES('610',:r,'Leave Attachment','a.pdf','x')", r=rid)
 
@@ -533,7 +632,8 @@ def test_employee_delete_matches_legacy_delete_request(db):
             db.execute(text("SELECT public.ariba_delete_request(:k,:r)"), {"k": tok, "r": rid})
             want = snap(db)
             sp.rollback()
-        got, code = _ours(db, lambda s, rid=rid: (c.delete_my_request(rid, _Req(), {"employee_id": "610", "role": "employee"}, s), snap(s))[1])
+        with _normalized(db):
+            got, code = _ours(db, lambda s, rid=rid: (c.delete_my_request(rid, _Req(), {"employee_id": "610", "role": "employee", "account_id": None}, s), snap(s))[1])
         if code:
             got = ("error", code)
         if got != want:
@@ -557,22 +657,23 @@ def test_resignation_tiers_follow_article_85():
 
 def test_law_note_on_pending_leave(db):
     _employee(db, "630", join=date(2025, 6, 1))
-    def req(t: str, f: str, days: int, status: str = "pending") -> dict:
-        rid = uuid.uuid4()
-        _exec(db, "INSERT INTO public.workflow_requests(id,employee_id,request_type,payload,current_stage,status) VALUES(:r,'630',:t,CAST(:p AS jsonb),:s,:st)",
-              r=rid, t=t, p=json.dumps({"from": f, "days": days}), s="hr" if status == "pending" else "completed", st=status)
-        return dict(db.execute(text("SELECT * FROM public.workflow_requests WHERE id=:r"), {"r": rid}).mappings().one())
-    note = lambda r: c._law_note(db, r, date.fromisoformat(r["payload"]["from"]), r["payload"]["days"])  # noqa: E731
-    assert note(req("marriage", "2026-11-01", 5)) is None
-    assert "5 يوم" in note(req("marriage", "2026-11-01", 7))
-    assert note(req("paternity", "2026-11-01", 4)).startswith("المدة النظامية 3")
-    assert note(req("sick", "2026-03-01", 20)) is None
-    req("sick", "2026-01-10", 25, "approved")
-    n = note(req("sick", "2026-03-01", 20))  # 25 before + 20 = 45: 15 days at three quarters
-    assert "45 يوم" in n and "15 يوم بثلاثة أرباع الأجر" in n
-    h = note(req("hajj", "2026-05-20", 16))  # under two years of service, and over 15 days
-    assert "أقل من سنتين" in h and "16" in h
-    assert note(req("marriage", "2026-11-01", 9, "approved")) is None  # decided requests carry no note
+    with _normalized(db):  # status is generated from current_stage
+        def req(t: str, f: str, days: int, status: str = "pending") -> dict:
+            rid = uuid.uuid4()
+            _exec(db, "INSERT INTO public.workflow_requests(id,employee_id,request_type,payload,current_stage) VALUES(:r,'630',:t,CAST(:p AS jsonb),:s)",
+                  r=rid, t=t, p=json.dumps({"from": f, "days": days}), s="hr" if status == "pending" else "completed")
+            return dict(db.execute(text("SELECT * FROM public.workflow_requests WHERE id=:r"), {"r": rid}).mappings().one())
+        note = lambda r: c._law_note(db, r, date.fromisoformat(r["payload"]["from"]), r["payload"]["days"])  # noqa: E731
+        assert note(req("marriage", "2026-11-01", 5)) is None
+        assert "5 يوم" in note(req("marriage", "2026-11-01", 7))
+        assert note(req("paternity", "2026-11-01", 4)).startswith("المدة النظامية 3")
+        assert note(req("sick", "2026-03-01", 20)) is None
+        req("sick", "2026-01-10", 25, "approved")
+        n = note(req("sick", "2026-03-01", 20))  # 25 before + 20 = 45: 15 days at three quarters
+        assert "45 يوم" in n and "15 يوم بثلاثة أرباع الأجر" in n
+        h = note(req("hajj", "2026-05-20", 16))  # under two years of service, and over 15 days
+        assert "أقل من سنتين" in h and "16" in h
+        assert note(req("marriage", "2026-11-01", 9, "approved")) is None  # decided requests carry no note
 
 
 def test_hr_delete_request_archives_and_removes(db):
@@ -583,11 +684,28 @@ def test_hr_delete_request_archives_and_removes(db):
     _exec(db, "INSERT INTO public.leave_requests(emp_id,type,from_date,to_date,days,status,workflow_request_id) VALUES('610','sick','2026-11-01','2026-11-01',1,'pending',:r)", r=rid)
     _exec(db, "INSERT INTO public.ariba_documents(employee_id,request_id,document_type,file_name,file_data) VALUES('610',:r,'Leave Attachment','a.pdf','x')", r=rid)
     def delete(s: Session) -> list:
-        c.hr_delete_request(rid, _Req(), {"employee_id": "40", "role": "hr"}, s)
+        c.hr_delete_request(rid, _Req(), {"employee_id": "40", "role": "hr", "account_id": None}, s)
         return [s.execute(text(q), {"r": rid}).scalar() for q in (
             "SELECT count(*) FROM public.workflow_requests WHERE id=:r", "SELECT count(*) FROM public.leave_requests WHERE workflow_request_id=:r",
             "SELECT count(*) FROM public.ariba_documents WHERE request_id=:r",
             "SELECT count(*) FROM public.ariba_deleted_items WHERE ref_id=CAST(:r AS text) AND jsonb_array_length(snapshot->'documents')=1")]
 
-    left, err = _ours(db, delete)
+    with _normalized(db):
+        left, err = _ours(db, delete)
     assert err is None and left == [0, 0, 0, 1]
+
+
+def test_hr_delete_letter_removes_its_rows(db):
+    """A sent letter (request + 'submitted' action + HTML document + notification) is deleted without a key error."""
+    _staff(db)
+    with _normalized(db):
+        def send_and_delete(s: Session) -> list:
+            hr = {"employee_id": "40", "role": "hr", "account_id": None, "username": "u40", "name_ar": "hr"}
+            sent = c.send_letter({"employee_id": "610", "title": "خطاب", "html": "<p>x</p>", "type": "custom"}, _Req(), hr, s)
+            c.delete_letter(sent["id"], _Req(), hr, s)
+            return [s.execute(text(q), {"r": sent["id"]}).scalar() for q in (
+                "SELECT count(*) FROM public.workflow_requests WHERE id=:r", "SELECT count(*) FROM public.workflow_actions WHERE request_id=:r",
+                "SELECT count(*) FROM public.ariba_documents WHERE request_id=:r", "SELECT count(*) FROM public.workflow_notifications WHERE request_id=:r")]
+
+        left, err = _ours(db, send_and_delete)
+    assert err is None and left == [0, 0, 0, 0]

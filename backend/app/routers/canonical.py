@@ -63,7 +63,7 @@ def _write_audit(db: Session, actor: dict[str, Any] | None, request: Request | N
                  details: dict[str, Any] | None = None) -> None:
     db.execute(text("""INSERT INTO public.ariba_audit_log
         (id, actor_employee_id, actor_username, actor_name, actor_role, module, action, entity_type, entity_id, summary, details)
-        VALUES (:id, :employee_id, :username, :name, :role, :module, :action, :entity_type, :entity_id, :summary, CAST(:details AS jsonb))"""), {
+        OVERRIDING SYSTEM VALUE VALUES (:id, :employee_id, :username, :name, :role, :module, :action, :entity_type, :entity_id, :summary, CAST(:details AS jsonb))"""), {
         "employee_id": (actor or {}).get("employee_id"), "username": (actor or {}).get("username"),
         "name": (actor or {}).get("name_ar"), "role": (actor or {}).get("role"), "module": module,
         "action": action, "entity_type": entity, "entity_id": str(entity_id) if entity_id is not None else None,
@@ -74,6 +74,7 @@ def _write_audit(db: Session, actor: dict[str, Any] | None, request: Request | N
 
 def _employee_dict(row: dict[str, Any]) -> dict[str, Any]:
     data = dict(row.get("data") or {})
+    data.pop("username", None)
     # Canonical top-level columns take precedence; legacy app fields remain in data JSONB.
     return {
         **data,
@@ -89,6 +90,43 @@ def _employee_dict(row: dict[str, Any]) -> dict[str, Any]:
         "manager_id": row.get("manager_id") or data.get("manager_id") or data.get("managerId"),
         "active": bool(row.get("active")), "data": data,
     }
+
+
+_EMPLOYEE_FROM = """public.employee_directory d
+    LEFT JOIN public.employers er ON er.id=d.employer_id
+    LEFT JOIN public.departments dp ON dp.id=d.department_id
+    LEFT JOIN public.job_titles jt ON jt.id=d.job_title_id
+    LEFT JOIN public.ariba_auth_accounts aa ON aa.employee_id=d.employee_id"""
+_EMPLOYEE_COLUMNS = "d.*,aa.username,er.name AS employer,dp.name AS department,jt.name AS job_title"
+
+
+def _lookup_id(db: Session, table_name: str, value: Any) -> int | None:
+    if value is None or not str(value).strip():
+        return None
+    allowed = {"employers", "departments", "job_titles"}
+    if table_name not in allowed:
+        raise ValueError("Unsupported employee lookup")
+    name = str(value).strip()
+    return db.scalar(text(f"""INSERT INTO public.{table_name}(name) VALUES(:name)
+        ON CONFLICT(name) DO UPDATE SET name=EXCLUDED.name RETURNING id"""), {"name": name})
+
+
+def _require_lookup(db: Session, lookup: str, value: str | None, label: str) -> None:
+    columns = {"roles": "code", "leave_types": "code", "permission_types": "code", "document_types": "code",
+               "workflow_request_types": "code"}
+    column = columns.get(lookup)
+    if not column:
+        raise ValueError("Unsupported reference lookup")
+    if not value or not db.scalar(text(f"SELECT 1 FROM public.{lookup} WHERE {column}=:value"), {"value": value}):
+        raise ApiError(422, "invalid_reference", f"Unsupported {label}: {value or '(empty)'}")
+
+
+def _validate_manager(db: Session, employee_id: str, manager_id: Any) -> None:
+    if not manager_id:
+        return
+    manager_id = str(manager_id)
+    if manager_id == employee_id or not db.scalar(text("SELECT 1 FROM public.employee_directory WHERE employee_id=:id"), {"id": manager_id}):
+        raise ApiError(422, "invalid_manager", "Manager must be a different existing employee")
 
 
 def _public_employee(row: dict[str, Any], actor: dict[str, Any], list_view: bool = False) -> dict[str, Any]:
@@ -142,7 +180,7 @@ def _public_employee(row: dict[str, Any], actor: dict[str, Any], list_view: bool
         salary["iban"] = data.get("iban") if may_view_ids else None
         salary["bank_name"] = data.get("bank") if may_view_ids else None
     result = {
-        **safe_data, "id": e["employee_id"], "emp_no": e["emp_no"], "name_ar": e["name_ar"], "name_en": e["name_en"],
+        **safe_data, "id": e["employee_id"], "emp_no": e["emp_no"], "username": e["username"], "name_ar": e["name_ar"], "name_en": e["name_en"],
         "job_title": e["job_title"], "category": data.get("empType", "active"), "is_active": e["active"],
         "is_terminated": not e["active"], "termination_date": data.get("terminationDate") or data.get("lastDay"),
         "national_id": data.get("iqamaNo") or data.get("iqama_no"), "national_id_expiry": data.get("iqamaExpiry"),
@@ -165,9 +203,10 @@ def _public_employee(row: dict[str, Any], actor: dict[str, Any], list_view: bool
 
 def _employee_detail(db: Session, row: dict[str, Any], actor: dict[str, Any]) -> dict[str, Any]:
     """Full employee record in the HR site's contract (see app/services/employee_map.py)."""
+    row = _row(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} WHERE d.employee_id=:id", id=row["employee_id"]) or row
     own = actor.get("employee_id") == row["employee_id"]
-    mgr = _row(db, "SELECT employee_id,username,name_ar,name_en,data FROM public.employee_directory WHERE employee_id=:m", m=row.get("manager_id")) if row.get("manager_id") else None
-    manager = ({"id": mgr["employee_id"], "emp_no": str((mgr.get("data") or {}).get("empNo") or mgr["username"]),
+    mgr = _row(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} WHERE d.employee_id=:m", m=row.get("manager_id")) if row.get("manager_id") else None
+    manager = ({"id": mgr["employee_id"], "emp_no": str((mgr.get("data") or {}).get("empNo") or mgr.get("username") or mgr["employee_id"]),
                 "name_ar": mgr["name_ar"], "name_en": mgr["name_en"]} if mgr else None)
     has_account = bool(_row(db, "SELECT 1 AS x FROM public.ariba_auth_accounts WHERE employee_id=:e LIMIT 1", e=row["employee_id"]))
     return emap.employee_out(row, may_salary=actor.get("role") in SALARY_ROLES or own, may_ids=actor.get("role") in HR_ROLES or own,
@@ -175,7 +214,7 @@ def _employee_detail(db: Session, row: dict[str, Any], actor: dict[str, Any]) ->
 
 
 def _account_user(db: Session, account: dict[str, Any]) -> dict[str, Any]:
-    emp = _row(db, "SELECT * FROM public.employee_directory WHERE employee_id=:eid", eid=account.get("employee_id")) if account.get("employee_id") else None
+    emp = _row(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} WHERE d.employee_id=:eid", eid=account.get("employee_id")) if account.get("employee_id") else None
     e = _employee_dict(emp) if emp else None
     return {
         "id": str(account["id"]), "username": account["username"], "role": account["role"],
@@ -197,10 +236,9 @@ def _new_session(db: Session, account: dict[str, Any]) -> dict[str, Any]:
     now = datetime.now(UTC)
     session_id = uuid.uuid4()
     db.execute(text("DELETE FROM public.ariba_sessions WHERE expires_at<=:now"), {"now": now})
-    db.execute(text("""INSERT INTO public.ariba_sessions(token,account_id,employee_id,role,expires_at)
-        VALUES (:token,:account_id,:employee_id,:role,:expires_at)"""), {
-        "token": session_id, "account_id": account["id"], "employee_id": account.get("employee_id"),
-        "role": account["role"], "expires_at": now + timedelta(hours=SESSION_HOURS),
+    db.execute(text("""INSERT INTO public.ariba_sessions(token,account_id,expires_at)
+        VALUES (:token,:account_id,:expires_at)"""), {
+        "token": session_id, "account_id": account["id"], "expires_at": now + timedelta(hours=SESSION_HOURS),
     })
     return {"access_token": _sign("access", account, session_id, timedelta(hours=1)),
             "refresh_token": _sign("refresh", account, session_id, timedelta(hours=SESSION_HOURS)),
@@ -244,7 +282,7 @@ def _authenticate(db: Session, authorization: str | None, allow_pending: bool = 
         raise ApiError(401, "session_expired", "Your session has expired. Please sign in again.") from exc
     if claims.get("typ") != "access":
         raise ApiError(401, "unauthorized", "Sign in required")
-    session = _row(db, """SELECT s.token,s.account_id,s.employee_id,s.role,s.expires_at,a.username,a.password_hash,a.active,a.must_change
+    session = _row(db, """SELECT s.token,s.account_id,a.employee_id,a.role,s.expires_at,a.username,a.password_hash,a.active,a.must_change
         FROM public.ariba_sessions s JOIN public.ariba_auth_accounts a ON a.id=s.account_id
         WHERE s.token=:sid AND s.account_id=:aid AND s.expires_at>now() AND a.active""",
         sid=claims["sid"], aid=claims["sub"])
@@ -267,7 +305,7 @@ def _require(actor: dict[str, Any], *roles: str) -> None:
 
 
 def _employee_scope(db: Session, actor: dict[str, Any], employee_id: str) -> dict[str, Any]:
-    row = _row(db, "SELECT * FROM public.employee_directory WHERE employee_id=:eid", eid=employee_id)
+    row = _row(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} WHERE d.employee_id=:eid", eid=employee_id)
     if not row:
         raise ApiError(404, "not_found", "Employee not found")
     role, own = actor.get("role"), actor.get("employee_id")
@@ -280,12 +318,31 @@ def _employee_scope(db: Session, actor: dict[str, Any], employee_id: str) -> dic
     raise ApiError(404, "not_found", "Employee not found")
 
 
+def _resolve_location_id(db: Session, value: Any) -> str | None:
+    if value is None or not str(value).strip():
+        return None
+    value = str(value).strip()
+    location_id = db.scalar(text("SELECT id FROM public.work_locations WHERE id=:value OR name=:value ORDER BY (id=:value) DESC LIMIT 1"),
+                            {"value": value})
+    if not location_id:
+        raise ApiError(422, "invalid_location", "The selected work location does not exist")
+    return str(location_id)
+
+
+def _delete_request_rows(db: Session, request_id: uuid.UUID) -> None:
+    """Remove a workflow request with everything that references it, children first (the normalized schema has the keys)."""
+    for sql in ("DELETE FROM public.leave_requests WHERE workflow_request_id=:r", "DELETE FROM public.permissions WHERE workflow_request_id=:r",
+                "DELETE FROM public.ariba_documents WHERE request_id=:r", "DELETE FROM public.workflow_notifications WHERE request_id=:r",
+                "DELETE FROM public.workflow_actions WHERE request_id=:r", "DELETE FROM public.workflow_requests WHERE id=:r"):
+        db.execute(text(sql), {"r": request_id})
+
+
 def _insert_notification(db: Session, employee_id: str | None, request_id: uuid.UUID | None,
                          title: str, body: str, stage: str, kind: str) -> None:
     if employee_id:
         db.execute(text("""INSERT INTO public.workflow_notifications
-            (recipient_employee_id,request_id,title,body,stage,kind,is_read)
-            VALUES (:employee_id,:request_id,:title,:body,:stage,:kind,false)"""),
+            (recipient_employee_id,request_id,title,body,stage,kind)
+            VALUES (:employee_id,:request_id,:title,:body,:stage,:kind)"""),
             {"employee_id": employee_id, "request_id": request_id, "title": title, "body": body, "stage": stage, "kind": kind})
 
 
@@ -311,7 +368,7 @@ def login(body: dict[str, Any], request: Request, db: Session = Depends(get_db))
     account = _row(db, "SELECT * FROM public.ariba_auth_accounts WHERE lower(username)=:u", u=username)
     valid, was_bcrypt = _verify_password(db, account["password_hash"], password) if account and account["active"] else (False, False)
     if not valid:
-        db.execute(text("INSERT INTO public.ariba_login_attempts(id,uname,ip) VALUES(:id,:u,:ip)"), {"id": _next_id(db, "ariba_login_attempts"), "u": username, "ip": ip})
+        db.execute(text("INSERT INTO public.ariba_login_attempts(id,uname,ip) OVERRIDING SYSTEM VALUE VALUES(:id,:u,:ip)"), {"id": _next_id(db, "ariba_login_attempts"), "u": username, "ip": ip})
         _write_audit(db, None, request, "auth", "login_failed", "account", summary="Failed login", details={"username": username})
         db.commit()
         raise ApiError(401, "invalid_credentials", "Invalid username or password")
@@ -376,7 +433,7 @@ def my_employee(actor: dict[str, Any] = Depends(current_actor), db: Session = De
 def employees(tab: str = "all", q: str = "", workplace_id: str | None = None, page: int = 1, page_size: int = 100, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     if actor["role"] == "finance":
         raise ApiError(403, "forbidden", "Not authorized")
-    rows = _rows(db, "SELECT * FROM public.employee_directory ORDER BY employee_id")
+    rows = _rows(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} ORDER BY d.employee_id")
     role, own = actor["role"], actor.get("employee_id")
     if role not in HR_READ_ROLES:
         rows = [r for r in rows if r["employee_id"] == own or (role == "manager" and r.get("manager_id") == own)]
@@ -397,7 +454,7 @@ def employees(tab: str = "all", q: str = "", workplace_id: str | None = None, pa
 
 @router.get("/employees/counts")
 def employee_counts(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    rows = _rows(db, "SELECT * FROM public.employee_directory")
+    rows = _rows(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM}")
     visible = rows if actor["role"] in HR_READ_ROLES else [r for r in rows if r["employee_id"] == actor.get("employee_id") or (actor["role"] == "manager" and r.get("manager_id") == actor.get("employee_id"))]
     active = [r for r in visible if r.get("active")]
     saudis = sum(1 for r in active if str(r.get("nationality") or "").lower() in {"saudi", "saudi arabia", "سعودي", "سعودية"})
@@ -439,7 +496,6 @@ def _employee_data(body: dict[str, Any], employee_id: str, username: str, emp_no
 
 def _employee_top_fields(body: dict[str, Any], data: dict[str, Any], active: bool) -> dict[str, Any]:
     return {
-        "username": str(data.get("username") or data.get("empNo") or ""),
         "name_ar": str(body.get("name_ar") or body.get("nameAr") or ""),
         "name_en": body.get("name_en", body.get("nameEn")),
         "employer": body.get("employer", body.get("workplace_id")),
@@ -526,15 +582,20 @@ def create_employee(body: dict[str, Any], request: Request, actor: dict[str, Any
     if _row(db, "SELECT 1 AS x FROM public.employee_directory WHERE employee_id=:e OR data->>'empNo'=:e", e=emp_no):
         raise ApiError(409, "conflict", "This employee number is already taken")
     username = "EMP" + emp_no.zfill(3) if emp_no.isdigit() else emp_no.upper()
-    data, top = emap.apply_input({"id": emp_no, "employee_id": emp_no, "employeeId": emp_no, "empNo": emp_no, "username": username,
-                                  "u": username, "active": True, "isTerminated": False, "term": False}, body)
+    data, top = emap.apply_input({"id": emp_no, "employee_id": emp_no, "employeeId": emp_no, "empNo": emp_no,
+                                  "active": True, "isTerminated": False, "term": False}, body)
+    _validate_manager(db, emp_no, top.get("manager_id"))
     _contract_end(data)
     _store_figures(db, data, top)
     row = _row(db, """INSERT INTO public.employee_directory
-        (employee_id,username,name_ar,name_en,employer,department,job_title,nationality,iqama_no,dob,join_date,manager_id,active,data)
-        VALUES (:id,:username,:name_ar,:name_en,:employer,:department,:job_title,:nationality,:iqama_no,:dob,:join_date,:manager_id,true,CAST(:data AS jsonb))
-        RETURNING *""", id=emp_no, username=username, data=json.dumps(data, ensure_ascii=False),
-        **{k: top.get(k) for k in ("name_ar", "name_en", "employer", "department", "job_title", "nationality", "iqama_no", "dob", "join_date", "manager_id")})
+        (employee_id,name_ar,name_en,employer_id,department_id,job_title_id,nationality,iqama_no,dob,join_date,manager_id,active,data)
+        VALUES (:id,:name_ar,:name_en,:employer_id,:department_id,:job_title_id,:nationality,:iqama_no,:dob,:join_date,:manager_id,true,CAST(:data AS jsonb))
+        RETURNING employee_id""", id=emp_no, data=json.dumps(data, ensure_ascii=False),
+        employer_id=_lookup_id(db, "employers", top.get("employer")),
+        department_id=_lookup_id(db, "departments", top.get("department")),
+        job_title_id=_lookup_id(db, "job_titles", top.get("job_title")),
+        **{k: top.get(k) for k in ("name_ar", "name_en", "nationality", "iqama_no", "dob", "join_date", "manager_id")})
+    row = _row(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} WHERE d.employee_id=:id", id=emp_no)
     _write_audit(db, actor, request, "employees", "create", "employee", emp_no)
     db.commit()
     return _employee_detail(db, row, actor)
@@ -546,12 +607,22 @@ def update_employee(employee_id: str, body: dict[str, Any], request: Request, ac
     _require(actor, *HR_ROLES)
     old = _employee_scope(db, actor, employee_id)
     data, top = emap.apply_input(dict(old.get("data") or {}), body)
+    _validate_manager(db, employee_id, top.get("manager_id", old.get("manager_id")))
     _contract_end(data)
     _store_figures(db, data, top, old)
     renewed = _reactivate_if_renewed(data, bool(old.get("active")))
-    sets = ["data=CAST(:data AS jsonb)", "updated_at=now()"] + [f"{c}=:{c}" for c in top] + (["active=true"] if renewed else [])
-    row = _row(db, f"UPDATE public.employee_directory SET {','.join(sets)} WHERE employee_id=:id RETURNING *",
-               id=employee_id, data=json.dumps(data, ensure_ascii=False), **top)
+    lookup_columns = {"employer": "employer_id", "department": "department_id", "job_title": "job_title_id"}
+    sets = ["data=CAST(:data AS jsonb)", "updated_at=now()"]
+    params = {**top, "id": employee_id, "data": json.dumps(data, ensure_ascii=False)}
+    for field, value in top.items():
+        column = lookup_columns.get(field, field)
+        if field in lookup_columns:
+            params[column] = _lookup_id(db, lookup_columns[field].removesuffix("_id") + "s", value)
+        sets.append(f"{column}=:{column}")
+    if renewed:
+        sets.append("active=true")
+    db.execute(text(f"UPDATE public.employee_directory SET {','.join(sets)} WHERE employee_id=:id"), params)
+    row = _row(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} WHERE d.employee_id=:id", id=employee_id)
     _write_audit(db, actor, request, "employees", "update", "employee", employee_id, details={"changed_fields": sorted(body.keys())})
     db.commit()
     return _employee_detail(db, row, actor)
@@ -611,7 +682,8 @@ def dependents_unavailable(*args: Any, **kwargs: Any):
 
 @router.get("/locations")
 def locations(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    rows = _rows(db, "SELECT * FROM public.work_locations WHERE active ORDER BY name")
+    rows = _rows(db, """SELECT w.*,coalesce(e.name,'all') AS employer FROM public.work_locations w
+        LEFT JOIN public.employers e ON e.id=w.employer_id WHERE w.active ORDER BY w.name""")
     return [{**r, "workplace": r.get("employer"), "is_active": r.get("active")} for r in rows]
 
 
@@ -619,12 +691,16 @@ def locations(actor: dict[str, Any] = Depends(current_actor), db: Session = Depe
 def create_location(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *HR_ROLES)
     loc_id = str(body.get("id") or uuid.uuid4())
-    row = _row(db, """INSERT INTO public.work_locations(id,name,name_en,employer,type,latitude,longitude,radius_m,active,polygon)
-        VALUES(:id,:name,:name_en,:employer,:type,:lat,:lng,:radius,true,CAST(:polygon AS jsonb)) RETURNING *""",
+    employer = str(body.get("employer") or "all").strip()
+    employer_id = None if employer.lower() == "all" else _lookup_id(db, "employers", employer)
+    row = _row(db, """INSERT INTO public.work_locations(id,name,name_en,employer_id,type,latitude,longitude,radius_m,active,polygon)
+        VALUES(:id,:name,:name_en,:employer_id,:type,:lat,:lng,:radius,true,CAST(:polygon AS jsonb)) RETURNING id""",
         id=loc_id, name=body.get("name") or body.get("name_ar") or "", name_en=body.get("name_en"),
-        employer=body.get("employer") or "all", type=body.get("type") or "project", lat=body.get("latitude"),
+        employer_id=employer_id, type=body.get("type") or "project", lat=body.get("latitude"),
         lng=body.get("longitude"), radius=body.get("radius_m") or 200,
         polygon=json.dumps(body["polygon"]) if body.get("polygon") is not None else None)
+    row = _row(db, """SELECT w.*,coalesce(e.name,'all') AS employer FROM public.work_locations w
+        LEFT JOIN public.employers e ON e.id=w.employer_id WHERE w.id=:id""", id=loc_id)
     _write_audit(db, actor, request, "locations", "create", "work_location", loc_id)
     db.commit()
     return row
@@ -633,17 +709,22 @@ def create_location(body: dict[str, Any], request: Request, actor: dict[str, Any
 @router.patch("/locations/{location_id}")
 def update_location(location_id: str, body: dict[str, Any], request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *HR_ROLES)
-    row = _row(db, "SELECT * FROM public.work_locations WHERE id=:id", id=location_id)
+    row = _row(db, """SELECT w.*,coalesce(e.name,'all') AS employer FROM public.work_locations w
+        LEFT JOIN public.employers e ON e.id=w.employer_id WHERE w.id=:id""", id=location_id)
     if not row:
         raise ApiError(404, "not_found", "Work location not found")
+    employer = str(body.get("employer", row["employer"]) or "all").strip()
+    employer_id = None if employer.lower() == "all" else _lookup_id(db, "employers", employer)
     fields = {"name": body.get("name", row["name"]), "name_en": body.get("name_en", row.get("name_en")),
-              "employer": body.get("employer", row["employer"]), "type": body.get("type", row["type"]),
+              "employer_id": employer_id, "type": body.get("type", row["type"]),
               "latitude": body.get("latitude", row["latitude"]), "longitude": body.get("longitude", row["longitude"]),
               "radius": body.get("radius_m", row["radius_m"]), "active": body.get("active", row["active"]),
               "polygon": json.dumps(body["polygon"]) if body.get("polygon") is not None else None, "id": location_id}
-    updated = _row(db, """UPDATE public.work_locations SET name=:name,name_en=:name_en,employer=:employer,type=:type,
+    _row(db, """UPDATE public.work_locations SET name=:name,name_en=:name_en,employer_id=:employer_id,type=:type,
         latitude=:latitude,longitude=:longitude,radius_m=:radius,active=:active,
-        polygon=coalesce(CAST(:polygon AS jsonb),polygon),updated_at=now() WHERE id=:id RETURNING *""", **fields)
+        polygon=coalesce(CAST(:polygon AS jsonb),polygon),updated_at=now() WHERE id=:id RETURNING id""", **fields)
+    updated = _row(db, """SELECT w.*,coalesce(e.name,'all') AS employer FROM public.work_locations w
+        LEFT JOIN public.employers e ON e.id=w.employer_id WHERE w.id=:id""", id=location_id)
     _write_audit(db, actor, request, "locations", "update", "work_location", location_id)
     db.commit()
     return updated
@@ -687,11 +768,13 @@ def set_employee_locations(employee_id: str, body: dict[str, Any], request: Requ
 
 @router.get("/settings/lookups")
 def lookups(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    emps = _rows(db, "SELECT employer,department,nationality FROM public.employee_directory")
-    def vals(k: str) -> list[dict[str, str]]:
-        names = sorted({str(r[k]).strip() for r in emps if r.get(k) and str(r[k]).strip()})
-        return [{"id": n, "code": n, "name_ar": n, "name_en": n, "is_saudi": n.lower() in {"saudi", "saudi arabia", "سعودي", "سعودية"}} for n in names]
-    return {"workplaces": vals("employer"), "departments": vals("department"), "nationalities": vals("nationality")}
+    employers = _rows(db, "SELECT id,name FROM public.employers ORDER BY name")
+    departments = _rows(db, "SELECT id,name FROM public.departments ORDER BY name")
+    nationalities = _rows(db, "SELECT DISTINCT btrim(nationality) AS name FROM public.employee_directory WHERE nullif(btrim(nationality),'') IS NOT NULL ORDER BY name")
+    def vals(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [{"id": r.get("name"), "code": r.get("name"), "name_ar": r.get("name"), "name_en": r.get("name"),
+                 "is_saudi": str(r.get("name") or "").lower() in {"saudi", "saudi arabia", "سعودي", "سعودية"}} for r in rows]
+    return {"workplaces": vals(employers), "departments": vals(departments), "nationalities": vals(nationalities)}
 
 
 @router.get("/settings/company")
@@ -699,7 +782,8 @@ def company_settings(actor: dict[str, Any] = Depends(current_actor), db: Session
     row = _row(db, "SELECT * FROM public.company_settings WHERE id='default'") or {}
     names = _row(db, "SELECT value FROM public.ariba_app_settings WHERE key='company_names'")
     value = (names or {}).get("value") or {}
-    return {"company_name_ar": value.get("coAr", ""), "company_name_en": value.get("coEn", ""), "labour_law_country": "SA", **row}
+    return {"company_name_ar": value.get("coAr", ""), "company_name_en": value.get("coEn", ""), "labour_law_country": "SA",
+            **row, "shift_hours": float(row.get("shift_duration_minutes") or 480) / 60}
 
 
 @router.put("/settings/company")
@@ -718,23 +802,26 @@ def update_company_settings(body: dict[str, Any], request: Request, actor: dict[
 @router.get("/settings/attendance")
 def attendance_settings(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     row = _row(db, "SELECT * FROM public.company_settings WHERE id='default'") or {}
-    return {"work_start": row.get("work_start"), "tolerance_minutes": row.get("tolerance_minutes", 15), "remote_days_per_year": row.get("remote_days_per_year", 10), "flexible_enabled": row.get("flexible_enabled", False), "shift_hours": row.get("shift_hours", 8), "window_start": row.get("flex_window_start"), "window_end": row.get("flex_window_end")}
+    return {"work_start": row.get("work_start"), "tolerance_minutes": row.get("tolerance_minutes", 15), "remote_days_per_year": row.get("remote_days_per_year", 10), "flexible_enabled": row.get("flexible_enabled", False), "shift_hours": float(row.get("shift_duration_minutes") or 480) / 60, "window_start": row.get("flex_window_start"), "window_end": row.get("flex_window_end")}
 
 
 @router.put("/settings/attendance")
 def update_attendance_settings(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *HR_ROLES)
+    shift_duration = body.get("shift_duration_minutes")
+    if shift_duration is None:
+        shift_duration = round(float(body.get("shift_hours", 8)) * 60)
     row = _row(db, """UPDATE public.company_settings SET work_start=:work_start,tolerance_minutes=:tolerance,
-        remote_days_per_year=:remote,flexible_enabled=:enabled,shift_hours=:hours,flex_window_start=:window_start,
-        flex_window_end=:window_end,shift_duration_minutes=coalesce(:duration,shift_duration_minutes),updated_at=now()
+        remote_days_per_year=:remote,flexible_enabled=:enabled,flex_window_start=:window_start,
+        flex_window_end=:window_end,shift_duration_minutes=:duration,updated_at=now()
         WHERE id='default' RETURNING *""", work_start=body.get("work_start"), tolerance=body.get("tolerance_minutes", 15),
-        remote=body.get("remote_days_per_year", 10), enabled=body.get("flexible_enabled", False), hours=body.get("shift_hours", 8),
-        window_start=body.get("window_start", "08:00"), window_end=body.get("window_end", "17:00"), duration=body.get("shift_duration_minutes"))
+        remote=body.get("remote_days_per_year", 10), enabled=body.get("flexible_enabled", False),
+        window_start=body.get("window_start", "08:00"), window_end=body.get("window_end", "17:00"), duration=shift_duration)
     if not row:
         raise ApiError(404, "not_found", "Canonical company_settings row is missing")
     _write_audit(db, actor, request, "settings", "update", "company_settings", "default")
     db.commit()
-    return {"work_start": row["work_start"], "tolerance_minutes": row["tolerance_minutes"], "remote_days_per_year": row["remote_days_per_year"], "flexible_enabled": row["flexible_enabled"], "shift_hours": row["shift_hours"], "window_start": row["flex_window_start"], "window_end": row["flex_window_end"]}
+    return {"work_start": row["work_start"], "tolerance_minutes": row["tolerance_minutes"], "remote_days_per_year": row["remote_days_per_year"], "flexible_enabled": row["flexible_enabled"], "shift_hours": float(row["shift_duration_minutes"]) / 60, "window_start": row["flex_window_start"], "window_end": row["flex_window_end"]}
 
 
 def _app_setting(db: Session, key: str) -> Any:
@@ -844,7 +931,7 @@ _FEMALE_NAMES = ("منى", "زينب", "ريم", "بدريه", "ساره", "نو
 
 @router.get("/dashboard")
 def dashboard(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    all_rows = _rows(db, "SELECT * FROM public.employee_directory")
+    all_rows = _rows(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM}")
     visible = all_rows if actor["role"] in HR_READ_ROLES else [r for r in all_rows if r["employee_id"] == actor.get("employee_id") or (actor["role"] == "manager" and r.get("manager_id") == actor.get("employee_id"))]
     active = [r for r in visible if r.get("active")]
     terminated = [r for r in visible if not r.get("active")]
@@ -867,7 +954,7 @@ def dashboard(actor: dict[str, Any] = Depends(current_actor), db: Session = Depe
     payroll_allowed = actor["role"] in SALARY_ROLES
     # Legacy totSal: basic + housing + transport of the current employees.
     payroll_total = sum(_num((r.get("data") or {}).get(k)) for r in active for k in ("salary", "housingAllowance", "transportAllowance")) if payroll_allowed else None
-    summary_row = _row(db, "SELECT pay_year,pay_month FROM public.payroll_archives_v2 WHERE approved ORDER BY pay_year DESC,pay_month DESC LIMIT 1")
+    summary_row = _row(db, "SELECT pay_year,pay_month FROM public.payroll_periods WHERE approved ORDER BY pay_year DESC,pay_month DESC LIMIT 1")
     alerts = []
     today = today_riyadh()
     for row in active:
@@ -904,9 +991,13 @@ def dashboard(actor: dict[str, Any] = Depends(current_actor), db: Session = Depe
 
 
 def _attendance_row(db: Session, row: dict[str, Any]) -> dict[str, Any]:
-    employee = _row(db, "SELECT name_ar,employer FROM public.employee_directory WHERE employee_id=:id", id=row["emp_id"])
-    return {"id": str(row["id"]), "employee_id": row["emp_id"], "employee_name": (employee or {}).get("name_ar", ""),
-            "workplace": (employee or {}).get("employer"), "work_date": row["date"],
+    row = _row(db, """SELECT a.*,d.name_ar AS employee_name,er.name AS workplace,wl.name AS location_name
+        FROM public.attendance a
+        LEFT JOIN public.employee_directory d ON d.employee_id=a.employee_id
+        LEFT JOIN public.employers er ON er.id=d.employer_id
+        LEFT JOIN public.work_locations wl ON wl.id=a.location_id WHERE a.id=:id""", id=row["id"]) or row
+    return {"id": str(row["id"]), "employee_id": row["employee_id"], "employee_name": row.get("employee_name") or "",
+            "workplace": row.get("workplace"), "work_date": row["date"],
             "time_in": str(row["time_in"])[:5] if row.get("time_in") else None,
             "time_out": str(row["time_out"])[:5] if row.get("time_out") else None,
             "location_id": row.get("location_id"), "location_name": row.get("location_name"),
@@ -922,14 +1013,14 @@ def hr_attendance(day: date | None = None, date_: date | None = Query(None, alia
     day = day or date_
     if day is None:
         raise ApiError(422, "validation_error", "date is required")
-    rows = _rows(db, "SELECT * FROM public.attendance WHERE date=:day ORDER BY emp_id,time_in", day=day)
+    rows = _rows(db, "SELECT * FROM public.attendance WHERE date=:day ORDER BY employee_id,time_in", day=day)
     return [_attendance_row(db, row) for row in rows]
 
 
 @router.get("/attendance/range")
 def hr_attendance_range(date_from: date, date_to: date, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *HR_READ_ROLES)
-    rows = _rows(db, "SELECT * FROM public.attendance WHERE date BETWEEN :start AND :end ORDER BY date,emp_id,time_in", start=date_from, end=date_to)
+    rows = _rows(db, "SELECT * FROM public.attendance WHERE date BETWEEN :start AND :end ORDER BY date,employee_id,time_in", start=date_from, end=date_to)
     return [_attendance_row(db, row) for row in rows]
 
 
@@ -941,10 +1032,15 @@ def hr_attendance_summary(month: str, actor: dict[str, Any] = Depends(current_ac
         start, end = date(year, number, 1), date(year + (number == 12), 1 if number == 12 else number + 1, 1)
     except (ValueError, TypeError):
         raise ApiError(422, "invalid_month", "Month must be YYYY-MM")
-    rows = _rows(db, "SELECT emp_id,status,late_minutes FROM public.attendance WHERE date>=:start AND date<:end", start=start, end=end)
+    rows = _rows(db, "SELECT employee_id,date,status,late_minutes FROM public.attendance WHERE date>=:start AND date<:end ORDER BY employee_id,date,time_in NULLS LAST,created_at", start=start, end=end)
     result: dict[str, dict[str, Any]] = {}
+    seen_days: set[tuple[str, date]] = set()
     for row in rows:
-        item = result.setdefault(row["emp_id"], {"employee_id": row["emp_id"], "present": 0, "late": 0, "absent": 0, "leave": 0, "remote": 0})
+        key = (row["employee_id"], row["date"])
+        if key in seen_days:
+            continue
+        seen_days.add(key)
+        item = result.setdefault(row["employee_id"], {"employee_id": row["employee_id"], "present": 0, "late": 0, "absent": 0, "leave": 0, "remote": 0})
         status = row.get("status") or "present"
         if status in item:
             item[status] += 1
@@ -959,10 +1055,15 @@ def create_attendance(body: dict[str, Any], request: Request, actor: dict[str, A
     _require(actor, *HR_ROLES)
     eid = str(body.get("employee_id") or "")
     _employee_scope(db, actor, eid)
-    row = _row(db, """INSERT INTO public.attendance(emp_id,date,time_in,time_out,location_id,location_name,status,notes,late_minutes,early_minutes)
-        VALUES(:eid,:day,:time_in,:time_out,:location_id,:location_name,:status,:notes,:late,:early) RETURNING *""",
+    if body.get("time_out") is None and _row(
+        db, "SELECT id FROM public.attendance WHERE employee_id=:e AND date=:d AND time_out IS NULL", e=eid, d=body.get("work_date")
+    ):
+        raise ApiError(409, "already_checked_in", "An open attendance session already exists for this employee and date")
+    location_id = _resolve_location_id(db, body.get("location_id") or body.get("location_name"))
+    row = _row(db, """INSERT INTO public.attendance(employee_id,date,time_in,time_out,location_id,status,notes,late_minutes,early_minutes)
+        VALUES(:eid,:day,:time_in,:time_out,:location_id,:status,:notes,:late,:early) RETURNING *""",
         eid=eid, day=body.get("work_date"), time_in=body.get("time_in"), time_out=body.get("time_out"),
-        location_id=body.get("location_id"), location_name=body.get("location_name"), status=body.get("status") or "present",
+        location_id=location_id, status=body.get("status") or "present",
         notes=body.get("notes"), late=body.get("late_minutes") or 0, early=body.get("early_minutes") or 0)
     _write_audit(db, actor, request, "attendance", "manual_entry", "attendance", row["id"], details={"employee_id": eid})
     db.commit()
@@ -973,16 +1074,28 @@ def create_attendance(body: dict[str, Any], request: Request, actor: dict[str, A
 def update_attendance(record_id: uuid.UUID, body: dict[str, Any], request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *HR_ROLES)
     allowed = {"date": "work_date", "time_in": "time_in", "time_out": "time_out", "location_id": "location_id",
-               "location_name": "location_name", "status": "status", "notes": "notes", "late_minutes": "late_minutes", "early_minutes": "early_minutes"}
+               "status": "status", "notes": "notes", "late_minutes": "late_minutes", "early_minutes": "early_minutes"}
     changes = {column: body[key] for key, column in allowed.items() if key in body}
+    if "location_name" in body and "location_id" not in body:
+        changes["location_id"] = _resolve_location_id(db, body["location_name"])
+    elif "location_id" in changes:
+        changes["location_id"] = _resolve_location_id(db, changes["location_id"])
     if not changes:
         raise ApiError(422, "empty_update", "No attendance fields were supplied")
+    existing = _row(db, "SELECT employee_id,date,time_out FROM public.attendance WHERE id=:id", id=record_id)
+    if not existing:
+        raise ApiError(404, "not_found", "Attendance record not found")
+    target_time_out = changes.get("time_out", existing.get("time_out"))
+    target_date = changes.get("work_date", existing["date"])
+    if target_time_out is None:
+        duplicate = _row(db, """SELECT id FROM public.attendance WHERE employee_id=:e AND date=:d AND time_out IS NULL AND id<>:id""",
+                         e=existing["employee_id"], d=target_date, id=record_id)
+        if duplicate:
+            raise ApiError(409, "already_checked_in", "An open attendance session already exists for this employee and date")
     names = {"work_date": "date"}
     set_sql = ",".join(f"{names.get(k,k)}=:{k}" for k in changes)
     changes["id"] = record_id
     row = _row(db, f"UPDATE public.attendance SET {set_sql} WHERE id=:id RETURNING *", **changes)
-    if not row:
-        raise ApiError(404, "not_found", "Attendance record not found")
     _write_audit(db, actor, request, "attendance", "update", "attendance", record_id, details={"changed_fields": list(body)})
     db.commit()
     return _attendance_row(db, row)
@@ -1005,13 +1118,13 @@ def my_attendance(actor: dict[str, Any] = Depends(current_actor), db: Session = 
         raise ApiError(404, "not_found", "Employee not found")
     emp = _employee_scope(db, actor, eid)
     today = today_riyadh()
-    sessions = _rows(db, "SELECT * FROM public.attendance WHERE emp_id=:eid AND date=:day ORDER BY time_in,created_at", eid=eid, day=today)
-    history = _rows(db, "SELECT * FROM public.attendance WHERE emp_id=:eid AND date>=:since ORDER BY date DESC,time_in", eid=eid, since=today-timedelta(days=30))
+    sessions = _rows(db, "SELECT * FROM public.attendance WHERE employee_id=:eid AND date=:day ORDER BY time_in,created_at", eid=eid, day=today)
+    history = _rows(db, "SELECT * FROM public.attendance WHERE employee_id=:eid AND date>=:since ORDER BY date DESC,time_in", eid=eid, since=today-timedelta(days=30))
     ids = [str(x) for x in ((emp.get("data") or {}).get("workLocationIds") or []) if x]
     if ids:
         locs = _rows(db, "SELECT * FROM public.work_locations WHERE active AND id = ANY(:ids)", ids=ids)
     else:
-        locs = _rows(db, "SELECT * FROM public.work_locations WHERE active AND (employer='all' OR employer=:employer)", employer=emp.get("employer"))
+        locs = _rows(db, "SELECT * FROM public.work_locations WHERE active AND (employer_id IS NULL OR employer_id=:employer_id)", employer_id=emp.get("employer_id"))
     settings = attendance_settings(actor, db)
     expected = None
     if settings["flexible_enabled"] and sessions and sessions[0].get("time_in"):
@@ -1020,7 +1133,7 @@ def my_attendance(actor: dict[str, Any] = Depends(current_actor), db: Session = 
         if int(first.get("late_minutes") or 0) > 0 and settings["window_end"]:
             exp_t = min(exp_t, settings["window_end"] if isinstance(settings["window_end"], time) else time.fromisoformat(str(settings["window_end"])[:5]))
         expected = exp_t.strftime("%H:%M")
-    remote_used = db.scalar(text("SELECT count(DISTINCT date) FROM public.attendance WHERE emp_id=:eid AND status='remote' AND date>=:year_start AND date<=:day"),
+    remote_used = db.scalar(text("SELECT count(DISTINCT date) FROM public.attendance WHERE employee_id=:eid AND status='remote' AND date>=:year_start AND date<=:day"),
                             {"eid": eid, "year_start": date(today.year, 1, 1), "day": today}) or 0
     return {"today": [_attendance_row(db, row) for row in sessions], "history": [_attendance_row(db, row) for row in history],
             "locations": locs, "flexible_enabled": settings["flexible_enabled"], "shift_hours": settings["shift_hours"],
@@ -1042,7 +1155,7 @@ def my_attendance_range(date_from: date, date_to: date, actor: dict[str, Any] = 
     """Legacy ariba_my_attendance_range: my sessions between two dates (attendance lookup card)."""
     if date_to < date_from or (date_to - date_from).days > 370:
         raise ApiError(422, "invalid_range", "حدد الفترة بشكل صحيح")
-    rows = _rows(db, "SELECT * FROM public.attendance WHERE emp_id=:e AND date BETWEEN :f AND :t ORDER BY date DESC,time_in", e=actor.get("employee_id"), f=date_from, t=date_to)
+    rows = _rows(db, "SELECT * FROM public.attendance WHERE employee_id=:e AND date BETWEEN :f AND :t ORDER BY date DESC,time_in", e=actor.get("employee_id"), f=date_from, t=date_to)
     return [_attendance_row(db, r) for r in rows]
 
 
@@ -1097,8 +1210,9 @@ def _punch_late(cs: dict[str, Any], t: time) -> int:
     """Late minutes of the day's first check-in. Flexible: legacy ariba_punch_late — after (window end - shift hours +
     tolerance), at least 1 minute, rounded. Fixed: ariba_attendance — after work start + tolerance, rounded."""
     tol = _tolerance(cs)
+    shift_hours = float(cs.get("shift_duration_minutes") or 480) / 60
     if cs.get("flexible_enabled"):
-        last_in = _clock_minutes(cs.get("flex_window_end") or time(17)) - float(cs.get("shift_hours") or 8) * 60 + tol
+        last_in = _clock_minutes(cs.get("flex_window_end") or time(17)) - shift_hours * 60 + tol
         return 0 if _clock_minutes(t) <= last_in else max(1, _round_half_up(_clock_minutes(t) - last_in))
     return max(0, _round_half_up(_clock_minutes(t) - (_clock_minutes(cs.get("work_start") or time(8)) + tol)))
 
@@ -1108,7 +1222,8 @@ def _punch_early(cs: dict[str, Any], first_in: time, first_late: int, t: time) -
     first check-in + shift hours, capped at the window end when that check-in was late. Fixed hours: 0."""
     if not cs.get("flexible_enabled"):
         return 0
-    expected = (datetime.combine(date(2000, 1, 1), first_in) + timedelta(hours=float(cs.get("shift_hours") or 8))).time()
+    shift_hours = float(cs.get("shift_duration_minutes") or 480) / 60
+    expected = (datetime.combine(date(2000, 1, 1), first_in) + timedelta(hours=shift_hours)).time()
     if first_late > 0:
         expected = min(expected, cs.get("flex_window_end") or time(17))
     return max(0, _round_half_up(_clock_minutes(expected) - _clock_minutes(t)))
@@ -1131,14 +1246,14 @@ def punch(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depend
         lat, lng = float(body["lat"]), float(body["lng"])
     except (KeyError, TypeError, ValueError) as exc:
         raise ApiError(422, "gps_required", "GPS_REQUIRED") from exc
-    emp = _row(db, "SELECT * FROM public.employee_directory WHERE employee_id=:e AND active", e=eid)
+    emp = _row(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} WHERE d.employee_id=:e AND d.active", e=eid)
     if not emp:
         raise ApiError(403, "employee_not_active", "الموظف غير نشط")
     ids = [str(x) for x in ((emp.get("data") or {}).get("workLocationIds") or []) if x]
     if ids:
         locs = _rows(db, "SELECT * FROM public.work_locations WHERE active AND id = ANY(:ids)", ids=ids)
     else:
-        locs = _rows(db, "SELECT * FROM public.work_locations WHERE active AND (employer='all' OR employer=:er)", er=emp.get("employer"))
+        locs = _rows(db, "SELECT * FROM public.work_locations WHERE active AND (employer_id IS NULL OR employer_id=:employer_id)", employer_id=emp.get("employer_id"))
     if not locs:
         raise ApiError(409, "no_active_location", "لا يوجد موقع عمل")
 
@@ -1164,24 +1279,32 @@ def punch(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depend
     flex = bool(cs.get("flexible_enabled"))
     w_start = cs.get("flex_window_start") or time(8)
     db.execute(text("""UPDATE public.attendance SET time_out='23:59:00',early_minutes=0,notes=coalesce(notes,'')||' | إغلاق تلقائي 23:59 (نسي بصمة الخروج)'
-        WHERE emp_id=:e AND time_in IS NOT NULL AND time_out IS NULL AND date<:d"""), {"e": eid, "d": today})
-    open_rec = _row(db, "SELECT * FROM public.attendance WHERE emp_id=:e AND date=:d AND time_in IS NOT NULL AND time_out IS NULL ORDER BY created_at DESC LIMIT 1", e=eid, d=today)
-    first_rec = _row(db, "SELECT * FROM public.attendance WHERE emp_id=:e AND date=:d ORDER BY time_in ASC NULLS LAST LIMIT 1", e=eid, d=today)
+        WHERE employee_id=:e AND time_in IS NOT NULL AND time_out IS NULL AND date<:d"""), {"e": eid, "d": today})
+    open_rec = _row(db, "SELECT * FROM public.attendance WHERE employee_id=:e AND date=:d AND time_in IS NOT NULL AND time_out IS NULL ORDER BY created_at DESC LIMIT 1", e=eid, d=today)
+    first_rec = _row(db, "SELECT * FROM public.attendance WHERE employee_id=:e AND date=:d ORDER BY time_in ASC NULLS LAST,created_at ASC LIMIT 1", e=eid, d=today)
     if action == "in":
         if open_rec:
             raise ApiError(409, "already_checked_in", "سجلت حضورك بالفعل — سجّل الانصراف أولاً")
         if flex and not first_rec and nowt < w_start:
             raise ApiError(409, "too_early_for_flexible_window", f"لا يمكن تسجيل الحضور قبل بداية الدوام المرن {w_start.strftime('%H:%M')}")
         late = 0 if first_rec else _punch_late(cs, nowt)
+        if first_rec:
+            db.execute(text("""UPDATE public.attendance SET early_minutes=0 WHERE id=(
+                SELECT id FROM public.attendance WHERE employee_id=:e AND date=:d AND time_out IS NOT NULL
+                ORDER BY time_in DESC NULLS LAST,created_at DESC LIMIT 1)"""), {"e": eid, "d": today})
         extra = " (دخول إضافي في نفس اليوم)" if first_rec else ""
-        row = _row(db, """INSERT INTO public.attendance(emp_id,date,time_in,location_id,location_name,lat,lng,status,notes,late_minutes,early_minutes)
-            VALUES(:e,:d,:t,:loc,:name,:lat,:lng,:st,:n,:late,0) RETURNING *""", e=eid, d=today, t=nowt, loc=loc["id"], name=loc["name"],
+        row = _row(db, """INSERT INTO public.attendance(employee_id,date,time_in,location_id,lat,lng,status,notes,late_minutes,early_minutes)
+            VALUES(:e,:d,:t,:loc,:lat,:lng,:st,:n,:late,0)
+            ON CONFLICT(employee_id,date) WHERE time_out IS NULL DO NOTHING RETURNING *""", e=eid, d=today, t=nowt, loc=loc["id"],
             lat=lat, lng=lng, st="remote" if loc.get("type") == "remote" else "late" if late > 0 else "present",
             n=("عمل عن بعد (طلب معتمد) — " if loc.get("type") == "remote" else "") + f"GPS distance: {round(d)} m{extra}", late=late)
+        if not row:
+            raise ApiError(409, "already_checked_in", "سجلت حضورك بالفعل — سجّل الانصراف أولاً")
     else:
         if not open_rec:
             raise ApiError(409, "not_checked_in", "لا يوجد سجل حضور مفتوح اليوم")
-        early = _punch_early(cs, (first_rec or open_rec)["time_in"], int((first_rec or {}).get("late_minutes") or 0), nowt)
+        first = first_rec or open_rec
+        early = _punch_early(cs, first["time_in"], int(first.get("late_minutes") or 0), nowt)
         row = _row(db, """UPDATE public.attendance SET time_out=:t,notes=coalesce(notes,'')||:n,early_minutes=:early WHERE id=:id RETURNING *""",
                    t=nowt, n=f" | GPS checkout distance: {round(d)} m", early=early, id=open_rec["id"])
     _write_audit(db, actor, request, "attendance", "punch_" + action, "attendance", row["id"])
@@ -1194,16 +1317,16 @@ LEAVE_TYPES = {"annual", "sick", "emergency", "death", "marriage", "maternity", 
 HOURLY_TYPES = {"permission", "maternity_permission", "early_leave", "perm", "perm_mat"}
 
 
-def _stages(req_type: str) -> list[str]:
+def _stages(req_type: str, has_manager: bool = True) -> list[str]:
     """Approval stages (legacy ariba_workflow_action, as decided with the business owner): every type goes
     manager → HR → CEO; forgot-punch goes to HR only."""
     if req_type == "forgot_punch":
         return ["hr"]
-    return ["manager", "hr", "ceo"]
+    return (["manager"] if has_manager else []) + ["hr", "ceo"]
 
 
-def _next_stage(req_type: str, stage: str) -> str:
-    st = _stages(req_type)
+def _next_stage(req_type: str, stage: str, has_manager: bool = True) -> str:
+    st = _stages(req_type, has_manager)
     return st[st.index(stage) + 1] if stage in st and st.index(stage) + 1 < len(st) else "completed"
 
 
@@ -1213,34 +1336,43 @@ def _role_employees(db: Session, *roles: str) -> list[str]:
 
 
 def _stage_people(db: Session, stage: str) -> list[str]:
-    """Who acts at the HR / CEO stage. The legacy server hard-coded employee 40 (HR) and 86 (CEO); here it is the
-    active accounts with that role, falling back to admins and then to those legacy ids."""
-    if stage == "hr":
-        return _role_employees(db, "hr") or _role_employees(db, "admin", "admin_manager") or ["40"]
-    return _role_employees(db, "ceo") or _role_employees(db, "chairman") or ["86"]
+    """Configured employees who approve at a stage."""
+    return [r["employee_id"] for r in _rows(db, "SELECT employee_id FROM public.workflow_approvers WHERE stage=:stage", stage=stage)]
+
+
+def _require_stage_approver(db: Session, stage: str) -> list[str]:
+    people = _stage_people(db, stage)
+    if not people:
+        raise ApiError(409, "workflow_approver_missing", f"No approver is configured for stage {stage}")
+    return people
 
 
 def _notify_stage(db: Session, item: dict[str, Any], stage: str) -> None:
     if stage == "manager":
-        targets = [item.get("manager_id")] if item.get("manager_id") else []
+        manager = _row(db, "SELECT manager_id FROM public.employee_directory WHERE employee_id=:e", e=item["employee_id"])
+        targets = [(manager or {}).get("manager_id")]
     else:
         targets = _stage_people(db, stage)
     for t in targets:
         _insert_notification(db, t, item["id"], "طلب بانتظار موافقتك", "يوجد طلب بانتظار موافقتك", stage, "request")
 
 
-def _can_act(actor: dict[str, Any], item: dict[str, Any]) -> bool:
+def _set_permission_status(db: Session, request_id: uuid.UUID, status: str) -> None:
+    db.execute(text("UPDATE public.permissions SET status=:status WHERE workflow_request_id=:id"),
+               {"status": status, "id": request_id})
+
+
+def _can_act(db: Session, actor: dict[str, Any], item: dict[str, Any]) -> bool:
     if item.get("status") != "pending" or str(item.get("request_type", "")).startswith("template:"):
         return False
     role, stage = actor.get("role"), item.get("current_stage")
     if role in {"admin", "admin_manager"}:
         return True
     if stage == "manager":
-        return bool(actor.get("employee_id")) and item.get("manager_id") == actor.get("employee_id")
-    if stage == "hr":
-        return role == "hr"
-    if stage == "ceo":
-        return role in {"ceo", "chairman"}
+        manager = _row(db, "SELECT manager_id FROM public.employee_directory WHERE employee_id=:e", e=item["employee_id"])
+        return bool(actor.get("employee_id")) and (manager or {}).get("manager_id") == actor.get("employee_id")
+    if stage in {"hr", "ceo"}:
+        return actor.get("employee_id") in _stage_people(db, stage)
     return False
 
 
@@ -1255,41 +1387,54 @@ def _apply_forgot_punch(db: Session, item: dict[str, Any]) -> None:
     if not day or not t1 or kind not in {"in", "out", "both"}:
         return
     cs = _row(db, "SELECT * FROM public.company_settings WHERE id='default'") or {}
-    note, loc, eid = " | أُضيفت بطلب نسيان بصمة معتمد من الموارد البشرية", "طلب نسيان بصمة", item["employee_id"]
-    first = lambda: _row(db, "SELECT * FROM public.attendance WHERE emp_id=:e AND date=:d ORDER BY time_in ASC NULLS LAST, created_at ASC LIMIT 1", e=eid, d=day)  # noqa: E731
-    insert = """INSERT INTO public.attendance(emp_id,date,time_in,time_out,status,notes,late_minutes,early_minutes,location_name)
-        VALUES(:e,:d,:t1,:t2,:st,:n,:late,:early,:loc)"""
+    note, eid = " | أُضيفت بطلب نسيان بصمة معتمد من الموارد البشرية", item["employee_id"]
+    first = lambda: _row(db, "SELECT * FROM public.attendance WHERE employee_id=:e AND date=:d ORDER BY time_in ASC NULLS LAST, created_at ASC LIMIT 1", e=eid, d=day)  # noqa: E731
+    def refresh_last_early() -> None:
+        first_row = first()
+        last_row = _row(db, "SELECT * FROM public.attendance WHERE employee_id=:e AND date=:d ORDER BY time_in DESC NULLS LAST,created_at DESC LIMIT 1", e=eid, d=day)
+        if not first_row or not last_row:
+            return
+        early = (_punch_early(cs, first_row["time_in"], int(first_row.get("late_minutes") or 0), last_row["time_out"])
+                 if first_row.get("time_in") and last_row.get("time_out") else 0)
+        db.execute(text("UPDATE public.attendance SET early_minutes=:early WHERE id=:id"), {"early": early, "id": last_row["id"]})
+        if first_row["id"] != last_row["id"]:
+            db.execute(text("UPDATE public.attendance SET early_minutes=0 WHERE id=:id"), {"id": first_row["id"]})
+    insert = """INSERT INTO public.attendance(employee_id,date,time_in,time_out,status,notes,late_minutes,early_minutes)
+        VALUES(:e,:d,:t1,:t2,:st,:n,:late,:early)"""
     if kind == "in":
         a, late = first(), _punch_late(cs, t1)
         if not a:
             db.execute(text(insert), {"e": eid, "d": day, "t1": t1, "t2": None, "st": "late" if late else "present",
-                                      "n": "طلب نسيان بصمة (دخول)" + note, "late": late, "early": 0, "loc": loc})
+                                      "n": "طلب نسيان بصمة (دخول)" + note, "late": late, "early": 0})
         elif a["time_in"] is None or t1 < a["time_in"]:
             early = _punch_early(cs, t1, late, a["time_out"]) if a["time_out"] else a["early_minutes"]
             db.execute(text("UPDATE public.attendance SET time_in=:t,late_minutes=:late,status=:st,early_minutes=:early,notes=coalesce(notes,'')||:n WHERE id=:id"),
                        {"t": t1, "late": late, "st": "late" if late else "present", "early": early, "n": note, "id": a["id"]})
+        refresh_last_early()
     elif kind == "out":
-        a = _row(db, "SELECT * FROM public.attendance WHERE emp_id=:e AND date=:d ORDER BY time_in DESC NULLS LAST, created_at DESC LIMIT 1", e=eid, d=day)
+        a = _row(db, "SELECT * FROM public.attendance WHERE employee_id=:e AND date=:d ORDER BY time_in DESC NULLS LAST, created_at DESC LIMIT 1", e=eid, d=day)
         if not a:
             db.execute(text(insert), {"e": eid, "d": day, "t1": None, "t2": t1, "st": "present", "n": "طلب نسيان بصمة (خروج)" + note,
-                                      "late": 0, "early": 0, "loc": loc})
+                                      "late": 0, "early": 0})
         elif a["time_out"] is None or "إغلاق تلقائي" in (a["notes"] or "") or t1 > a["time_out"]:
             early = _punch_early(cs, a["time_in"], int(a["late_minutes"] or 0), t1) if a["time_in"] else 0
             db.execute(text("UPDATE public.attendance SET time_out=:t,early_minutes=:early,notes=coalesce(notes,'')||:n WHERE id=:id"),
                        {"t": t1, "early": early, "n": note, "id": a["id"]})
+        refresh_last_early()
     else:
         if not t2:
             return
         a, late = first(), _punch_late(cs, t1)
         if not a:
             db.execute(text(insert), {"e": eid, "d": day, "t1": t1, "t2": t2, "st": "late" if late else "present",
-                                      "n": "طلب نسيان بصمة (دخول وخروج)" + note, "late": late, "early": _punch_early(cs, t1, late, t2), "loc": loc})
+                                      "n": "طلب نسيان بصمة (دخول وخروج)" + note, "late": late, "early": _punch_early(cs, t1, late, t2)})
         else:
             if a["time_in"] is not None and a["time_in"] <= t1:
                 t1 = a["time_in"]
                 late = a["late_minutes"] if a["late_minutes"] is not None else _punch_late(cs, t1)
             db.execute(text("UPDATE public.attendance SET time_in=:t1,time_out=:t2,late_minutes=:late,status=:st,early_minutes=:early,notes=coalesce(notes,'')||:n WHERE id=:id"),
                        {"t1": t1, "t2": t2, "late": late, "st": "late" if late else "present", "early": _punch_early(cs, t1, late, t2), "n": note, "id": a["id"]})
+        refresh_last_early()
 
 
 def _override(db: Session, actor: dict[str, Any], item: dict[str, Any], reason: str | None) -> None:
@@ -1299,27 +1444,28 @@ def _override(db: Session, actor: dict[str, Any], item: dict[str, Any], reason: 
     if stage not in {"manager", "hr", "ceo"}:
         raise ApiError(409, "not_overrideable", "REQUEST_STAGE_NOT_OVERRIDEABLE")
     t = item["request_type"]
-    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_employee_id,actor_account_id,stage,action,comment) VALUES(:r,:e,:a,:s,'approved',:c)"),
-               {"r": rid, "e": actor.get("employee_id"), "a": actor.get("account_id"), "s": "hr" if t == "forgot_punch" else f"hr_override_{stage}",
+    next_stage = "hr" if stage == "manager" else "ceo" if stage == "hr" else None
+    next_people = _require_stage_approver(db, next_stage) if t != "forgot_punch" and next_stage else []
+    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:r,:a,:s,'approved',:c)"),
+               {"r": rid, "a": actor["account_id"], "s": stage,
                 "c": reason or "اعتماد الموارد البشرية نيابة عن المسؤول في هذه المرحلة"})
-    db.execute(text("UPDATE public.workflow_notifications SET is_read=true,read_at=now() WHERE request_id=:r AND NOT is_read"), {"r": rid})
-    done = "UPDATE public.workflow_requests SET status='approved',current_stage='completed',completed_at=now(),updated_at=now() WHERE id=:r"
+    db.execute(text("UPDATE public.workflow_notifications SET read_at=now() WHERE request_id=:r AND read_at IS NULL"), {"r": rid})
+    done = "UPDATE public.workflow_requests SET current_stage='completed',completed_at=now(),updated_at=now() WHERE id=:r"
     if t == "forgot_punch":
         _apply_forgot_punch(db, item)
         db.execute(text(done), {"r": rid})
         _insert_notification(db, item["employee_id"], rid, "تمت الموافقة على نسيان البصمة", "تمت الموافقة على طلبك وتم تسجيل الحضور/الانصراف", "employee", "decision")
         return
     if stage in {"manager", "hr"}:
-        col, nxt = ("mgr", "hr") if stage == "manager" else ("hr", "ceo")
-        db.execute(text(f"UPDATE public.leave_requests SET {col}_status='approved',{col}_at=now(),status='pending',updated_at=now() WHERE workflow_request_id=:r"), {"r": rid})
+        nxt = next_stage
         db.execute(text("UPDATE public.workflow_requests SET current_stage=:n,updated_at=now() WHERE id=:r"), {"r": rid, "n": nxt})
         title, body = (("طلب بانتظار موافقة الموارد البشرية", "تم اعتماد الطلب نيابة عن المدير المباشر") if nxt == "hr"
                        else ("طلب بانتظار موافقتك", "تم اعتماد الطلب نيابة عن الموارد البشرية"))
-        for who in _stage_people(db, nxt):
+        for who in next_people:
             _insert_notification(db, who, rid, title, body, "workflow", "request")
         return
-    db.execute(text("UPDATE public.leave_requests SET ceo_status='approved',ceo_at=now(),status='approved',updated_at=now() WHERE workflow_request_id=:r"), {"r": rid})
     db.execute(text(done), {"r": rid})
+    _set_permission_status(db, rid, "approved")
     _insert_notification(db, item["employee_id"], rid, "تمت الموافقة النهائية", "تمت الموافقة على طلبك بالكامل بواسطة الموارد البشرية نيابة عن المسؤول", "employee", "decision")
 
 
@@ -1327,26 +1473,30 @@ def _advance(db: Session, actor: dict[str, Any], item: dict[str, Any], action: s
     """One approval step (legacy ariba_workflow_action): record the action, move to the next stage or finish, notify."""
     stage = stage or item["current_stage"]
     rid = item["id"]
-    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_employee_id,actor_account_id,stage,action,comment) VALUES(:r,:e,:a,:s,:act,:c)"),
-               {"r": rid, "e": actor.get("employee_id"), "a": actor.get("account_id"), "s": stage, "act": "approved" if action == "approve" else "rejected", "c": reason})
-    db.execute(text("UPDATE public.workflow_notifications SET is_read=true,read_at=now() WHERE request_id=:r AND stage=:s AND NOT is_read"), {"r": rid, "s": stage})
-    col = {"manager": "mgr", "hr": "hr", "ceo": "ceo"}.get(stage)
+    next_stage = None
+    if action == "approve":
+        manager = _row(db, "SELECT manager_id FROM public.employee_directory WHERE employee_id=:e", e=item["employee_id"])
+        next_stage = _next_stage(item["request_type"], stage, has_manager=bool((manager or {}).get("manager_id")))
+        if next_stage in {"hr", "ceo"}:
+            _require_stage_approver(db, next_stage)
+    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:r,:a,:s,:act,:c)"),
+               {"r": rid, "a": actor["account_id"], "s": stage, "act": "approved" if action == "approve" else "rejected", "c": reason})
+    db.execute(text("UPDATE public.workflow_notifications SET read_at=now() WHERE request_id=:r AND stage=:s AND read_at IS NULL"), {"r": rid, "s": stage})
     if action == "reject":
-        db.execute(text("UPDATE public.workflow_requests SET status='rejected',current_stage='rejected',rejected_at=now(),rejection_reason=:c,updated_at=now() WHERE id=:r"), {"r": rid, "c": reason})
-        extra = f",{col}_status='rejected'" if col else ""
-        db.execute(text(f"UPDATE public.leave_requests SET status='rejected',rejected_by=:e,rejected_reason=:c{extra},updated_at=now() WHERE workflow_request_id=:r"), {"r": rid, "e": actor.get("employee_id"), "c": reason})
+        db.execute(text("UPDATE public.workflow_requests SET current_stage='rejected',updated_at=now() WHERE id=:r"), {"r": rid})
+        _set_permission_status(db, rid, "rejected")
         _insert_notification(db, item["employee_id"], rid, "تم رفض الطلب", reason or "تم رفض الطلب", "employee", "decision")
         return
-    if col:
-        db.execute(text(f"UPDATE public.leave_requests SET {col}_status='approved',{col}_at=now(),updated_at=now() WHERE workflow_request_id=:r"), {"r": rid})
-    nxt = _next_stage(item["request_type"], stage)
+    nxt = next_stage
     if nxt == "completed":
-        db.execute(text("UPDATE public.workflow_requests SET status='approved',current_stage='completed',completed_at=now(),updated_at=now() WHERE id=:r"), {"r": rid})
-        db.execute(text("UPDATE public.leave_requests SET status='approved',updated_at=now() WHERE workflow_request_id=:r"), {"r": rid})
+        db.execute(text("UPDATE public.workflow_requests SET current_stage='completed',completed_at=now(),updated_at=now() WHERE id=:r"), {"r": rid})
+        _set_permission_status(db, rid, "approved")
         if item["request_type"] == "forgot_punch":
             _apply_forgot_punch(db, item)
         _insert_notification(db, item["employee_id"], rid, "تمت الموافقة النهائية", "تمت الموافقة على طلبك بالكامل", "employee", "decision")
     else:
+        if nxt in {"hr", "ceo"}:
+            _require_stage_approver(db, nxt)
         db.execute(text("UPDATE public.workflow_requests SET current_stage=:n,updated_at=now() WHERE id=:r"), {"r": rid, "n": nxt})
         _insert_notification(db, item["employee_id"], rid, "تمت الموافقة على مرحلة", "تمت الموافقة على طلبك وانتقل للمرحلة التالية", "employee", "workflow")
         _notify_stage(db, dict(item, current_stage=nxt), nxt)
@@ -1390,14 +1540,14 @@ def my_requests(actor: dict[str, Any] = Depends(current_actor), db: Session = De
 
 @router.get("/me/team")
 def my_team(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    rows = _rows(db, "SELECT * FROM public.employee_directory WHERE manager_id=:eid AND active ORDER BY name_ar", eid=actor.get("employee_id"))
+    rows = _rows(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} WHERE d.manager_id=:eid AND d.active ORDER BY d.name_ar", eid=actor.get("employee_id"))
     return [{"id": e["employee_id"], "emp_no": e["emp_no"], "name_ar": e["name_ar"], "job_title": e["job_title"]} for e in map(_employee_dict, rows)]
 
 
 @router.get("/me/approvals")
 def approvals(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     rows = _rows(db, "SELECT * FROM public.workflow_requests WHERE status='pending' AND request_type NOT LIKE 'template:%' ORDER BY created_at")
-    return _me_requests_out(db, [r for r in rows if _can_act(actor, r)])
+    return _me_requests_out(db, [r for r in rows if _can_act(db, actor, r)])
 
 
 @router.post("/me/requests", status_code=201)
@@ -1407,11 +1557,13 @@ def submit_request(body: dict[str, Any], request: Request, actor: dict[str, Any]
         raise ApiError(404, "not_found", "Employee not found")
     emp = _employee_scope(db, actor, eid)
     t = str(body.get("type") or "")
+    _require_lookup(db, "workflow_request_types", t, "request type")
     notes = str(body.get("notes") or "").strip()
     today = today_riyadh()
     bad = lambda m: ApiError(422, "invalid_request", m)  # noqa: E731
     payload: dict[str, Any] = {"notes": notes}
     if t in LEAVE_TYPES or t == "mission":
+        _require_lookup(db, "leave_types", t, "leave type")
         f, to = cdata._d(body.get("from_date") or body.get("from")), cdata._d(body.get("to_date") or body.get("to"))
         if not f or not to or to < f:
             raise bad("حدد الفترة بشكل صحيح")
@@ -1422,6 +1574,7 @@ def submit_request(body: dict[str, Any], request: Request, actor: dict[str, Any]
             raise ApiError(422, "exceeds_balance", "يتجاوز الرصيد المتاح")
         payload.update({"from": f.isoformat(), "to": to.isoformat(), "days": days})
     elif t in HOURLY_TYPES:
+        _require_lookup(db, "permission_types", t, "permission type")
         d, tm = cdata._d(body.get("on_date") or body.get("date")), body.get("time_from") or body.get("time")
         if not d or not tm:
             raise bad("حدد التاريخ والوقت")
@@ -1463,21 +1616,30 @@ def submit_request(body: dict[str, Any], request: Request, actor: dict[str, Any]
         raise bad("نوع طلب غير مدعوم")
     payload.update({"submitted_from": "employee_app", "submitted_at": datetime.now(UTC).isoformat()})
     manager = emp.get("manager_id") or None
-    stage = _stages(t)[0]
-    if stage == "manager" and not manager:
-        stage = _stages(t)[1]
-    row = _row(db, """INSERT INTO public.workflow_requests(employee_id,request_type,payload,manager_id,hr_id,ceo_id,current_stage,status)
-        VALUES(:eid,:type,CAST(:payload AS jsonb),:manager,:hr,:ceo,:stage,'pending') RETURNING *""",
-        eid=eid, type=t, payload=json.dumps(payload, ensure_ascii=False), manager=manager,
-        hr=_stage_people(db, "hr")[0], ceo=_stage_people(db, "ceo")[0], stage=stage)
-    if t in LEAVE_TYPES or t in HOURLY_TYPES:
+    stages = _stages(t, bool(manager))
+    stage = stages[0]
+    for configured_stage in stages:
+        if configured_stage in {"hr", "ceo"}:
+            _require_stage_approver(db, configured_stage)
+    row = _row(db, """INSERT INTO public.workflow_requests(employee_id,request_type,payload,current_stage)
+        VALUES(:eid,:type,CAST(:payload AS jsonb),:stage) RETURNING *""",
+        eid=eid, type=t, payload=json.dumps(payload, ensure_ascii=False), stage=stage)
+    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:rid,:account,'employee','submitted',:comment)"),
+               {"rid": row["id"], "account": actor["account_id"], "comment": notes or None})
+    if t in LEAVE_TYPES or t == "mission":
         f = cdata._d(payload.get("from") or payload.get("date"))
         to = cdata._d(payload.get("to")) or f
-        db.execute(text("""INSERT INTO public.leave_requests(emp_id,type,from_date,to_date,days,notes,status,mgr_status,hr_status,ceo_status,manager_id,workflow_request_id)
-            VALUES(:eid,:type,:f,:t,:days,:notes,'pending','pending','pending','pending',:m,:rid)"""),
-            {"eid": eid, "type": t, "f": f, "t": to, "days": max(1, int(payload.get("days") or 1)), "notes": notes, "m": manager, "rid": row["id"]})
+        db.execute(text("""INSERT INTO public.leave_requests(employee_id,leave_type,from_date,to_date,days,notes,workflow_request_id)
+            VALUES(:eid,:type,:f,:t,:days,:notes,:rid)"""),
+            {"eid": eid, "type": t, "f": f, "t": to, "days": max(1, int(payload.get("days") or 1)), "notes": notes, "rid": row["id"]})
+    elif t in HOURLY_TYPES:
+        request_date = cdata._d(payload.get("date"))
+        db.execute(text("""INSERT INTO public.permissions(employee_id,permission_type,date,time,dur,notes,status,workflow_request_id)
+            VALUES(:eid,:type,:date,:time,:dur,:notes,'pending',:rid)"""),
+            {"eid": eid, "type": t, "date": request_date, "time": payload.get("time"), "dur": payload.get("dur"),
+             "notes": notes, "rid": row["id"]})
     if t == "forgot_punch":
-        for h in _stage_people(db, "hr"):
+        for h in _require_stage_approver(db, "hr"):
             _insert_notification(db, h, row["id"], "طلب نسيان بصمة", "يوجد طلب نسيان بصمة بانتظار موافقتك", "hr", "request")
     elif stage == "manager":
         _insert_notification(db, manager, row["id"], "طلب جديد", "يوجد طلب جديد من الموظف بانتظار موافقتك", "manager", "request")
@@ -1486,7 +1648,7 @@ def submit_request(body: dict[str, Any], request: Request, actor: dict[str, Any]
     if stage == "hr" and t != "forgot_punch":  # legacy: no manager → the employee is told it went to HR
         _insert_notification(db, eid, row["id"], "طلب جديد", "تم إرسال طلبك إلى الموارد البشرية", "hr", "request")
     if stage == "manager":  # V115: HR hears of every new request (it can approve on the manager's behalf)
-        for h in _stage_people(db, "hr"):
+        for h in _require_stage_approver(db, "hr"):
             if h not in {eid, manager}:
                 _insert_notification(db, h, row["id"], f"طلب جديد من {emp.get('name_ar') or eid}",
                                      "الطلب بانتظار المدير المباشر — تقدر تعتمده بالنيابة عنه من طلبات الموظفين", "hr", "request")
@@ -1510,10 +1672,7 @@ def delete_my_request(request_id: uuid.UUID, request: Request, actor: dict[str, 
         FROM public.workflow_requests r WHERE r.id=:r""", r=request_id)["s"]
     db.execute(text("INSERT INTO public.ariba_deleted_items(kind,ref_id,employee_id,snapshot,deleted_by,deleted_by_role) VALUES('workflow_request',:r,:e,CAST(:s AS jsonb),:by,:role)"),
                {"r": str(request_id), "e": item["employee_id"], "s": json.dumps(snap, default=str, ensure_ascii=False), "by": actor.get("employee_id"), "role": actor.get("role")})
-    for sql in ("DELETE FROM public.ariba_documents WHERE request_id=:r", "DELETE FROM public.workflow_notifications WHERE request_id=:r",
-                "DELETE FROM public.workflow_actions WHERE request_id=:r", "DELETE FROM public.leave_requests WHERE workflow_request_id=:r",
-                "DELETE FROM public.workflow_requests WHERE id=:r"):
-        db.execute(text(sql), {"r": request_id})
+    _delete_request_rows(db, request_id)
     if item["status"] == "pending":  # legacy ariba_delete_request: HR is told when an employee withdraws a pending request
         name = _row(db, "SELECT coalesce(name_ar,employee_id) AS n FROM public.employee_directory WHERE employee_id=:e", e=item["employee_id"])
         title = f"{(name or {}).get('n') or item['employee_id']} حذف طلباً معلقاً: {(item.get('payload') or {}).get('title') or item['request_type']}"
@@ -1531,7 +1690,7 @@ def decide_request(request_id: uuid.UUID, body: dict[str, Any], request: Request
     action, reason = body.get("action"), (str(body.get("reason") or "").strip() or None)
     if action not in {"approve", "reject"}:
         raise ApiError(422, "invalid_action", "Action must be approve or reject")
-    if not _can_act(actor, item):
+    if not _can_act(db, actor, item):
         raise ApiError(403, "forbidden", "ليست لديك صلاحية على هذا الطلب")
     if action == "reject" and not reason:
         raise ApiError(422, "reason_required", "اكتب سبب الرفض")
@@ -1548,7 +1707,9 @@ _SLIP_KEYS = ("salByDays", "houPay", "traPay", "prjPay", "othPay", "otherAllow",
 
 @router.get("/me/payslips")
 def payslips(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    rows = _rows(db, "SELECT pay_year AS year,pay_month AS month,payload FROM public.employee_payrolls WHERE employee_id=:eid AND approved ORDER BY pay_year DESC,pay_month DESC", eid=actor.get("employee_id"))
+    rows = _rows(db, """SELECT ep.pay_year AS year,ep.pay_month AS month,ep.payload FROM public.employee_payrolls ep
+        JOIN public.payroll_periods pp USING(pay_year,pay_month)
+        WHERE ep.employee_id=:eid AND pp.approved ORDER BY ep.pay_year DESC,ep.pay_month DESC""", eid=actor.get("employee_id"))
     out, seen = [], set()
     for r in rows:
         if (r["year"], r["month"]) in seen:
@@ -1577,16 +1738,40 @@ def notifications(actor: dict[str, Any] = Depends(current_actor), db: Session = 
             kind, target = ("no" if n.get("req_status") == "rejected" else "ok"), "leaves"
         if str(n.get("request_type") or "").startswith("template:"):
             kind, target = "template", "documents"
-        out.append({"id": str(n["id"]), "kind": kind, "title": n["title"], "body": n.get("body"), "at": n["created_at"], "target": target, "is_read": n["is_read"]})
+        out.append({"id": str(n["id"]), "kind": kind, "title": n["title"], "body": n.get("body"), "at": n["created_at"], "target": target, "is_read": n.get("read_at") is not None})
     for t in _rows(db, "SELECT id,payload->>'title' AS title,created_at FROM public.workflow_requests WHERE employee_id=:e AND request_type LIKE 'template:%' AND status='pending'", e=eid):
         out.append({"id": f"l:{t['id']}", "kind": "template", "title": f"نموذج جديد بانتظار ردك: {t['title'] or ''}", "body": None, "at": t["created_at"], "target": "documents", "is_read": False})
     return sorted(out, key=lambda n: n["at"], reverse=True)[:50]
 
 
+@router.post("/me/notifications/read", status_code=204)
+def mark_notifications_read(body: dict[str, Any] | None = None, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
+    ids = (body or {}).get("ids")
+    if ids is None:
+        db.execute(text("UPDATE public.workflow_notifications SET read_at=now() WHERE recipient_employee_id=:e AND read_at IS NULL"),
+                   {"e": actor.get("employee_id")})
+        db.commit()
+        return
+    if not isinstance(ids, list):
+        raise ApiError(422, "invalid_request", "Notification ids must be a list")
+    valid_ids = []
+    for value in ids:
+        try:
+            valid_ids.append(str(uuid.UUID(str(value))))
+        except (ValueError, TypeError, AttributeError):
+            continue
+    if valid_ids:
+        db.execute(text("UPDATE public.workflow_notifications SET read_at=now() WHERE recipient_employee_id=:e AND id::text=ANY(:ids) AND read_at IS NULL"),
+                   {"e": actor.get("employee_id"), "ids": valid_ids})
+        db.commit()
+
+
 @router.get("/me/letters")
 def my_letters(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    return _rows(db, """SELECT r.id,r.request_type AS type,r.payload->>'title' AS title,r.status,r.rejection_reason,r.created_at,r.completed_at AS responded_at
-        FROM public.workflow_requests r WHERE r.employee_id=:eid AND r.request_type LIKE 'template:%' ORDER BY r.created_at DESC""", eid=actor.get("employee_id"))  # noqa: E501
+    return _rows(db, """SELECT r.id,r.request_type AS type,r.payload->>'title' AS title,r.status,
+        (SELECT a.comment FROM public.workflow_actions a WHERE a.request_id=r.id AND a.action='rejected' ORDER BY a.created_at DESC LIMIT 1) AS rejection_reason,
+        r.created_at,r.completed_at AS responded_at FROM public.workflow_requests r
+        WHERE r.employee_id=:eid AND r.request_type LIKE 'template:%' ORDER BY r.created_at DESC""", eid=actor.get("employee_id"))
 
 
 @router.post("/me/letters/{letter_id}/respond")
@@ -1598,11 +1783,13 @@ def respond_letter(letter_id: uuid.UUID, body: dict[str, Any], request: Request,
     if action not in {"approved", "rejected"} or (action == "rejected" and len(str(body.get("reason") or "").strip()) < 3):
         raise ApiError(422, "invalid_request", "Invalid letter response")
     status = "approved" if action == "approved" else "rejected"
-    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_employee_id,actor_account_id,stage,action,comment) VALUES(:id,:eid,:aid,'employee',:action,:reason)"), {"id": letter_id, "eid": actor.get("employee_id"), "aid": actor["account_id"], "action": action, "reason": body.get("reason")})
-    db.execute(text("UPDATE public.workflow_requests SET status=:status,current_stage=:stage,rejection_reason=:reason,updated_at=now() WHERE id=:id"), {"status": status, "stage": "completed" if status == "approved" else "rejected", "reason": body.get("reason"), "id": letter_id})
+    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:id,:aid,'employee',:action,:reason)"), {"id": letter_id, "aid": actor["account_id"], "action": action, "reason": body.get("reason")})
+    db.execute(text("UPDATE public.workflow_requests SET current_stage=:stage,completed_at=now(),updated_at=now() WHERE id=:id"), {"stage": "completed" if status == "approved" else "rejected", "id": letter_id})
     _write_audit(db, actor, request, "letters", "respond", "workflow_request", letter_id, details={"action": action})
     db.commit()
-    return _row(db, "SELECT id,request_type AS type,payload->>'title' AS title,status,rejection_reason,created_at,completed_at AS responded_at FROM public.workflow_requests WHERE id=:id", id=letter_id)
+    return _row(db, """SELECT r.id,r.request_type AS type,r.payload->>'title' AS title,r.status,
+        (SELECT a.comment FROM public.workflow_actions a WHERE a.request_id=r.id AND a.action='rejected' ORDER BY a.created_at DESC LIMIT 1) AS rejection_reason,
+        r.created_at,r.completed_at AS responded_at FROM public.workflow_requests r WHERE r.id=:id""", id=letter_id)
 
 
 @router.get("/letters/{letter_id}/html", response_class=HTMLResponse)
@@ -1623,11 +1810,12 @@ def list_documents(employee_id: str, actor: dict[str, Any] = Depends(current_act
 async def upload_document(employee_id: str, request: Request, file: UploadFile = File(...), type: str = Form("other"), actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *HR_ROLES)
     _employee_scope(db, actor, employee_id)
+    _require_lookup(db, "document_types", type, "document type")
     data = await file.read(get_settings().max_upload_bytes + 1)
     if len(data) > get_settings().max_upload_bytes:
         raise ApiError(413, "file_too_large", "File exceeds the upload limit")
-    row = _row(db, """INSERT INTO public.ariba_documents(employee_id,document_type,file_name,mime_type,file_size,file_data,uploaded_by)
-        VALUES(:eid,:type,:name,:mime,:size,:data,:actor) RETURNING id,employee_id,document_type AS type,file_name,mime_type,file_size AS size_bytes,uploaded_by,created_at""", eid=employee_id, type=type, name=file.filename or "upload", mime=file.content_type or "application/octet-stream", size=len(data), data=data, actor=actor.get("employee_id"))
+    row = _row(db, """INSERT INTO public.ariba_documents(employee_id,document_type,file_name,mime_type,file_data,uploaded_by)
+        VALUES(:eid,:type,:name,:mime,:data,:actor) RETURNING id,employee_id,document_type AS type,file_name,mime_type,file_size AS size_bytes,uploaded_by,created_at""", eid=employee_id, type=type, name=file.filename or "upload", mime=file.content_type or "application/octet-stream", data=data, actor=actor.get("employee_id"))
     _write_audit(db, actor, request, "documents", "upload", "document", row["id"], details={"employee_id": employee_id})
     db.commit()
     return row
@@ -1654,6 +1842,7 @@ def delete_document(document_id: uuid.UUID, request: Request, actor: dict[str, A
     snapshot["file_data_base64"] = base64.b64encode(bytes(document["file_data"])).decode("ascii")
     db.execute(text("INSERT INTO public.ariba_deleted_items(kind,ref_id,employee_id,snapshot,deleted_by,deleted_by_role) VALUES('document',:id,:eid,CAST(:snapshot AS jsonb),:actor,:role)"),
                {"id": str(document_id), "eid": document["employee_id"], "snapshot": json.dumps(snapshot, default=str), "actor": actor.get("employee_id"), "role": actor["role"]})
+    db.execute(text("UPDATE public.leave_requests SET doc_attachment_id=NULL WHERE doc_attachment_id=:id"), {"id": document_id})
     db.execute(text("DELETE FROM public.ariba_documents WHERE id=:id"), {"id": document_id})
     _write_audit(db, actor, request, "documents", "delete", "document", document_id)
     db.commit()
@@ -1663,12 +1852,13 @@ def delete_document(document_id: uuid.UUID, request: Request, actor: dict[str, A
 async def upload_photo(employee_id: str, request: Request, file: UploadFile = File(...), actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *HR_ROLES)
     row = _employee_scope(db, actor, employee_id)
+    _require_lookup(db, "document_types", "photo", "document type")
     content = await file.read(get_settings().max_upload_bytes + 1)
     if len(content) > get_settings().max_upload_bytes:
         raise ApiError(413, "file_too_large", "File exceeds the upload limit")
     db.execute(text("DELETE FROM public.ariba_documents WHERE employee_id=:eid AND document_type='photo'"), {"eid": employee_id})
-    db.execute(text("INSERT INTO public.ariba_documents(employee_id,document_type,file_name,mime_type,file_size,file_data,uploaded_by) VALUES(:eid,'photo',:name,:mime,:size,:data,:actor)"),
-               {"eid": employee_id, "name": file.filename or "photo", "mime": file.content_type or "application/octet-stream", "size": len(content), "data": content, "actor": actor.get("employee_id")})
+    db.execute(text("INSERT INTO public.ariba_documents(employee_id,document_type,file_name,mime_type,file_data,uploaded_by) VALUES(:eid,'photo',:name,:mime,:data,:actor)"),
+               {"eid": employee_id, "name": file.filename or "photo", "mime": file.content_type or "application/octet-stream", "data": content, "actor": actor.get("employee_id")})
     data = dict(row.get("data") or {})
     data["photoUrl"] = f"/api/v1/employees/{employee_id}/photo"
     db.execute(text("UPDATE public.employee_directory SET data=CAST(:data AS jsonb),updated_at=now() WHERE employee_id=:eid"), {"data": json.dumps(data, ensure_ascii=False), "eid": employee_id})
@@ -1704,14 +1894,14 @@ async def dependent_document_unavailable(dependent_id: str, file: UploadFile = F
 
 # --------------------------------------------------------------------------- sheets
 # `pay_YYYY_MM` = a payroll month: payroll_archives_v2.rows is the month sheet the screen edits, employee_payrolls
-# holds one payload per employee (payslips), ariba_payroll_status the lifecycle. The export has no unique keys,
-# so every write is UPDATE-then-INSERT. Other keys are settings in ariba_app_settings (logo, HR signer).
+# holds one payload per employee (payslips); payroll_periods controls month approval. Other keys are settings in
+# ariba_app_settings (logo, HR signer).
 
 
 def _employee_ids(db: Session) -> dict[str, str]:
-    """Every legacy identifier of an employee (employee_id, data.id, data.empNo, username) -> employee_id."""
+    """Every legacy identifier of an employee (employee_id, data.id, data.empNo, account username) -> employee_id."""
     out: dict[str, str] = {}
-    for r in _rows(db, "SELECT employee_id,username,data FROM public.employee_directory"):
+    for r in _rows(db, "SELECT d.employee_id,a.username,d.data FROM public.employee_directory d LEFT JOIN public.ariba_auth_accounts a ON a.employee_id=d.employee_id"):
         eid = r["employee_id"]
         d = r.get("data") or {}
         for k in (d.get("empNo"), d.get("id"), r.get("username"), eid):
@@ -1728,27 +1918,18 @@ def _pay_key(key: str) -> tuple[int, int] | None:
     return None
 
 
-def _set_payroll_status(db: Session, year: int, month: int, **fields: Any) -> None:
-    cols = ",".join(f"{k}=:{k}" for k in fields)
-    params = {"year": year, "month": month, **fields}
-    done = db.execute(text(f"UPDATE public.ariba_payroll_status SET {cols},updated_at=now() WHERE pay_year=:year AND pay_month=:month"), params)
-    if not done.rowcount:
-        names = ",".join(fields)
-        vals = ",".join(f":{k}" for k in fields)
-        db.execute(text(f"INSERT INTO public.ariba_payroll_status(pay_year,pay_month,{names},updated_at) VALUES(:year,:month,{vals},now())"), params)
-
-
 def _month_rows(db: Session, year: int, month: int) -> tuple[list[Any], bool, Any, Any]:
     """(rows, approved, approved_at, updated_at) of a payroll month; rows carry the canonical employee_id in `id`."""
-    archive = _row(db, "SELECT approved,approved_at,rows,coalesce(updated_at,saved_at) AS updated_at FROM public.payroll_archives_v2 WHERE pay_year=:y AND pay_month=:m ORDER BY updated_at DESC NULLS LAST LIMIT 1", y=year, m=month)
+    period = _row(db, "SELECT approved,approved_at FROM public.payroll_periods WHERE pay_year=:y AND pay_month=:m", y=year, m=month)
+    approved = bool((period or {}).get("approved"))
+    approved_at = (period or {}).get("approved_at")
+    archive = _row(db, "SELECT rows,coalesce(updated_at,saved_at) AS updated_at FROM public.payroll_archives_v2 WHERE pay_year=:y AND pay_month=:m ORDER BY updated_at DESC NULLS LAST LIMIT 1", y=year, m=month)
     if archive:
-        rows, approved, approved_at, updated_at = list(archive["rows"] or []), bool(archive["approved"]), archive["approved_at"], archive["updated_at"]
+        rows, updated_at = list(archive["rows"] or []), archive["updated_at"]
     else:
-        items = _rows(db, "SELECT employee_id,approved,approved_at,payload,updated_at FROM public.employee_payrolls WHERE pay_year=:y AND pay_month=:m", y=year, m=month)
+        items = _rows(db, "SELECT employee_id,payload,updated_at FROM public.employee_payrolls WHERE pay_year=:y AND pay_month=:m", y=year, m=month)
         items.sort(key=lambda r: (float((r["payload"] or {}).get("idx") or 0), str(r["employee_id"])))
         rows = [dict(r["payload"] or {}, employee_id=r["employee_id"]) for r in items]
-        approved = bool(items) and all(r["approved"] for r in items)
-        approved_at = max((r["approved_at"] for r in items if r["approved_at"]), default=None)
         updated_at = max((r["updated_at"] for r in items if r["updated_at"]), default=None)
     ids = _employee_ids(db)
     out = []
@@ -1851,22 +2032,20 @@ def put_sheet(key: str, body: dict[str, Any], request: Request, actor: dict[str,
     if approved:
         raise ApiError(409, "approved", "Approved payroll cannot be edited")
     payload = json.dumps(rows, ensure_ascii=False)
-    done = db.execute(text("UPDATE public.payroll_archives_v2 SET rows=CAST(:rows AS jsonb),updated_at=now() WHERE pay_year=:y AND pay_month=:m"), {"rows": payload, "y": year, "m": month})
+    db.execute(text("INSERT INTO public.payroll_periods(pay_year,pay_month,approved) VALUES(:y,:m,false) ON CONFLICT(pay_year,pay_month) DO NOTHING"), {"y": year, "m": month})
+    done = db.execute(text("UPDATE public.payroll_archives_v2 SET approved=false,approved_at=NULL,rows=CAST(:rows AS jsonb),updated_at=now() WHERE pay_year=:y AND pay_month=:m"), {"rows": payload, "y": year, "m": month})
     if not done.rowcount:
         db.execute(text("INSERT INTO public.payroll_archives_v2(pay_year,pay_month,approved,rows,saved_at,updated_at) VALUES(:y,:m,false,CAST(:rows AS jsonb),now(),now())"), {"rows": payload, "y": year, "m": month})
-    # Per-employee payloads: rows already approved individually (legacy partial approval) are left untouched.
-    locked = {r["employee_id"] for r in _rows(db, "SELECT employee_id FROM public.employee_payrolls WHERE pay_year=:y AND pay_month=:m AND approved", y=year, m=month)}
-    db.execute(text("DELETE FROM public.employee_payrolls WHERE pay_year=:y AND pay_month=:m AND NOT approved"), {"y": year, "m": month})
+    db.execute(text("DELETE FROM public.employee_payrolls WHERE pay_year=:y AND pay_month=:m"), {"y": year, "m": month})
     ids = _employee_ids(db)
     for i, item in enumerate(rows):
         if not isinstance(item, dict):
             continue
         eid = ids.get(str(item.get("id") or "")) or ids.get(str(item.get("empNo") or ""))
-        if not eid or eid in locked:
+        if not eid:
             continue
-        db.execute(text("""INSERT INTO public.employee_payrolls(employee_id,pay_year,pay_month,approved,payload,updated_at)
-            VALUES(:eid,:y,:m,false,CAST(:payload AS jsonb),now())"""), {"eid": eid, "y": year, "m": month, "payload": json.dumps(dict(item, idx=i), ensure_ascii=False)})
-    _set_payroll_status(db, year, month, status="draft", prepared_by=actor.get("employee_id"), prepared_by_name=actor.get("name_ar"))
+        db.execute(text("""INSERT INTO public.employee_payrolls(employee_id,pay_year,pay_month,payload,updated_at)
+            VALUES(:eid,:y,:m,CAST(:payload AS jsonb),now())"""), {"eid": eid, "y": year, "m": month, "payload": json.dumps(dict(item, idx=i), ensure_ascii=False)})
     _write_audit(db, actor, request, "payroll", "save", "payroll_month", key, details={"rows": len(rows)})
     db.commit()
     return get_sheet(key, actor, db)
@@ -1883,11 +2062,11 @@ def approve_sheet(key: str, request: Request, actor: dict[str, Any] = Depends(cu
     if not rows:
         raise ApiError(404, "not_found", "Payroll not found")
     payload = json.dumps(rows, ensure_ascii=False)
+    db.execute(text("""INSERT INTO public.payroll_periods(pay_year,pay_month,approved,approved_at) VALUES(:y,:m,true,now())
+        ON CONFLICT(pay_year,pay_month) DO UPDATE SET approved=true,approved_at=EXCLUDED.approved_at"""), {"y": year, "m": month})
     done = db.execute(text("UPDATE public.payroll_archives_v2 SET approved=true,approved_at=now()::text,rows=CAST(:rows AS jsonb),updated_at=now() WHERE pay_year=:y AND pay_month=:m"), {"rows": payload, "y": year, "m": month})
     if not done.rowcount:
         db.execute(text("INSERT INTO public.payroll_archives_v2(pay_year,pay_month,approved,approved_at,rows,saved_at,updated_at) VALUES(:y,:m,true,now()::text,CAST(:rows AS jsonb),now(),now())"), {"rows": payload, "y": year, "m": month})
-    db.execute(text("UPDATE public.employee_payrolls SET approved=true,approved_at=now(),updated_at=now() WHERE pay_year=:y AND pay_month=:m"), {"y": year, "m": month})
-    _set_payroll_status(db, year, month, status="approved", approved_by=actor.get("employee_id"), approved_by_name=actor.get("name_ar"), approved_at=datetime.now(UTC))
     _write_audit(db, actor, request, "payroll", "approve", "payroll_month", key)
     db.commit()
     return get_sheet(key, actor, db)
@@ -1901,10 +2080,8 @@ def reopen_payroll(key: str, request: Request, body: dict[str, Any] | None = Non
         raise ApiError(422, "invalid_key", "Invalid payroll sheet key")
     year, month = ym
     reason = str((body or {}).get("reason") or "Reopened for correction").strip()
+    db.execute(text("UPDATE public.payroll_periods SET approved=false,approved_at=NULL WHERE pay_year=:y AND pay_month=:m"), {"y": year, "m": month})
     db.execute(text("UPDATE public.payroll_archives_v2 SET approved=false,approved_at=NULL,updated_at=now() WHERE pay_year=:y AND pay_month=:m"), {"y": year, "m": month})
-    db.execute(text("UPDATE public.employee_payrolls SET approved=false,approved_at=NULL,updated_at=now() WHERE pay_year=:y AND pay_month=:m"), {"y": year, "m": month})
-    _set_payroll_status(db, year, month, status="reopened", reopened_by=actor.get("employee_id"), reopened_by_name=actor.get("name_ar"),
-                        reopened_at=datetime.now(UTC), reopen_reason=reason)
     _write_audit(db, actor, request, "payroll", "reopen", "payroll_month", key, details={"reason": reason})
     db.commit()
     return get_sheet(key, actor, db)
@@ -1913,10 +2090,11 @@ def reopen_payroll(key: str, request: Request, body: dict[str, Any] | None = Non
 @router.get("/payroll-archive")
 def payroll_archive(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *PAYROLL_ROLES)
-    return _rows(db, """SELECT pay_year AS year,pay_month AS month,approved_at,jsonb_array_length(rows) AS employees,
-        coalesce((SELECT sum((item->>'totalDue')::numeric) FROM jsonb_array_elements(rows) item),0) AS total,
-        coalesce((SELECT sum((item->>'netSAR')::numeric) FROM jsonb_array_elements(rows) item),0) AS net_sar
-        FROM public.payroll_archives_v2 WHERE approved ORDER BY pay_year DESC,pay_month DESC""")
+    return _rows(db, """SELECT a.pay_year AS year,a.pay_month AS month,p.approved_at,jsonb_array_length(a.rows) AS employees,
+        coalesce((SELECT sum((item->>'totalDue')::numeric) FROM jsonb_array_elements(a.rows) item),0) AS total,
+        coalesce((SELECT sum((item->>'netSAR')::numeric) FROM jsonb_array_elements(a.rows) item),0) AS net_sar
+        FROM public.payroll_archives_v2 a JOIN public.payroll_periods p USING(pay_year,pay_month)
+        WHERE p.approved ORDER BY a.pay_year DESC,a.pay_month DESC""")
 
 
 def _num(v: Any) -> float:
@@ -1929,7 +2107,7 @@ def _num(v: Any) -> float:
 @router.get("/salary/basis")
 def salary_basis(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *SALARY_ROLES)
-    rows = _rows(db, "SELECT * FROM public.employee_directory ORDER BY name_ar")
+    rows = _rows(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} ORDER BY d.name_ar")
     result = []
     for row in rows:
         emp = _employee_dict(row)
@@ -1971,7 +2149,7 @@ def salary_basis(actor: dict[str, Any] = Depends(current_actor), db: Session = D
 @router.get("/registry/documents")
 def document_registry(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *HR_READ_ROLES)
-    rows = _rows(db, "SELECT * FROM public.employee_directory WHERE active ORDER BY employee_id")
+    rows = _rows(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} WHERE d.active ORDER BY d.employee_id")
     today = today_riyadh()
     out = []
     for row in rows:
@@ -2035,13 +2213,14 @@ def _workflow_out(db: Session, row: dict[str, Any]) -> dict[str, Any]:
     payload = row.get("payload") or {}
     leave = _row(db, "SELECT * FROM public.leave_requests WHERE workflow_request_id=:id", id=row["id"])
     employee = _row(db, "SELECT name_ar FROM public.employee_directory WHERE employee_id=:id", id=row["employee_id"])
+    rejected = _row(db, "SELECT comment FROM public.workflow_actions WHERE request_id=:id AND action='rejected' ORDER BY created_at DESC LIMIT 1", id=row["id"])
     return {"id": str(row["id"]), "employee_id": row["employee_id"], "employee_name": (employee or {}).get("name_ar", ""),
             "type": row["request_type"], "status": row["status"], "stage": row["current_stage"],
             "from_date": (leave or {}).get("from_date") or payload.get("from"), "to_date": (leave or {}).get("to_date") or payload.get("to"),
             "days": (leave or {}).get("days") or payload.get("days"), "on_date": payload.get("date"),
             "time_from": payload.get("time"), "time_to": payload.get("time2"), "hours": payload.get("hours") or payload.get("dur"),
             "amount": payload.get("amount"), "punch_kind": payload.get("kind"), "notes": (leave or {}).get("notes") or payload.get("notes"),
-            "rejection_reason": row.get("rejection_reason"), "attachment_id": None, "created_at": row["created_at"],
+            "rejection_reason": (rejected or {}).get("comment"), "attachment_id": (leave or {}).get("doc_attachment_id"), "created_at": row["created_at"],
             "law_note": _law_note(db, row, cdata._d((leave or {}).get("from_date") or payload.get("from")), int((leave or {}).get("days") or payload.get("days") or 0))}
 
 
@@ -2074,22 +2253,31 @@ def create_hr_request(body: dict[str, Any], request: Request, actor: dict[str, A
     req_type = str(body.get("type") or "")
     if req_type not in {"annual", "sick", "emergency", "death", "marriage", "maternity", "paternity", "umrah", "hajj", "remote"}:
         raise ApiError(422, "invalid_request", "Unsupported HR leave type")
+    _require_lookup(db, "workflow_request_types", req_type, "request type")
+    _require_lookup(db, "leave_types", req_type, "leave type")
     start = date.fromisoformat(str(body.get("from_date")))
     end = date.fromisoformat(str(body.get("to_date")))
     if end < start:
         raise ApiError(422, "invalid_request", "End date must not precede start date")
     status = body.get("status") if body.get("status") in {"approved", "rejected", "pending"} else "pending"
     stage = "completed" if status == "approved" else ("rejected" if status == "rejected" else "hr")
+    if status == "pending":
+        _require_stage_approver(db, "hr")
     payload = {"from": start.isoformat(), "to": end.isoformat(), "days": body.get("days") or (end-start).days+1,
                "notes": body.get("notes") or "", "submitted_from": "hr_main", "submitted_at": datetime.now(UTC).isoformat()}
-    row = _row(db, """INSERT INTO public.workflow_requests(employee_id,request_type,payload,manager_id,current_stage,status)
-        VALUES(:eid,:type,CAST(:payload AS jsonb),:manager,:stage,:status) RETURNING *""", eid=employee_id, type=req_type,
-        payload=json.dumps(payload), manager=employee.get("manager_id"), stage=stage, status=status)
-    db.execute(text("""INSERT INTO public.leave_requests(emp_id,type,from_date,to_date,days,notes,status,mgr_status,hr_status,ceo_status,manager_id,workflow_request_id)
-        VALUES(:eid,:type,:start,:end,:days,:notes,:status,:mgr,:status,:ceo,:manager,:rid)"""),
-        {"eid": employee_id, "type": req_type, "start": start, "end": end, "days": payload["days"], "notes": payload["notes"],
-         "status": status, "mgr": "skipped" if status == "pending" else status, "ceo": "pending" if status == "pending" else status,
-         "manager": employee.get("manager_id"), "rid": row["id"]})
+    row = _row(db, """INSERT INTO public.workflow_requests(employee_id,request_type,payload,current_stage)
+        VALUES(:eid,:type,CAST(:payload AS jsonb),:stage) RETURNING *""", eid=employee_id, type=req_type,
+        payload=json.dumps(payload), stage=stage)
+    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:rid,:account,'hr','submitted',:comment)"),
+               {"rid": row["id"], "account": actor["account_id"], "comment": payload["notes"] or None})
+    db.execute(text("""INSERT INTO public.leave_requests(employee_id,leave_type,from_date,to_date,days,notes,workflow_request_id)
+        VALUES(:eid,:type,:start,:end,:days,:notes,:rid)"""),
+        {"eid": employee_id, "type": req_type, "start": start, "end": end, "days": payload["days"], "notes": payload["notes"], "rid": row["id"]})
+    if status != "pending":
+        decision = "approved" if status == "approved" else "rejected"
+        comment = str(body.get("rejection_reason") or payload["notes"] or "") if decision == "rejected" else payload["notes"]
+        db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:id,:account,'hr',:action,:comment)"),
+                   {"id": row["id"], "account": actor["account_id"], "action": decision, "comment": comment})
     _insert_notification(db, employee_id, row["id"], "Leave recorded by HR", f"{start} - {end}", "hr", "request")
     _write_audit(db, actor, request, "leave", "hr_create", "workflow_request", row["id"], details={"type": req_type})
     db.commit()
@@ -2106,10 +2294,13 @@ def _hr_decide(db: Session, actor: dict[str, Any], request: Request, request_id:
         raise ApiError(422, "invalid_action", "Action must be approve or reject")
     if action == "reject" and not str(reason or "").strip():
         raise ApiError(422, "reason_required", "A rejection reason is required")
-    if not allow_override and stage != "hr":
-        raise ApiError(403, "forbidden", "This request is not at the HR stage")
     if actor["role"] not in HR_ROLES:
         raise ApiError(403, "forbidden", "Not authorized")
+    if allow_override:
+        if actor["role"] not in {"admin", "admin_manager"} and actor.get("employee_id") not in _stage_people(db, "hr"):
+            raise ApiError(403, "forbidden", "Not authorized as a configured HR approver")
+    elif stage != "hr" or not _can_act(db, actor, item):
+        raise ApiError(403, "forbidden", "This request is not assigned to this HR approver")
     if allow_override and action == "approve":
         _override(db, actor, item, reason)
     else:
@@ -2166,10 +2357,7 @@ def hr_delete_request(request_id: uuid.UUID, request: Request, actor: dict[str, 
         FROM public.workflow_requests r WHERE r.id=:id""", id=request_id)
     db.execute(text("INSERT INTO public.ariba_deleted_items(kind,ref_id,employee_id,snapshot,deleted_by,deleted_by_role) VALUES('workflow_request',:id,:eid,CAST(:snapshot AS jsonb),:actor,:role)"),
                {"id": str(request_id), "eid": row["employee_id"], "snapshot": json.dumps(snapshot["snapshot"], default=str), "actor": actor.get("employee_id"), "role": actor["role"]})
-    db.execute(text("DELETE FROM public.ariba_documents WHERE request_id=:id"), {"id": request_id})
-    db.execute(text("DELETE FROM public.leave_requests WHERE workflow_request_id=:id"), {"id": request_id})
-    db.execute(text("DELETE FROM public.workflow_notifications WHERE request_id=:id"), {"id": request_id})
-    db.execute(text("DELETE FROM public.workflow_requests WHERE id=:id"), {"id": request_id})
+    _delete_request_rows(db, request_id)
     _write_audit(db, actor, request, "workflow", "delete", "workflow_request", request_id)
     db.commit()
 
@@ -2293,7 +2481,10 @@ def holidays(actor: dict[str, Any] = Depends(current_actor), db: Session = Depen
 @router.get("/letters")
 def letter_status(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *HR_READ_ROLES)
-    return _rows(db, "SELECT r.id,r.employee_id,r.request_type AS type,r.payload->>'title' AS title,r.status,r.rejection_reason,r.created_at,r.completed_at AS responded_at,d.name_ar AS employee_name FROM public.workflow_requests r LEFT JOIN public.employee_directory d ON d.employee_id=r.employee_id WHERE r.request_type LIKE 'template:%' ORDER BY r.created_at DESC")
+    return _rows(db, """SELECT r.id,r.employee_id,r.request_type AS type,r.payload->>'title' AS title,r.status,
+        (SELECT a.comment FROM public.workflow_actions a WHERE a.request_id=r.id AND a.action='rejected' ORDER BY a.created_at DESC LIMIT 1) AS rejection_reason,
+        r.created_at,r.completed_at AS responded_at,d.name_ar AS employee_name FROM public.workflow_requests r
+        LEFT JOIN public.employee_directory d ON d.employee_id=r.employee_id WHERE r.request_type LIKE 'template:%' ORDER BY r.created_at DESC""")
 
 
 @router.post("/letters")
@@ -2305,10 +2496,15 @@ def send_letter(body: dict[str, Any], request: Request, actor: dict[str, Any] = 
     content = str(body.get("html") or "")
     if not title or not content:
         raise ApiError(422, "invalid_request", "Letter title and HTML are required")
+    request_type = "template:" + str(body.get("type") or "custom")
+    _require_lookup(db, "workflow_request_types", request_type, "request type")
+    _require_lookup(db, "document_types", "letter", "document type")
     rid = uuid.uuid4()
-    req = _row(db, "INSERT INTO public.workflow_requests(employee_id,request_type,payload,current_stage,status) VALUES(:eid,:type,CAST(:payload AS jsonb),'employee','pending') RETURNING id,employee_id,request_type,status,created_at", eid=employee_id, type="template:"+str(body.get("type") or "custom"), payload=json.dumps({"title": title, "template_type": body.get("type"), "sent_by": actor.get("employee_id")}))
+    req = _row(db, "INSERT INTO public.workflow_requests(employee_id,request_type,payload,current_stage) VALUES(:eid,:type,CAST(:payload AS jsonb),'employee') RETURNING id,employee_id,request_type,status,created_at", eid=employee_id, type=request_type, payload=json.dumps({"title": title, "template_type": body.get("type"), "sent_by": actor.get("employee_id")}))
+    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:rid,:account,'hr','submitted',:comment)"),
+               {"rid": req["id"], "account": actor["account_id"], "comment": title})
     raw = content.encode("utf-8")
-    doc = _row(db, "INSERT INTO public.ariba_documents(employee_id,request_id,document_type,file_name,mime_type,file_size,file_data,uploaded_by) VALUES(:eid,:rid,:type,:name,'text/html',:size,:data,:uploader) RETURNING id", eid=employee_id, rid=req["id"], type="letter", name=title+".html", size=len(raw), data=raw, uploader=actor.get("employee_id"))
+    doc = _row(db, "INSERT INTO public.ariba_documents(employee_id,request_id,document_type,file_name,mime_type,file_data,uploaded_by) VALUES(:eid,:rid,:type,:name,'text/html',:data,:uploader) RETURNING id", eid=employee_id, rid=req["id"], type="letter", name=title+".html", data=raw, uploader=actor.get("employee_id"))
     _insert_notification(db, employee_id, req["id"], "A letter is waiting for your response", title, "employee", "template")
     _write_audit(db, actor, request, "letters", "send", "workflow_request", req["id"])
     db.commit()
@@ -2319,10 +2515,9 @@ def send_letter(body: dict[str, Any], request: Request, actor: dict[str, Any] = 
 @router.delete("/letters/{letter_id}", status_code=204)
 def delete_letter(letter_id: uuid.UUID, request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     _require(actor, *HR_ROLES)
-    db.execute(text("DELETE FROM public.ariba_documents WHERE request_id=:id"), {"id": letter_id})
-    result = db.execute(text("DELETE FROM public.workflow_requests WHERE id=:id AND request_type LIKE 'template:%'"), {"id": letter_id})
-    if result.rowcount == 0:
+    if not _row(db, "SELECT 1 AS x FROM public.workflow_requests WHERE id=:id AND request_type LIKE 'template:%'", id=letter_id):
         raise ApiError(404, "not_found", "Letter not found")
+    _delete_request_rows(db, letter_id)
     _write_audit(db, actor, request, "letters", "delete", "workflow_request", letter_id)
     db.commit()
 
@@ -2348,9 +2543,14 @@ def create_account(body: dict[str, Any], request: Request, actor: dict[str, Any]
     employee_id = str(body.get("employee_id") or "")
     emp = _employee_scope(db, actor, employee_id)
     role = str(body.get("role") or "employee")
+    _require_lookup(db, "roles", role, "role")
     if role == "admin" and actor["role"] != "admin":
         raise ApiError(403, "forbidden", "Only admin can create admin accounts")
+    if _row(db, "SELECT 1 AS x FROM public.ariba_auth_accounts WHERE employee_id=:eid", eid=employee_id):
+        raise ApiError(409, "account_exists", "This employee already has an account")
     username = str(emp.get("username") or emp.get("data", {}).get("empNo") or employee_id).lower()
+    if _row(db, "SELECT 1 AS x FROM public.ariba_auth_accounts WHERE lower(username)=:username", username=username):
+        raise ApiError(409, "username_exists", "This username is already in use")
     password = "".join(secrets.choice("abcdefghjkmnpqrstuvwxyz23456789") for _ in range(8))
     password += secrets.choice("abcdefghjkmnpqrstuvwxyz") + secrets.choice("23456789")
     account = _row(db, "INSERT INTO public.ariba_auth_accounts(username,password_hash,role,employee_id,active,must_change) VALUES(:username,:hash,:role,:eid,true,true) RETURNING *", username=username, hash=_hasher.hash(password), role=role, eid=employee_id)
@@ -2367,6 +2567,7 @@ def update_account(user_id: uuid.UUID, body: dict[str, Any], request: Request, a
         raise ApiError(404, "not_found", "Account not found")
     role = body.get("role", target["role"])
     active = body.get("is_active", target["active"])
+    _require_lookup(db, "roles", str(role), "role")
     if role != target["role"] and actor["role"] != "admin":
         raise ApiError(403, "forbidden", "Only admin can change roles")
     db.execute(text("UPDATE public.ariba_auth_accounts SET role=:role,active=:active,updated_at=now() WHERE id=:id"), {"role": role, "active": active, "id": user_id})

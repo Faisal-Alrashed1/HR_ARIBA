@@ -112,7 +112,7 @@ function ago(ts: string) {
 // V118 bell panel.
 function BellPanel({ visible, onClose, top }: { visible: boolean; onClose: () => void; top: number }) {
   const t = useTheme();
-  const { items, unread, seenAt, markAllRead } = useBell();
+  const { items, unread, markAllRead } = useBell();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={{ flex: 1 }} onPress={onClose}>
@@ -129,7 +129,7 @@ function BellPanel({ visible, onClose, top }: { visible: boolean; onClose: () =>
             {!items.length ? <T center color={t.mu} style={{ padding: 34 }}>لا توجد إشعارات.</T> : null}
             {items.map((n) => {
               const k = KIND[n.kind] ?? KIND.ok;
-              const un = new Date(n.at).getTime() > seenAt;
+              const un = !n.is_read;
               return (
                 <Pressable key={n.id} onPress={() => { onClose(); router.navigate(`/(tabs)/${n.target}` as never); }}
                   style={[styles.item, { borderBottomColor: t.bd, backgroundColor: un ? "rgba(41,179,94,.09)" : "transparent" }]}>

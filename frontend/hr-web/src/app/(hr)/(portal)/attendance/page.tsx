@@ -12,6 +12,7 @@ import { listAllEmployees } from "@/lib/employees";
 import { listLocations } from "@/lib/locations";
 import { todayIso, ddmmyyyy } from "@/lib/format";
 import { listAttendance, listAttendanceSummary, upsertAttendance, type AttendanceRecord, type AttendanceStatus } from "@/lib/attendance";
+import { groupRows } from "@/lib/calc/att-reports";
 import type { EmployeeListItem } from "@/lib/api";
 import { DateField, TimeField } from "@/components/common/date-time-field";
 
@@ -72,17 +73,23 @@ export default function Page() {
     };
   }, [date, month, reloadTick]);
 
-  const recByEmp = useMemo(() => {
-    const m = new Map<string, AttendanceRecord>();
-    for (const r of records) m.set(String(r.employee_id), r);
-    return m;
+  const daily = useMemo(() => groupRows(records), [records]);
+  const sessionsByEmp = useMemo(() => {
+    const grouped = new Map<string, AttendanceRecord[]>();
+    for (const record of records) {
+      const key = String(record.employee_id);
+      grouped.set(key, [...(grouped.get(key) ?? []), record]);
+    }
+    return grouped;
   }, [records]);
 
   const counts = useMemo(() => {
     const c = { present: 0, late: 0, absent: 0, leave: 0, remote: 0 };
-    for (const r of records) c[r.status]++;
+    for (const r of daily.values()) {
+      if (r.status in c) c[r.status as keyof typeof c]++;
+    }
     return c;
-  }, [records]);
+  }, [daily]);
 
   function openAdd() {
     setEditId(null);
@@ -156,21 +163,24 @@ export default function Page() {
             <div style={{ textAlign: "center", color: "var(--mu)", padding: 20 }}>لا يوجد موظفون</div>
           ) : (
             emps.map((e) => {
-              const r = recByEmp.get(String(e.id));
-              const st = r ? STATUS[r.status] : STATUS.none;
+              const day = daily.get(`${e.id}|${date}`);
+              const sessions = sessionsByEmp.get(String(e.id)) ?? [];
+              const st = day ? STATUS[day.status as AttendanceStatus] : STATUS.none;
+              const location = sessions[0]?.location_name;
               return (
                 <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: "1px solid rgba(36,48,68,.4)" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.name_ar.split(" ").slice(0, 3).join(" ")}</div>
-                    <div style={{ fontSize: 10, color: "var(--dm)" }}>{r?.location_name || e.workplace?.name_ar || "—"}</div>
+                    <div style={{ fontSize: 10, color: "var(--dm)" }}>{location || e.workplace?.name_ar || "—"}</div>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 11, color: "var(--mu)" }}>{r ? `${r.time_in ?? ""} → ${r.time_out ?? "..."}` : "—"}</div>
-                    {r?.late_minutes ? <div style={{ fontSize: 10, color: "var(--am)" }}>⏰ تأخير {r.late_minutes} دقيقة</div> : null}
-                    {r?.early_minutes ? <div style={{ fontSize: 10, color: "var(--rd)" }}><i className="ti ti-door-exit" aria-hidden /> خروج مبكر {r.early_minutes} دقيقة</div> : null}
+                    <div style={{ fontSize: 11, color: "var(--mu)" }}>{day ? `${day.in ?? ""} → ${day.out ?? "..."} · ${day.hours} س` : "—"}</div>
+                    {day?.late ? <div style={{ fontSize: 10, color: "var(--am)" }}>تأخير {day.late} دقيقة</div> : null}
+                    {day?.early ? <div style={{ fontSize: 10, color: "var(--rd)" }}><i className="ti ti-door-exit" aria-hidden /> خروج مبكر {day.early} دقيقة</div> : null}
+                    {sessions.length > 1 && <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 3 }}>{sessions.map((session, index) => <button key={session.id} type="button" className="btn bsm" title={`تعديل الجلسة ${index + 1}`} onClick={() => openEdit(session)}>{session.time_in ?? "—"}–{session.time_out ?? "..."} <i className="ti ti-edit" aria-hidden /></button>)}</div>}
                   </div>
                   <span className={st.cls}>{st.label}</span>
-                  {r && <button type="button" className="btn bsm" onClick={() => openEdit(r)}><i className="ti ti-edit" style={{ fontSize: 12 }} /></button>}
+                  {sessions.length === 1 && <button type="button" className="btn bsm" onClick={() => openEdit(sessions[0])}><i className="ti ti-edit" style={{ fontSize: 12 }} /></button>}
                 </div>
               );
             })

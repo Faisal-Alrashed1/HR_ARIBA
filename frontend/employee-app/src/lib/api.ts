@@ -293,6 +293,10 @@ export type Notification = {
   body: string | null;
   at: string;
   target: "documents" | "leaves" | "team";
+  is_read: boolean;
 };
 
-export const notifications = { mine: () => api<Notification[]>("/me/notifications") };
+export const notifications = {
+  mine: () => api<Notification[]>("/me/notifications"),
+  markAllRead: () => api<void>("/me/notifications/read", { method: "POST" }),
+};

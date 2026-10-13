@@ -79,14 +79,14 @@ Most likely ⚠️: the variable exists on the Postgres service (or as a shared 
 | 6 | Requests & workflow | services/workflow | B handlers | `workflow_requests/actions/notifications`, `leave_requests` | Take B storage; restore A's stage rules + response shape; add `DELETE /me/requests` |
 | 7 | Punch / attendance | services/punch + geofence | B (calls 3 missing fns) | `attendance`, `work_locations` (+`polygon`) | A's Python logic on canonical rows; add point-in-polygon in Python |
 | 8 | Forgot-punch approval | `record_forgot_punch` | `ariba_apply_forgot_punch` (missing) | `attendance` | Python |
-| 9 | Payroll sheets / archive / payslips | payroll_runs/rows | B | `employee_payrolls.payload`, `payroll_archives_v2`, `ariba_payroll_status` | Take B; payslip fallback for pre-V119 rows; decide run vs row approval |
+| 9 | Payroll sheets / archive / payslips | payroll_runs/rows | B | `employee_payrolls.payload`, `payroll_archives_v2`, `payroll_periods` | Month approval and payslip visibility come from `payroll_periods`; payload fallback remains |
 | 10 | GOSI rates | `gosi_rules` | 501 | none | **Gap** → proposal: store rate periods in `ariba_app_settings` key `gosi_rates` (existing table, JSONB) — needs approval |
 | 11 | Lookups (workplaces, departments, nationalities) | tables | derived from employees; add/delete 501 | none | **Gap** → proposal: `ariba_app_settings` key `lookups` — needs approval |
 | 12 | Dependents | table | 501 | none (maybe `employee_directory.data`) ⚠️ | **Gap** → proposal: `data.dependents[]` in JSONB — needs approval |
 | 13 | Forms / letters | `sent_letters` | `workflow_requests` type `template:*` | `workflow_requests` | Take B; check `/letters/{id}/html` source |
 | 14 | Documents | disk storage | `ariba_documents.file_data` | `ariba_documents` | Take B |
 | 15 | Settings, signer, logo | `sheets` | `ariba_app_settings` | `ariba_app_settings`, `company_settings` | Take B; map `hr_signer` shape (`nameAr/sigs[empId]/useSig`) ↔ hr-web `Signer` |
-| 16 | Notifications | computed | `workflow_notifications` | same | Take B storage; map to app shape; mark-read via `is_read` |
+| 16 | Notifications | computed | `workflow_notifications` | same | Take B storage; map to app shape; derive read state from `read_at`; mark-read writes `read_at` |
 | 17 | Tests | `backend/tests` (ORM) | `tests_canonical` | — | New contract tests: every frontend-used route, against a restored PG |
 
 ## 7. Decisions needed before Phase C
@@ -95,7 +95,7 @@ Most likely ⚠️: the variable exists on the Postgres service (or as a shared 
 2. Missing functions: reimplement in Python (recommended) **or** import their definitions from `supabase_full.sql`?
 3. Gaps 10–12: approve storing GOSI rates, lookups and dependents in existing JSONB (`ariba_app_settings` / `employee_directory.data`)?
 4. Roles `chairman` / `admin_manager`: what may each do?
-5. Payroll month 2026-09: is a month approved when all rows are approved, or by `ariba_payroll_status`?
+5. Payroll approval is month-scoped in `payroll_periods`, not per employee or `ariba_payroll_status`.
 6. Imported `ariba_sessions`: expire them at cut-over?
 
 ## 8. Verification plan (Phase D)

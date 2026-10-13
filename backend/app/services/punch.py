@@ -110,6 +110,9 @@ def punch_in(db: Session, emp: Employee, lat: float, lng: float) -> AttendanceRe
     day = sessions_on(db, emp.id, today)
     if any(r.time_in and r.time_out is None for r in day):
         raise ApiError(409, "already_checked_in", "سجلت حضورك بالفعل — سجّل الانصراف أولاً")
+    previous = next((r for r in reversed(day) if r.time_in is not None and r.time_out is not None), None)
+    if previous is not None:
+        previous.early_minutes = 0
     s = att.settings(db)
     first = not day
     late = 0

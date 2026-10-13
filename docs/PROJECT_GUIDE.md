@@ -123,17 +123,18 @@
 
 ## 5. قاعدة البيانات (canonical)
 - **أهم الجداول:**
-  - `employee_directory`: أعمدة أساسية (`employee_id`، `name_ar`، `department`، `employer`، `manager_id`، `active`…)، وعمود **`data` JSONB** فيه كل بيانات الموظف القديمة (الراتب `salary`، والبدلات، و`salaryTotal`، و`insuranceSub/Comp`، و`netSalary*`، والإقامة، والعقد…).
-  - `workflow_requests`: **كل طلبات الموظفين**. الأعمدة `request_type`، و`payload` JSONB، و`current_stage` (manager / hr / ceo)، و`status`.
-  - `workflow_actions` و `workflow_notifications`: سجل الموافقات والإشعارات.
-  - `leave_requests`: نسخة للإجازات والاستئذانات، مربوطة بـ `workflow_request_id`.
-  - `attendance`: البصمات، كل صف جلسة.
-  - `employee_payrolls` (المسير، `payload` JSONB لكل موظف وشهر)، و`payroll_archives_v2`، و`ariba_payroll_status`.
+  - `employee_directory`: `employee_id` والاسم والمدير والحالة، ومفاتيح `employer_id` و`department_id` و`job_title_id` إلى جداول الأسماء. اسم المستخدم من `ariba_auth_accounts` فقط. عمود `data` JSONB يحتفظ بالحقول القديمة والحسابات.
+  - `workflow_requests`: **كل طلبات الموظفين**. `status` مولّد من `current_stage` ولا يُكتب مباشرة؛ جهات HR وCEO المعتمدة في `workflow_approvers`.
+  - `workflow_actions` يسجل الحساب الفاعل والتعليق، و`workflow_notifications.read_at` يحدد المقروء.
+  - `leave_requests` و`permissions`: تفاصيل الطلب، مربوطة إلزامياً بـ `workflow_requests` للإجازة، وبـ `workflow_request_id` للاستئذان.
+  - `attendance`: كل صف جلسة؛ أكثر من جلسة في اليوم مسموح، مع جلسة مفتوحة واحدة لكل موظف/يوم. الموقع يُقرأ عبر `location_id`.
+  - `employee_payrolls` (المسير، `payload` JSONB لكل موظف وشهر)، و`payroll_archives_v2`. اعتماد الشهر في `payroll_periods`.
+  - جداول lookup: `employers` و`departments` و`job_titles` و`roles` وأنواع الطلبات والإجازات والأذونات والمستندات.
   - `ariba_auth_accounts` و `ariba_sessions`: الحسابات والجلسات.
   - `ariba_app_settings`: الإعدادات كـ key/value، منها `ins_settings` للتأمينات والشعار.
   - `work_locations`، `public_holidays`، `ariba_documents`، `ariba_audit_log`، `ariba_deleted_items`.
 - **مراحل الموافقة:** `_stages()` في `canonical.py`، مثل القديم (`ariba_workflow_action`) بقرار صاحب المشروع:
-  - كل الأنواع: مدير ← HR ← رئيس تنفيذي (الموظف بدون مدير يبدأ من HR).
+  - كل الأنواع: مدير الموظف من `employee_directory.manager_id` ← HR ثم الرئيس التنفيذي حسب `workflow_approvers` (الموظف بدون مدير يبدأ من HR).
   - **نسيان البصمة: HR بس**، والموافقة عليه **تسجّل الحضور** في `attendance`.
   - التحقق من رصيد الإجازة السنوية عند التقديم **باقي** (أشد من القديم)، بقرار صاحب المشروع.
 - **قواعد محلية على الجهاز** (Postgres في `/tmp`):
@@ -168,7 +169,7 @@
 | `app/services/employee_map.py` | ترجمة بالاتجاهين بين `employee_directory.data` وحقول الموقع، و`figures()` تحسب الإجمالي والتأمينات والصافي |
 | `app/services/gosi.py` | التأمينات من قواعد بتواريخ سريان (مع إعفاء V130) |
 | `app/services/leave.py` | محرك أرصدة الإجازات (منقول سطر بسطر من V114) |
-| `app/services/end_of_service.py`، `contracts.py`، `geofence.py`، `punch.py`، `attendance.py`، `scheduling.py`(core) | حسابات نهاية الخدمة، والعقود، والنطاق الجغرافي، والبصمة، والتقويم (الرياض، الأحد–الخميس) |
+| `app/services/end_of_service.py`، `contracts.py`، `scheduling.py`(core) | حسابات نهاية الخدمة، والعقود، والتقويم (الرياض، الأحد–الخميس). منطق البصمة الحالي في `routers/canonical.py`؛ `geofence.py` و`punch.py` و`attendance.py` من طبقة ORM القديمة وغير مربوطة بـ `main.py`. |
 | `app/services/*` الباقي | أغلبها كانت لمرحلة قاعدتنا القديمة |
 | `app/core/` | الأخطاء الموحدة (`errors.py`)، ورؤوس الأمان وحد محاولات الدخول (`security.py`)، والوقت (`scheduling.py`). `identity.py` و `auth.py` للقديم |
 | `app/models.py` | جداول canonical بالـ reflection (98 سطر) |
@@ -287,8 +288,8 @@
 
 **المسير:**
 1. الموقع يحسب المسير بمحرك PAYX في المتصفح.
-2. يحفظه عبر `PUT /sheets/pay_YYYY_MM`، وينحفظ في `employee_payrolls`.
-3. بعد الاعتماد ينتقل للأرشيف، والقسائم تظهر للموظف.
+2. يحفظه عبر `PUT /sheets/pay_YYYY_MM` في `payroll_archives_v2` و`employee_payrolls`.
+3. الاعتماد في `payroll_periods`؛ القسائم تظهر للموظف بعد اعتماد الشهر.
 
 **تعديل راتب موظف:** `POST/PATCH /employees` تعيد حساب `salaryTotal` و `insuranceSub/Comp` و `netSalary*` المخزّنة عبر `_store_figures()` بنفس منطق الـ HTML (`sEmp` + `refreshInsuranceDependentViews`). طابقت 102 من 107 موظف قيم الـ HTML الأصلية، والباقي بيانات قديمة. `eosLaborLaw` المخزّن ما زال ما يتحدث.
 
@@ -332,3 +333,12 @@
 
 ---
 
+## 10. ملاحظات مفتوحة / ديون معروفة
+- **حذف بيئة demo** بعد العروض، أو حذف قاعدة `Postgres` منها.
+- **حذف** `~/Desktop/HR/backups/prod_for_demo.sql`، فيه رواتب حقيقية.
+- **حذف** `frontend/employee-app/.env` عشان يرجع التطبيق للإنتاج.
+- **`eosLaborLaw` المخزّن** ما يتحدث عند تعديل الراتب. التأمينات والصافي صاروا يتحدثون.
+- **غير مدعوم على canonical:** المرافقين (`dependents` يرجع 501)، وإضافة وحذف الأقسام وجهات العمل.
+- **زر «تحديث البيانات»** يمسح التعديلات غير المحفوظة في الصفحة، مثل تعديلات المسير. ممكن نضيف تأكيد.
+- **ملفات كثيرة في `backend/app/routers` و `services` و `alembic` و `tests` أرشيف** من المرحلة القديمة. تنظيفها مؤجل.
+- **تطبيق الموظف ما انجرّب على جوال حقيقي بكل تفاصيله.** ولا فيه بناء دائم (TestFlight / APK) بعد.

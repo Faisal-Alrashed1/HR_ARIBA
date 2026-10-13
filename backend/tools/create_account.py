@@ -20,7 +20,7 @@ from sqlalchemy import text  # noqa: E402
 
 from app.database import engine  # noqa: E402
 
-ROLES = ("employee", "manager", "hr", "ceo", "admin", "finance", "admin_manager", "chairman")
+ROLES = ("employee", "manager", "hr", "ceo", "admin", "finance")
 
 
 def main() -> None:
@@ -36,6 +36,8 @@ def main() -> None:
             raise SystemExit(f"Username {username} already exists")
         if a.employee_id and not db.execute(text("SELECT 1 FROM public.employee_directory WHERE employee_id=:e"), {"e": a.employee_id}).first():
             raise SystemExit(f"Employee {a.employee_id} not found")
+        if a.employee_id and db.execute(text("SELECT 1 FROM public.ariba_auth_accounts WHERE employee_id=:e"), {"e": a.employee_id}).first():
+            raise SystemExit(f"Employee {a.employee_id} already has an account")
         acc = db.execute(text("""INSERT INTO public.ariba_auth_accounts(username,password_hash,role,employee_id,active,must_change)
             VALUES(:u,:h,:r,:e,true,true) RETURNING id"""), {"u": username, "h": PasswordHasher().hash(password), "r": a.role, "e": a.employee_id}).scalar_one()
         db.execute(text("SELECT pg_advisory_xact_lock(hashtext('ariba_audit_log'))"))
