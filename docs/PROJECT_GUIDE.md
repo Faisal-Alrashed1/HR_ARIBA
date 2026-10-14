@@ -1,344 +1,543 @@
-# دليل مشروع أريبا للموارد البشرية — من البذرة إلى آخر تعديل
+# ARIBA HR — Project Guide, from the first seed to the latest change
 
-> آخر تحديث: 2026-10-11، آخر commit منشور: `2dea04d`.
-> هذا الملف هو **المرجع الأول** لأي محادثة جديدة. اقرأه كامل قبل أي تعديل، وبعدها `docs/HANDOFF.md` و `docs/INTEGRATION_AUDIT.md` عند الحاجة.
-
----
-
-## 0. قواعد العمل مع صاحب المشروع
-- **اللغة:** الرد بالعربي، مختصر ومباشر.
-- **المرجع:** المرجع الوحيد للشكل والمعادلات هو ملفات HTML المفصولة في `frontend/legacy` (النسخة V114 مع تحديثات حتى V130). أي قاعدة في `docs/BUSINESS_RULES.md` تخالف الـ HTML: نتبع الـ HTML وننبّه.
-- **قاعدة البيانات:** هي قاعدة زميلنا (Supabase الأصلية، «canonical»). **لا** Alembic ولا إنشاء جداول عليها، و**لا** commit لأي ملف SQL فيه بيانات حقيقية.
-- **النشر:** ما ننشر إلا لما يقول صاحب المشروع «انشر». التعديلات تتجمع محلياً وتنفحص أول.
-- **كلمات المرور:** ما ندخل كلمة مرور حقيقية على موقع منشور. الفحص يكون محلياً بحسابات تجربة.
+> Last update: 2026-10-14. Last deployed commit: `1ba1a42` (production and demo).
+> This file is **the first reference** for anyone (or any new session). The English version comes first, then the full Arabic version.
 
 ---
 
-## 1. فكرة المشروع (البذرة)
-شركة **أريبا للاستشارات** كانت تشغّل نظام موارد بشرية عبارة عن **ملف HTML ضخم واحد** فيه كل شي، وتطور عبر تحديثات مرقّمة (V1 → V130). البيانات كانت في **Supabase** اللي بناه الزميل **محمد عوض**: جداول، ودوال SQL، وحسابات.
+# English
 
-**الهدف:** إعادة بناء النظام بتقنيات حديثة، **بنفس الشاشات والحقول والنصوص والمعادلات بالضبط**، على ثلاثة أجزاء:
-1. **موقع الموارد البشرية** (متصفح): لموظفي HR والمدراء والمالية.
-2. **تطبيق جوال للموظف** (iPhone و Android): البصمة والطلبات والراتب.
-3. **خادم واحد + قاعدة بيانات** يخدم الاثنين.
+## 0. Working rules (owner's instructions)
+- Reply in **Arabic, short and direct**.
+- **No push to `main` and no deploy until the owner says «انشر».** A push to `main` deploys **both** production and demo.
+- **Never delete anything** (files, databases, environments, backups) unless the owner names it and asks.
+- Decide the best option and execute. Stop for the owner only at real decisions and before deploying.
+- Never type real passwords on deployed sites. Test locally with test accounts.
+- Never commit files containing real data (DB dumps, logs with data). Schema-only SQL is fine.
+- **Reference for every screen, field, text and formula:** the split legacy HTML in `frontend/legacy` and the legacy Supabase SQL functions (`tools/legacy-parity/sql`). The only intended differences are the documented labour-law corrections (section 6).
 
-**المبدأ:** ننقل **المنطق** نظيف وبنفس النتائج، ما ننسخ الكود القديم.
+## 1. The idea
+- **ARIBA Consulting** ran HR on **one huge HTML file**, grown through numbered updates V1 to V130. Data lived in **Supabase**, built by colleague Mohammed Awad: tables, SQL functions and calculations.
+- **Goal:** rebuild it on a modern stack with **the same screens, fields, texts and formulas**:
+  1. **HR website** for HR, managers and finance.
+  2. **Employee mobile app** (iPhone and Android): punch, requests, salary.
+  3. **One backend + database** serving both.
+- **Principle:** port the logic cleanly with identical results, not copy the old code.
 
----
+## 2. Tech stack
+- **Backend:**
+  - Python 3.12, FastAPI, Uvicorn.
+  - SQLAlchemy 2 + psycopg 3, raw SQL via `text()`.
+  - Pydantic, PyJWT, Argon2/bcrypt.
+  - pytest.
+- **Database:** PostgreSQL 18 on Railway, service `Postgres-Q6OM`. Normalized schema since 2026-10-13 (section 5). The old service `Postgres` is kept untouched.
+- **HR website:** Next.js 16, React 19, TypeScript, Chart.js, Tabler Icons, Zod, ESLint.
+  - This Next.js has breaking changes. Read `frontend/hr-web/AGENTS.md`; it uses `proxy.ts`, not `middleware.ts`.
+- **Employee app:** Expo 57, React Native 0.86, TypeScript, Expo Router, expo-location, expo-secure-store, react-native-svg.
+- **Hosting:** Railway project `sparkling-learning` with two environments (production, demo). GitHub `Faisal-Alrashed1/HR_ARIBA` (private). Push to `main` auto-deploys both.
+- **Parity tooling:**
+  - `backend/tests_canonical/test_legacy_parity.py`: runs the legacy SQL functions in a throw-away DB and compares them with our code.
+  - `tools/legacy-parity`: Node + jsdom, runs the legacy HTML and compares the site's formulas.
 
-## 2. الخط الزمني (من أول commit لآخر تعديل)
+## 3. Timeline
 
-### المرحلة 1 — 4 أكتوبر: الأساس
-| commit | وش صار |
-|---|---|
-| `de89234` | أساس الخادم: الجداول، الدخول، الأدوار والصلاحيات، الأمان، API الموظفين |
-| `2918f77` | نسبة السعودة |
-| `a772d67` | أساس الموقع وصفحة الموظفين والوثائق |
-| `2720be8` | التأمينات (GOSI)، مكافأة نهاية الخدمة، لوحة التحكم، التنبيهات، المستندات، الصورة، المرافقين |
-| `9981fbd` | مطابقة تصميم V114 |
-| `ac9eb15` | النشر على Railway بتسجيل دخول خاص فينا وتخزين على قرص، بدون Supabase |
+### 3.1 — 4 Oct: first version (later reset)
+- Backend foundation: auth, roles, security, employees.
+- Saudization, GOSI, EOS, dashboard, alerts, documents, photo, dependents.
+- V114 design and first Railway deploy.
 
-### المرحلة 2 — 5 أكتوبر: إعادة البناء من الـ HTML الجديد
-- `34fab47` و `7c2a099`: **تصفير الريبو** وتقسيمه: `backend` + `frontend/hr-web` (Next.js) + `frontend/employee-app` (React Native)، والـ HTML المفصول صار مرجع في `frontend/legacy`.
-- بعدها نُقلت كل صفحة من الـ HTML بنفس النتائج:
-  - التأمينات مع إعفاء V130.
-  - نهاية الخدمة والمخالصة.
-  - المسير (محرك PAYX V119).
-  - القسيمة والمواقع والحضور.
-  - محرك أرصدة الإجازات (منقول سطر بسطر ومطابق لناتج الـ JS القديم).
-  - الإجازات والوثائق والتقارير التسعة والإعدادات.
-  - النماذج التسعة بالترويسة وإرسالها للموظف.
+### 3.2 — 5 Oct: rebuild from the split legacy HTML
+- Repo reset into `backend` + `frontend/hr-web` + `frontend/employee-app`, with the legacy HTML as reference in `frontend/legacy`.
+- Ported with identical results:
+  - GOSI with the V130 exemption.
+  - EOS page (`rEOS`) and settlement (`sRun`).
+  - Payroll engine PAYX V119.
+  - Payslip, locations, attendance.
+  - Leave ledger engine.
+  - Leaves, documents, the 9 reports, settings.
+  - The 9 letterhead forms.
 
-### المرحلة 3 — 6 أكتوبر: تنظيف وإضافات وأول نسخة من التطبيق
-- **الموقع:**
-  - تنظيف السكيما (migration 0007).
-  - تقارير الحضور V117.
-  - مستند المخالصة مع كتابة المبلغ بالحروف.
-  - أرشيف الرواتب، وإرسال النماذج لأكثر من موظف، والنسخ الإنجليزية.
-  - مواقع عمل لكل موظف (V121).
-  - مرفقات الطلبات، ونهاية العقد والإنهاء التلقائي، وخيار «بدون خصم».
-- **التطبيق:** بصمة GPS مع نطاق جغرافي في الخادم، وطلباتي، ونسيان البصمة، والفريق، والموافقات، والنماذج، والقسائم، والإشعارات.
+### 3.3 — 6 Oct: additions and the first app
+- **Web:**
+  - V117 attendance reports.
+  - Settlement document with amount in words.
+  - Payroll archive.
+  - Bulk and English forms.
+  - Per-employee work locations (V121).
+  - Request attachments.
+  - Contract end with auto terminate/reactivate.
+  - «بدون خصم» GOSI toggle.
+- **App:** GPS punch with server geofence and flexible hours, my requests, forgot punch, team, approvals, forms, payslips, notifications.
 
-### المرحلة 4 — 8 أكتوبر: الانتقال لقاعدة زميلنا (canonical)
-- `d32f890`: تقرير مقارنة جداوله بكودنا (`docs/INTEGRATION_AUDIT.md`).
-- `d5cd4e3`: **الخادم صار يشتغل على جداول Supabase الـ 34 كما هي**:
-  - ملف routes واحد هو `backend/app/routers/canonical.py`، فيه أوامر SQL مباشرة.
-  - الحسابات اللي تأكدنا منها بقت من كودنا.
-  - القاعدة نُقلت لخدمة Railway اسمها `Postgres-Q6OM`، والقاعدة القديمة `Postgres` بقت للرجوع.
-- `8b46326`: أداة إنشاء حساب دخول بكلمة مرور مؤقتة.
-- `6f89af9`: تطبيق الموظف بشكل V118 القديم (الشريط العائم، دائرة البصمة، كل التبويبات).
+### 3.4 — 8 Oct: moved onto the colleague's database (canonical)
+- The backend runs on the original Supabase schema through `backend/app/routers/canonical.py` (all routes, raw SQL).
+- DB service `Postgres-Q6OM`. Audit in `docs/INTEGRATION_AUDIT.md`.
+- `backend/tools/create_account.py` creates a login with a temporary password.
+- The app was restyled to the legacy V118 look.
 
-### المرحلة 5 — 11 أكتوبر: العرض، والهوية، والطلبات
-- **بيئة عرض `demo` على Railway:** نسخة من الإنتاج، وكل الرواتب فيها 1000 فعلياً في القاعدة. **ما فيها commit**، هي إعداد في Railway. التفاصيل في القسم 4.
-- `673ddb1`: شيل الإيموجي واستبداله بأيقونات Tabler الخطية، وتحويل الألوان الدخيلة لألوان الهوية (من ملف `ARIBA LAYOUT - NEW 4.pptx`).
-- `9a345ee`: كل رمز انشال صار له بديل، منها أيقونات SVG في المستندات المطبوعة (`lib/print-icons.ts`). وصور الرجل والمرأة والتمهير صارت من صور أرسلها صاحب المشروع (اشتراك Flaticon).
-- `487fbaa`:
-  - **منتقي تاريخ ووقت موحد** في الموقع (39 خانة) والتطبيق، مع اختيار سريع للسنة والشهر.
-  - **صفحة «الطلبات والإجازات»** تعرض كل الأنواع، والرقم يطابق القائمة.
-  - **تنبيه نسيان البصمة** في صفحة الحضور.
-- `8ee52fc`: لوحة التحكم: أيقونات فوق البطاقات، ورقم الرواتب أسود، وصورتي الجنس بلون واحد وحجم واحد، وأشرطة للأقسام، وترتيب أيقونة ← رقم ← اسم.
-- `fe9c836`: زر «تحديث البيانات» صار يعيد تحميل **أي** صفحة (كان يشتغل على صفحتين بس).
+### 3.5 — 11 Oct: demo, brand, UI
+- **Demo environment:** a copy of production with all salaries 1000. It is a Railway setup, not a commit.
+- **Brand:** Tabler icons instead of emoji, ARIBA colours, male/female/tamheer avatars.
+- **UI:**
+  - Unified date/time picker.
+  - «الطلبات والإجازات» page with all request types.
+  - Forgot-punch notice.
+  - Dashboard polish.
+  - «تحديث البيانات» reloads any page.
+- **Employees:** saving recomputes stored GOSI/net (legacy `sEmp`); clearer messages; «كل جهات العمل» filter fixed.
 
----
+### 3.6 — 11–12 Oct: legacy parity audit (`0f85a93`)
+- Report in `docs/LOGIC_AUDIT.md`. The legacy HTML was run in jsdom and the legacy SQL functions in Postgres, then compared number by number.
+- **EOS report** uses the recorded award (84/84). Contract end is computed on save. Reactivation on renewal (V101).
+- **Punch (legacy V140):**
+  - Polygons, smallest zone first.
+  - Remote only with an approved remote request for the day.
+  - Late minutes at least 1, rounded.
+  - Tolerance 0 respected.
+- **Dashboard figures** match the legacy.
+- **GOSI exemption** = legacy `kindOf` (428/428).
+- **App leave balance** = legacy `ariba_leave_calc`.
+- **Requests:**
+  - Every type goes manager → HR → CEO; forgot punch goes to HR only.
+  - HR is notified of every new request; legacy notification texts.
+  - HR override and final approve as legacy.
+  - Forgot punch merges into the day's record.
+  - The annual-leave balance check on submit is **kept** (owner's choice).
+- **Attendance reports** logic in `frontend/hr-web/src/lib/calc/att-reports.ts` (+ avg check-in). The payroll report recomputes net.
+- **Permanent parity tests** (section 9).
 
-## 3. المعمارية
+### 3.7 — 12–13 Oct
+- `683982d`: files and photos live in the DB (`ariba_documents`).
+- `c24e6d6`: the owner removed the open-notes section from this guide.
+- `1d2bbed`: dark green border on every dashboard tile.
+- `ad8ee40`: HR delete-request fix (a missing parenthesis gave HTTP 500, shown as «Cannot reach the server») + regression test.
+- **Rollback point** `before-normalization` taken (section 8).
+
+### 3.8 — 13 Oct: the colleague's normalization merged and deployed
+- The colleague (Ghady Nafisah, repo `Dalteam/HR_ARIBA`) normalized the schema and updated the CRUD operations and API routes.
+- **`dbbee54`:** their changes brought into our code.
+  - Taken as delivered: `canonical.py`, `models.py`, the contract test, `create_account.py`, the app's notifications (server read state), the attendance page (sessions per day).
+  - Kept ours: the delete-request fix and the dashboard borders.
+  - **Single delete helper:** removes a request with every row that references it (leave, permission, documents, notifications, actions). Used by HR delete, employee delete and letter delete, which failed on the new foreign keys.
+  - **Parity tests** re-done on the new schema (adds correction K, section 6).
+- **`1ba1a42`:** `docs/db-normalization/run_on_railway.sh` migrates one Railway environment:
+  1. Full backup, verified.
+  2. `railway_prep.sql`: restores the original Supabase keys the Railway export lost, and aligns payroll approval flags (backed up to `ops`).
+  3. `preflight_checks.sql`, then `pre_migration_fixes.sql`, then `preflight_checks.sql` again.
+  4. `ariba_normalization.sql`.
+- **Production and demo DBs migrated, code deployed (15:27).**
+  - Checked afterwards: health OK, login answers, no 500s.
+  - Row counts unchanged, except:
+    - Payroll rows 175 → 171: 4 orphan rows (deleted employees), backed up in `ops.orphan_payrolls_backup`.
+    - Workflow actions 12 → 14: backfilled missing actions; old «HR override» stage rows were removed (they exist only in the pre-migration backup).
+  - All tests green.
+
+## 4. Architecture
 ```
- موقع HR (Next.js 16)          تطبيق الموظف (Expo / React Native)
- frontend/hr-web               frontend/employee-app
-        │  HTTPS JSON  /api/v1          │
+ HR website (Next.js)            Employee app (Expo)
+ frontend/hr-web                 frontend/employee-app
+        │  HTTPS JSON /api/v1           │
         └──────────────┬────────────────┘
                        ▼
-            الخادم FastAPI (Python 3.12)
-            backend/app/main.py → routers/canonical.py
-                       │  SQL مباشر (SQLAlchemy text)
+          FastAPI backend: backend/app/main.py → routers/canonical.py (raw SQL)
                        ▼
-     PostgreSQL على Railway (جداول Supabase الأصلية، 34 جدول)
+          PostgreSQL on Railway (normalized schema)
 ```
-- **الدخول:** `POST /api/v1/auth/login` يرجّع JWT موقّع من الخادم. الحسابات في `ariba_auth_accounts`، وكلمات المرور bcrypt من النظام القديم، وتتحوّل تلقائياً لـ Argon2.
-- **الأدوار:** admin، admin_manager، hr، ceo، finance، manager، employee. الخادم يتحقق من الصلاحية في كل route، والواجهة تعكسها بس.
-- **التخزين:** صور الموظفين ومرفقات الطلبات والخطابات **داخل قاعدة البيانات** (جدول `ariba_documents`، عمود `file_data`). قرص Railway (`STORAGE_DIR=/data`) من المرحلة القديمة وما يُستخدم على canonical.
+- **Login:** `POST /api/v1/auth/login` returns a JWT signed by the backend. Accounts in `ariba_auth_accounts`; legacy bcrypt passwords auto-upgrade to Argon2.
+- **Roles:** admin, admin_manager, hr, ceo, finance, manager, employee. The backend checks permissions on every route; the UI only mirrors them.
+- **Files:** photos, attachments and letters are stored **in the DB** (`ariba_documents.file_data`). The Railway `/data` disk is unused.
+- **The frontends depend only on the API JSON**, never on the DB shape.
 
----
+## 5. Database (normalized, since 2026-10-13)
+- **`employee_directory`:**
+  - `employee_id`, name, `manager_id` (FK), `active`.
+  - `employer_id`, `department_id`, `job_title_id` (FKs to lookup tables).
+  - `data` JSONB still holds the legacy fields and stored figures.
+  - The username lives only in `ariba_auth_accounts`.
+- **Lookups:** `employers`, `departments`, `job_titles`, `roles`, `workflow_stages`, `leave_types`, `permission_types`, `document_types`, `workflow_request_types`.
+- **Workflow:**
+  - `workflow_requests`: all requests; `status` is generated from `current_stage`.
+  - `workflow_approvers`: hr = 40, ceo = 86.
+  - `workflow_actions`: actor account and comment.
+  - `workflow_notifications.read_at` marks read.
+- **Requests detail:** `leave_requests` (`employee_id`, `leave_type`; compat view `leave_requests_v`) and `permissions`.
+- **`attendance`:** `employee_id`; one row per session; at most one open session per employee per day; location via `location_id`.
+- **Payroll:**
+  - `employee_payrolls` (`payload` JSONB per employee and month) and `payroll_archives_v2`.
+  - Month approval in `payroll_periods`.
+  - `payroll_components`/`payroll_lines` exist but are **empty**; the app still reads the payload.
+- **Other tables:** `ariba_auth_accounts`, `ariba_sessions`, `ariba_app_settings`, `work_locations` (`employer_id`, NULL = all), `public_holidays`, `company_settings` (shift hours from `shift_duration_minutes`), `ariba_documents`, `ariba_audit_log`, `ariba_deleted_items`.
+- **Schema `ops`:** old backup tables, `orphan_payrolls_backup`, `employee_payrolls_approval_backup`.
+- **Migration scripts:** `docs/db-normalization/` (section 3.8).
+- **Known data issue — long IDs:**
+  - 81 employees (1 active, 80 terminated) have an `employee_id` like `XLS-62d422dece6b`. The legacy HTML gave these IDs to employees imported from Excel, and they became the primary key.
+  - 78 of them have a real employee number in `data.empNo`, which the UI shows.
+  - **3 terminated employees have none**, so the long ID shows as their number.
+  - 4 logins use `EMPXLS-…` usernames.
+  - **Not fixed yet** (options: give the 3 a number, or renumber all IDs across tables).
 
-## 4. البيئات والروابط (Railway، مشروع `sparkling-learning`)
-| البيئة | الموقع | الخادم | القاعدة |
-|---|---|---|---|
-| **production** (البيانات الحقيقية) | https://frontend-production-f9a8a.up.railway.app | https://hrariba-production.up.railway.app | `Postgres-Q6OM` |
-| **demo** (الرواتب 1000) | https://frontend-demo-b5ec.up.railway.app | https://hrariba-demo.up.railway.app | `Postgres-Q6OM` (نسخة demo) |
-
-- **خدمات كل بيئة:** `HR_ARIBA` (الخادم)، و`frontend` (الموقع)، و`Postgres-Q6OM` (القاعدة المستخدمة)، و`Postgres` (القاعدة القديمة للرجوع، وفي demo ما لها استخدام).
-- **النشر:** أي push على `main` ينشر **البيئتين مع بعض** تلقائياً، لأنهم يأخذون من نفس الريبو.
-- **متغيرات الخادم:** `DATABASE_URL`، `JWT_SECRET`، `CORS_ORIGINS`، `RUN_MIGRATIONS_ON_STARTUP=false`، `STORAGE_DIR=/data`، `ENV=production`.
-- **متغير الموقع:** `NEXT_PUBLIC_API_URL`، ويُقرأ وقت البناء.
-- **الـ CLI:** مربوط على `production`. لأي أمر على العرض أضف `-e demo`.
-- **كيف انبنت بيئة demo:**
-  1. `pg_dump` من الإنتاج، بتشغيل صاحب المشروع.
-  2. استيراد النسخة في قاعدة محلية `ariba_demo`.
-  3. تشغيل سكربت يخلي إجمالي كل موظف 1000 بنفس نسب البدلات، ويعيد حساب التأمينات والصافي، ويعدّل المسيرات والأرشيف، وينظف السجلات.
-  4. رفعها لقاعدة demo.
-- **صور وملفات demo:** نفس الإنتاج، لأنها داخل القاعدة اللي انتسخت. (حالياً في النسختين: مرفق إجازة واحد وخطاب واحد، وما فيه صور موظفين مرفوعة.)
-- **قاعدة بعد العرض:** يا نحذف بيئة demo، أو نحذف منها قاعدة `Postgres` القديمة لتوفير التكلفة.
-
----
-
-## 5. قاعدة البيانات (canonical)
-- **أهم الجداول:**
-  - `employee_directory`: `employee_id` والاسم والمدير والحالة، ومفاتيح `employer_id` و`department_id` و`job_title_id` إلى جداول الأسماء. اسم المستخدم من `ariba_auth_accounts` فقط. عمود `data` JSONB يحتفظ بالحقول القديمة والحسابات.
-  - `workflow_requests`: **كل طلبات الموظفين**. `status` مولّد من `current_stage` ولا يُكتب مباشرة؛ جهات HR وCEO المعتمدة في `workflow_approvers`.
-  - `workflow_actions` يسجل الحساب الفاعل والتعليق، و`workflow_notifications.read_at` يحدد المقروء.
-  - `leave_requests` و`permissions`: تفاصيل الطلب، مربوطة إلزامياً بـ `workflow_requests` للإجازة، وبـ `workflow_request_id` للاستئذان.
-  - `attendance`: كل صف جلسة؛ أكثر من جلسة في اليوم مسموح، مع جلسة مفتوحة واحدة لكل موظف/يوم. الموقع يُقرأ عبر `location_id`.
-  - `employee_payrolls` (المسير، `payload` JSONB لكل موظف وشهر)، و`payroll_archives_v2`. اعتماد الشهر في `payroll_periods`.
-  - جداول lookup: `employers` و`departments` و`job_titles` و`roles` وأنواع الطلبات والإجازات والأذونات والمستندات.
-  - `ariba_auth_accounts` و `ariba_sessions`: الحسابات والجلسات.
-  - `ariba_app_settings`: الإعدادات كـ key/value، منها `ins_settings` للتأمينات والشعار.
-  - `work_locations`، `public_holidays`، `ariba_documents`، `ariba_audit_log`، `ariba_deleted_items`.
-- **مراحل الموافقة:** `_stages()` في `canonical.py`، مثل القديم (`ariba_workflow_action`) بقرار صاحب المشروع:
-  - كل الأنواع: مدير الموظف من `employee_directory.manager_id` ← HR ثم الرئيس التنفيذي حسب `workflow_approvers` (الموظف بدون مدير يبدأ من HR).
-  - **نسيان البصمة: HR بس**، والموافقة عليه **تسجّل الحضور** في `attendance`.
-  - التحقق من رصيد الإجازة السنوية عند التقديم **باقي** (أشد من القديم)، بقرار صاحب المشروع.
-- **قواعد محلية على الجهاز** (Postgres في `/tmp`):
-  - `ariba_demo`: نسخة العرض المحلية، فيها حسابات وطلبات تجربة.
-  - `ariba_hr_dev` و `ariba_hr_test`: قديمة.
-- **نسخ احتياطية خارج الريبو:**
-  - `~/Desktop/HR/backups/`: فيها `prod_for_demo.sql`، **بيانات حقيقية، تنحذف بعد الانتهاء**، ونسخة القاعدة القديمة.
-  - `~/Downloads/supabase_full.sql`: تصدير زميلتنا الكامل.
-
----
-
-## 6. المجلدات والملفات
-
-### الجذر
-| الملف | الدور |
+## 6. Labour-law corrections (intended differences from legacy)
+| Code | Correction |
 |---|---|
-| `README.md` | تعريف وتشغيل سريع |
-| `.gitignore` | يستثني `.env` والقواعد المحلية والـ dumps |
-| `.claude/launch.json` | إعداد تشغيل محلي قديم. الإعداد المستخدم فعلياً في `~/Desktop/HR/.claude/launch.json` |
-| `.vscode/` | إعدادات المحرر |
+| A | Art. 85 resignation: exactly 5 years = 1/3, exactly 10 = full |
+| B | EOS base = actual wage (basic + all fixed allowances) |
+| C | Art. 77 on a fixed-term contract = wage of the months left (min two months) |
+| D | Art. 87 full-award option |
+| E/F | Legal notes for HR (sick-leave tiers art. 117, marriage/death/paternity/maternity limits, hajj). Notes only, nothing is rejected |
+| G | Payroll GOSI on the actual housing allowance |
+| H | Overtime divisor unchanged |
+| I | Warning when this or next year's Eids are missing |
+| J | Leave after 5 years correct for contracts above 21 days |
+| K | Flexible day: early leave counted on the last session (added with the normalization merge) |
 
-### `backend/` — الخادم
-| الملف | الدور |
-|---|---|
-| `app/main.py` | إنشاء التطبيق: CORS، رؤوس الأمان، معالجة الأخطاء. **يربط router اثنين بس:** `health` و `canonical` |
-| `app/config.py` | قراءة المتغيرات والتحقق منها (في الإنتاج: يشترط JWT قوي و Postgres) |
-| `app/database.py` | المحرك والجلسة، ويحوّل `postgresql://` إلى `postgresql+psycopg://` |
-| **`app/routers/canonical.py`** | **قلب الخادم (2165 سطر، 99 route).** كل الـ API: الدخول، والموظفين، والمواقع، والإعدادات، ولوحة التحكم، والحضور والبصمة، وطلبات الموظف (`/me/requests`)، وطلبات HR (`/requests`) وموافقاتها، والإشعارات، والنماذج، والمستندات والصور، والمسير (`/sheets`)، والأرشيف، والأرصدة، والعطل |
-| `app/routers/health.py` | `/health` لـ Railway |
-| `app/routers/*.py` الباقي | **أرشيف** من مرحلة قاعدتنا القديمة. غير مربوط بـ `main.py` |
-| `app/services/canonical_data.py` | يقرأ جداول canonical بالشكل اللي تبيه الحسابات |
-| `app/services/employee_map.py` | ترجمة بالاتجاهين بين `employee_directory.data` وحقول الموقع، و`figures()` تحسب الإجمالي والتأمينات والصافي |
-| `app/services/gosi.py` | التأمينات من قواعد بتواريخ سريان (مع إعفاء V130) |
-| `app/services/leave.py` | محرك أرصدة الإجازات (منقول سطر بسطر من V114) |
-| `app/services/end_of_service.py`، `contracts.py`، `scheduling.py`(core) | حسابات نهاية الخدمة، والعقود، والتقويم (الرياض، الأحد–الخميس). منطق البصمة الحالي في `routers/canonical.py`؛ `geofence.py` و`punch.py` و`attendance.py` من طبقة ORM القديمة وغير مربوطة بـ `main.py`. |
-| `app/services/*` الباقي | أغلبها كانت لمرحلة قاعدتنا القديمة |
-| `app/core/` | الأخطاء الموحدة (`errors.py`)، ورؤوس الأمان وحد محاولات الدخول (`security.py`)، والوقت (`scheduling.py`). `identity.py` و `auth.py` للقديم |
-| `app/models.py` | جداول canonical بالـ reflection (98 سطر) |
-| `app/schemas.py`، `app/enums.py` | أشكال الطلبات والأنواع |
-| `alembic/` + `migrations.py` | **أرشيف**: migrations 0001–0008 لقاعدتنا القديمة. **ممنوع تشغيلها** على canonical |
-| `tools/create_account.py` | إنشاء حساب دخول بكلمة مرور مؤقتة. الاستخدام: `railway ssh -s HR_ARIBA -- python tools/create_account.py --username X --role employee --employee-id N` |
-| `tools/load_canonical.py` | تحميل تصدير Supabase في قاعدة فاضية |
-| `tests_canonical/` | اختبارات عقد canonical (الجداول، والتشفير، وإخفاء الراتب والهوية) + **`test_legacy_parity.py`** (مطابقة النظام القديم، القسم 9). `pytest.ini` يشغّلها هي بس |
-| `tests/` | **≈70 اختبار معطّلة**: `conftest.py` يستورد `Credential` من `models.py` القديم اللي انحذف وقت الانتقال لـ canonical. فيها اختبارات حسابات قيّمة (التأمينات، ونهاية الخدمة، ومحرك الإجازات، وأيام العمل) تحتاج إنقاذ |
-| `railway.json` | أمر التشغيل `uvicorn` و healthcheck `/health` |
-| `requirements.txt` | المكتبات |
+## 7. Environments and links
+| | Production (real data) | Demo (salaries 1000) |
+|---|---|---|
+| Website | https://frontend-production-f9a8a.up.railway.app | https://frontend-demo-b5ec.up.railway.app |
+| Backend | https://hrariba-production.up.railway.app | https://hrariba-demo.up.railway.app |
+| Database | `Postgres-Q6OM` | `Postgres-Q6OM` (demo copy) |
 
-### `frontend/hr-web/` — موقع HR (Next.js 16، React 19)
-> انتبه: `AGENTS.md` يقول إن Next.js هذا فيه تغييرات عن المعتاد، والمرجع `node_modules/next/dist/docs/`. مثلاً `proxy.ts` بدل `middleware.ts`.
-
-**الصفحات `src/app/(hr)/(portal)/`:**
-| الصفحة | المحتوى |
-|---|---|
-| `dashboard` | البطاقات (الحاليون، السعودة، الرواتب، الجنس، الأقسام، المعلقة/المنتهية/التمهير) والرسوم والتنبيهات |
-| `employees` (+ `[id]`، `new`) | القائمة والتبويبات وملف الموظف |
-| `attendance` | الحضور اليومي، والتسجيل اليدوي، والملخص الشهري، والتقارير، و**تنبيه نسيان البصمة** |
-| `locations` | مواقع البصمة |
-| **`leaves`** | **«الطلبات والإجازات»** (1032 سطر): بانتظار إجراء · كل الطلبات · طلب جديد · الأرصدة · العطل · عمل إضافي. تقبل رابط `?tab=lv1&type=forgot_punch` |
-| `payroll` | المسير (محرك PAYX في `lib/calc/payroll.ts`)، حفظ واعتماد، وExcel، وطباعة |
-| `payslips` | القسيمة الرسمية |
-| `end-of-service`، `settlement` | نهاية الخدمة والمخالصة ومستندها |
-| `documents` | الإقامات، والجوازات، والتأمين، والعقود |
-| `reports` | التقارير التسعة |
-| `settings` | الشركة، والحضور، والتأمينات، والأقسام، والحسابات، والموقّع |
-| `templates` | النماذج وإرسالها للموظف |
-
-**باقي المجلد:**
-- `src/app/(hr)/login`: دخول HR.
-- `src/app/(employee)/me/...`: نسخة ويب قديمة لبوابة الموظف. **التطبيق الفعلي هو `employee-app`**.
-- **`src/components/`:**
-  - `hr/hr-shell.tsx`: الإطار، والقائمة، والشريط العلوي، وزر «تحديث البيانات» اللي يعيد تحميل الصفحة عبر `key={tick}`.
-  - `hr/employee-form.tsx` و `employee-details.tsx` و `dependents-tab.tsx` و `terminate-modal.tsx`.
-  - `hr/charts.tsx` (Chart.js)، و`hr/attendance-reports.tsx`، و`hr/linked-employees.tsx`.
-  - `hr/forgot-punch-notice.tsx`: تنبيه صفحة الحضور.
-  - `hr/gender-icons.tsx`: صور الجنس كـ CSS mask.
-  - **`common/date-time-field.tsx`**: منتقي التاريخ والوقت الموحد (`DateField`، `TimeField`).
-  - `common/toast.tsx`: الرسائل مع أيقونة. `common/password-dialog.tsx`.
-- **`src/lib/`:**
-  - `api.ts`: العميل والأنواع. `leave.ts`، `employees.ts`، `attendance.ts`، `settings.ts`، `sheets.ts`، `salary.ts`، `locations.ts`، `registry.ts`: استدعاءات كل وحدة.
-  - **`calc/`**: معادلات منقولة من الـ HTML (`payroll.ts`، `payx.ts`، `eos.ts`، `settlement.ts`، `settlement-doc.ts`، `forms.ts`، `forms-en.ts`، `tafqeet.ts`).
-  - `i18n/ar.ts` و `en.ts`: النصوص.
-  - `theme.tsx`: الوضع الليلي والنهاري عبر `html[data-ariba-theme]`.
-  - `refresh.tsx` و `use-api.ts`: التحديث وجلب البيانات.
-  - `print.ts` و `print-icons.ts`: الطباعة.
-  - `session.ts` و `auth.ts` و `auth-context.tsx`: الجلسة.
-- `src/proxy.ts`: توجيه حسب الدور (مرآة فقط).
-- **`src/styles/`:** ملفات CSS منقولة من الـ HTML بالترتيب (`hr/00…24`). تعديلاتنا في **`hr/14-ariba-cohesive-brand-v42.css`**، وفي آخره: صور الجنس، والمنتقي `.ariba-dt*`، ولوحة التحكم.
-- **`public/`:** `brand/` (الشعار والترويسة)، و`fonts/` (خط ARIBA Two)، و`icons/` (male / female / tamheer).
-
-### `frontend/employee-app/` — تطبيق الموظف (Expo 57، React Native 0.86، expo-router)
-**التبويبات `app/(tabs)/`:**
-| الملف | المحتوى |
-|---|---|
-| `_layout.tsx` | الإطار، والشريط العائم، والجرس |
-| `index.tsx` | الرئيسية: دائرة البصمة، والأرصدة، والأزرار السريعة |
-| `attendance.tsx` | الحضور والبحث بفترة |
-| `leaves.tsx` | طلباتي + طلب جديد |
-| `overtime.tsx` | عمل إضافي |
-| `salary.tsx` | الراتب والقسائم |
-| `team.tsx` | فريقي |
-| `approvals.tsx` | الموافقات |
-| `documents.tsx` | المستندات |
-| `profile.tsx` | ملفي |
-
-**باقي المجلد:**
-- `app/login.tsx`، و`change-password.tsx`، و`letter/[id].tsx`.
-- **`src/components/`:**
-  - `ui.tsx`: المكوّنات الأساسية، ومنها `PickerField` و `CardTitle` و `Btn` اللي تقبل اسم أيقونة، والرسائل.
-  - **`date-time.tsx`**: التقويم وأزرار الوقت.
-  - `icons.tsx`: أيقونات SVG خطية بأسلوب Tabler.
-  - `shared.tsx`: نافذة نسيان البصمة، وبطاقة جهة العمل.
-  - `request-item.tsx`، و`password-sheet.tsx`.
-- **`src/lib/`:**
-  - `api.ts`: عنوان الخادم من `EXPO_PUBLIC_API_URL`، والافتراضي الإنتاج.
-  - `data.tsx`، `punch.tsx`، `geo.ts`، `notifications.tsx`، `labels.ts`، `store.ts`، `auth.tsx`.
-- `src/theme.tsx`: ألوان الهوية للوضعين.
-- `app.json`: يفرض الاتجاه من اليمين لليسار (`forcesRTL`).
-- **`.env`** (غير مرفوع): **حالياً يأشّر على خادم العرض**. احذفه عشان يرجع للإنتاج.
-
-### `frontend/legacy/` — المرجع
-`hr-portal/` و `employee-portal/`: ملفات الـ HTML و CSS و JS المفصولة (V114 → V130). نرجع لها لأي شاشة أو معادلة.
-
-### `docs/`
-| الملف | المحتوى |
-|---|---|
-| `PROJECT_GUIDE.md` | **هذا الملف** |
-| `HANDOFF.md` | ملخص 6 و 8 أكتوبر |
-| `INTEGRATION_AUDIT.md` | مقارنة canonical بكودنا |
-| `ARIBA_HR_System_Documentation.md` | توثيق النظام القديم |
-| `BUSINESS_RULES.md` | القواعد |
-| `DATABASE.md` | قاعدتنا القديمة |
-| `ARCHITECTURE.md`، `SECURITY.md`، `DEPLOY_RAILWAY.md`، `USAGE.md`، `ROADMAP.md`، `PROJECT_STATUS.md`، `PHASE1_REVIEW.md`، `FEATURE_*.md`، `*.manifest.json` | مراجع قديمة |
-
----
-
-## 7. أهم المسارات
-
-**البصمة:**
-1. التطبيق يرسل `POST /me/attendance/punch` ومعه الإحداثيات.
-2. الخادم يتحقق من النطاق الجغرافي والساعات المرنة.
-3. يكتب البصمة في جدول `attendance`.
-
-**طلب من التطبيق:**
-1. التطبيق يرسل `POST /me/requests`.
-2. ينحفظ في `workflow_requests`، والإجازات والاستئذانات تنحفظ كمان في `leave_requests`.
-3. ينرسل إشعار لأصحاب المرحلة الأولى.
-4. يظهر في الموقع في «الطلبات والإجازات» تحت «بانتظار إجراء» و«كل الطلبات».
-5. HR يوافق أو يرفض أو يعتمد نيابة أو يعتمد نهائي (`/requests/{id}/...`).
-
-**نسيان البصمة:** مرحلته HR بس. يظهر كمان في تنبيه صفحة الحضور، والموافقة عليه تكتب صف في `attendance`.
-
-**المسير:**
-1. الموقع يحسب المسير بمحرك PAYX في المتصفح.
-2. يحفظه عبر `PUT /sheets/pay_YYYY_MM` في `payroll_archives_v2` و`employee_payrolls`.
-3. الاعتماد في `payroll_periods`؛ القسائم تظهر للموظف بعد اعتماد الشهر.
-
-**تعديل راتب موظف:** `POST/PATCH /employees` تعيد حساب `salaryTotal` و `insuranceSub/Comp` و `netSalary*` المخزّنة عبر `_store_figures()` بنفس منطق الـ HTML (`sEmp` + `refreshInsuranceDependentViews`). طابقت 102 من 107 موظف قيم الـ HTML الأصلية، والباقي بيانات قديمة. `eosLaborLaw` المخزّن ما زال ما يتحدث.
-
----
-
-## 8. التشغيل المحلي
-- **الخادم على قاعدة العرض المحلية:**
+- **Services per environment:** `HR_ARIBA` (backend), `frontend`, `Postgres-Q6OM`, `Postgres` (old, untouched).
+- **Railway CLI** is linked to production; add `-e demo` for demo.
+- **Backend variables:** `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`, `RUN_MIGRATIONS_ON_STARTUP=false`, `ENV=production`. **Website:** `NEXT_PUBLIC_API_URL` (read at build time).
+- **The system is still in build stage, for developers only.**
+- **Employee app:** no permanent build yet (TestFlight/APK). Run it with Expo:
   ```
-  cd backend
-  DATABASE_URL='postgresql:///ariba_demo?host=/tmp' RUN_MIGRATIONS_ON_STARTUP=false CORS_ORIGINS='http://localhost:3010,http://localhost:8081,http://localhost:8082' ENV=development .venv/bin/uvicorn app.main:app --port 8010
+  cd frontend/employee-app && npx expo start --lan --clear
   ```
-- **الموقع:** `cd frontend/hr-web && NEXT_PUBLIC_API_URL=http://localhost:8010/api/v1 npx next dev -p 3010`
-- **التطبيق على الجوال:** `cd frontend/employee-app && npx expo start --tunnel --clear` ثم Expo Go وامسح الـ QR. أي شخص يقدر يمسحه ما دام الجهاز شغّال.
-- **التطبيق في المتصفح للتجربة:** `EXPO_PUBLIC_API_URL=http://localhost:8010 npx expo start --web --port 8082`
-- **حسابات التجربة المحلية:** `ui.check` (admin) و `ui.emp` (موظف 10) موجودة في `ariba_demo` المحلية بس. كلمات مرورها ما تنكتب في الملفات.
-- **الفحوصات:**
-  - الموقع: `npx tsc --noEmit` و `npx eslint src --quiet`
-  - التطبيق: `npx tsc --noEmit`
-  - الخادم: `.venv/bin/python -m pytest -q` (ومع `LEGACY_PARITY_PG` للمطابقة الكاملة)
-  - المطابقة مع الـ HTML: `cd tools/legacy-parity && npm test`
+  or `--tunnel`. `frontend/employee-app/.env` points at demo.
+- **GitHub CLI:** the active account must be `Faisal-Alrashed1`; the second account cannot see the private repo.
+
+## 8. Backups and rollback
+- **`before-normalization`:**
+  - Git tag = `ad8ee40`.
+  - Snapshot in `~/Desktop/HR/backups/before-normalization/`: prod + demo DB dumps, Railway variables, code bundle/zip, `README.txt` with restore steps.
+- **`~/Desktop/HR/backups/before-migration-2026-10-13/`:** prod + demo DB dumps taken by `run_on_railway.sh` right before migrating.
+- **These folders contain real data:** owner-only, never commit or share.
+- **Rollback = code and DB together:**
+  - Code: `git checkout before-normalization -- .`, commit, push.
+  - DB: restore the dump into a **new** database and point `DATABASE_URL` at it.
+
+## 9. Local setup, checks, tests
+- **Local Postgres (`host=/tmp`):**
+  - **New schema:** `ariba_after`, `ariba_after2`, `ariba_norm_trial` (migrated copies of production).
+  - **Old schema, no longer usable with the current code:** `ariba_demo`, `ariba_verify`, `ariba_before`.
+  - The test accounts `ui.check` (admin) / `ui.emp` (employee 10) exist only in old `ariba_demo`. On a new-schema copy, create a test login with `backend/tools/create_account.py`.
+- **Backend:**
+  ```
+  cd backend && DATABASE_URL='postgresql:///ariba_after?host=/tmp' RUN_MIGRATIONS_ON_STARTUP=false ENV=development CORS_ORIGINS='http://localhost:3010,http://localhost:8082' .venv/bin/uvicorn app.main:app --port 8010
+  ```
+- **Website:**
+  ```
+  cd frontend/hr-web && NEXT_PUBLIC_API_URL=http://localhost:8010/api/v1 npx next dev -p 3010
+  ```
+- **App in the browser:**
+  ```
+  cd frontend/employee-app && EXPO_PUBLIC_API_URL=http://localhost:8010 npx expo start --web --port 8082
+  ```
+- **Checks (all must pass before any deploy):**
+  - `cd backend && LEGACY_PARITY_PG='postgresql:///postgres?host=/tmp' .venv/bin/python -m pytest -q` — 44 passed, 1 skipped.
+  - `cd tools/legacy-parity && npm ci && npm test` — all suites match the legacy HTML.
+  - `cd frontend/hr-web && npx tsc --noEmit && npx eslint src --quiet`
+  - `cd frontend/employee-app && npx tsc --noEmit`
+- **Tests:**
+  - `backend/tests_canonical/test_canonical_contract.py`: table allowlist, security, masking.
+  - `test_legacy_parity.py`: legacy SQL functions run on the old shape, ours on the migrated shape, same rows. Covers punch, late/early, leave balance, notifications, approval flow, override/final, forgot punch, deletes, labour-law notes.
+  - `tools/legacy-parity`: site formulas vs legacy HTML (PAYX, settlement, EOS, tafqeet, GOSI exemption, attendance reports, labour-law corrections).
+  - `backend/tests/` (≈70, old) are broken and archived.
+
+## 10. Key files
+- `backend/app/routers/canonical.py`: all API routes (raw SQL), about 2640 lines.
+- `backend/app/services/`:
+  - `employee_map.py` (data ↔ API fields, `figures()`), `canonical_data.py` (readers for the engines).
+  - `leave.py` (LeaveBook), `gosi.py`, `end_of_service.py`, `contracts.py`.
+- `backend/app/models.py`: table allowlist checked at startup.
+- `frontend/hr-web/src/app/(hr)/(portal)/*`: the pages (dashboard, employees, attendance, locations, leaves, payroll, payslips, end-of-service, settlement, documents, reports, settings, templates).
+- `frontend/hr-web/src/lib/calc/*`: site formulas. `frontend/hr-web/src/lib/*.ts`: API clients and types.
+- `frontend/employee-app/app/(tabs)/*`: app tabs. `frontend/employee-app/src/lib/api.ts`: API client.
+- `frontend/legacy/`: the reference HTML.
+- `docs/`:
+  - `LOGIC_AUDIT.md`: legacy vs ours + decisions.
+  - `INTEGRATION_AUDIT.md`: canonical DB vs our code.
+  - `db-normalization/`: migration scripts.
+  - `HANDOFF_NEXT.md` (local only, superseded by this guide).
+  - The other docs are older references.
+
+## 11. Current status
+- **Production and demo:** same code (`1ba1a42`) on the normalized schema, all checks green.
+- **Not done yet:**
+  - The 3 employees without an employee number (long IDs, section 5).
+  - Empty `payroll_lines`.
+  - A manual pass over the screens after the migration.
+  - A permanent mobile build.
 
 ---
 
-## 9. الاختبارات (الوضع الحالي)
-- **الخادم:** `tests_canonical`.
-  - `test_canonical_contract.py`: عقد canonical.
-  - **`test_legacy_parity.py`: مطابقة النظام القديم.**
-    - بقيم مرجعية من الـ HTML نفسه (`fixtures/legacy_*.json`): نهاية العقد (`addMonthsSafe`)، وإعفاء التأمينات (`kindOf`)، وإرجاع الموظف نشط.
-    - **بدوال SQL القديمة نفسها** على قاعدة مؤقتة تنبني وتنحذف تلقائياً (من `tools/legacy-parity/sql`: سكيما ودوال، بدون بيانات) وبيانات تجريبية: المضلّع، وموقع البصمة وقاعدة «عن بعد»، والتأخير والخروج المبكر، ورصيد التطبيق (`ariba_leave_calc`)، وإشعارات الطلب الجديد (`ariba_submit_request`).
-    - التشغيل الكامل: `LEGACY_PARITY_PG='postgresql:///postgres?host=/tmp' .venv/bin/python -m pytest -q`. بدون المتغير تتجاوز اختبارات القاعدة.
-- **الموقع مقابل الـ HTML:** `tools/legacy-parity` (Node): يشغّل بوابة HR القديمة في jsdom ويقارن معادلات `src/lib/calc` على مدخلات عشوائية: PAYX (20,000)، والمخالصة (3,000)، ونهاية الخدمة (840)، والتفقيط، وإعفاء التأمينات.
-  - `cd tools/legacy-parity && npm ci && npm test`.
-  - `npm run fixtures` يحدّث القيم المرجعية لاختبارات الخادم.
-- **معطّلة:** `tests/`، تقريباً 70 اختبار (السبب في القسم 6).
-- **الواجهات:** ما فيه اختبارات واجهة، والتحقق يدوي في المتصفح.
-- **الخطة المقترحة (ما بدأت):**
-  1. إنقاذ اختبارات الحسابات.
-  2. اختبارات لمسار الطلبات على canonical.
-  3. حذف القديم اللي ما له معنى.
-  4. اختبارات للواجهات لاحقاً.
+# العربي
 
----
+> آخر تحديث: 2026-10-14. آخر نسخة منشورة: `1ba1a42` (الإنتاج والعرض).
+> هذا الملف **المرجع الأول** لأي شخص أو محادثة جديدة.
 
-## 10. ملاحظات مفتوحة / ديون معروفة
-- **حذف بيئة demo** بعد العروض، أو حذف قاعدة `Postgres` منها.
-- **حذف** `~/Desktop/HR/backups/prod_for_demo.sql`، فيه رواتب حقيقية.
-- **حذف** `frontend/employee-app/.env` عشان يرجع التطبيق للإنتاج.
-- **`eosLaborLaw` المخزّن** ما يتحدث عند تعديل الراتب. التأمينات والصافي صاروا يتحدثون.
-- **غير مدعوم على canonical:** المرافقين (`dependents` يرجع 501)، وإضافة وحذف الأقسام وجهات العمل.
-- **زر «تحديث البيانات»** يمسح التعديلات غير المحفوظة في الصفحة، مثل تعديلات المسير. ممكن نضيف تأكيد.
-- **ملفات كثيرة في `backend/app/routers` و `services` و `alembic` و `tests` أرشيف** من المرحلة القديمة. تنظيفها مؤجل.
-- **تطبيق الموظف ما انجرّب على جوال حقيقي بكل تفاصيله.** ولا فيه بناء دائم (TestFlight / APK) بعد.
+## 0. قواعد العمل (تعليمات صاحب المشروع)
+- الرد **بالعربي، مختصر ومباشر**.
+- **لا رفع على `main` ولا نشر إلا لما يقول «انشر».** الرفع على `main` ينشر **الإنتاج والعرض** مع بعض.
+- **لا تحذف أي شي** (ملفات، قواعد، بيئات، نسخ احتياطية) إلا لو صاحب المشروع سمّاه وطلب.
+- قرّر الأصح ونفّذ. توقف بس عند القرارات الحقيقية وقبل النشر.
+- لا كلمات مرور حقيقية على مواقع منشورة. الفحص محلياً بحسابات تجربة.
+- لا رفع لملفات فيها بيانات حقيقية (نسخ قواعد، سجلات فيها بيانات). ملفات السكيما بدون بيانات مسموحة.
+- **المرجع لكل شاشة وحقل ونص ومعادلة:** الـ HTML المقسّم في `frontend/legacy`، ودوال SQL القديمة (`tools/legacy-parity/sql`). الفروق المقصودة الوحيدة هي تصحيحات نظام العمل الموثّقة (القسم 6).
+
+## 1. الفكرة
+- **أريبا للاستشارات** كانت تشغّل الموارد البشرية على **ملف HTML واحد ضخم**، تطوّر بتحديثات من V1 إلى V130. البيانات على **Supabase** بناها الزميل محمد عوض: جداول، ودوال SQL، وحسابات.
+- **الهدف:** إعادة بنائه بتقنيات حديثة **بنفس الشاشات والحقول والنصوص والمعادلات**:
+  1. **موقع HR** لـ HR والمدراء والمالية.
+  2. **تطبيق جوال للموظف** (آيفون وأندرويد): البصمة، والطلبات، والراتب.
+  3. **خادم واحد + قاعدة بيانات** يخدم الاثنين.
+- **المبدأ:** ننقل المنطق نظيف وبنفس النتائج، ما ننسخ الكود القديم.
+
+## 2. التقنيات
+- **الخادم:**
+  - Python 3.12، وFastAPI، وUvicorn.
+  - SQLAlchemy 2 + psycopg 3، وأوامر SQL مباشرة.
+  - Pydantic، وPyJWT، وArgon2/bcrypt.
+  - pytest.
+- **القاعدة:** PostgreSQL 18 على Railway، خدمة `Postgres-Q6OM`، بسكيما مرتبة من 2026-10-13 (القسم 5). والخدمة القديمة `Postgres` باقية بدون لمس.
+- **موقع HR:** Next.js 16، وReact 19، وTypeScript، وChart.js، وTabler Icons، وZod، وESLint.
+  - نسخة Next.js هذي فيها تغييرات جذرية. اقرأ `frontend/hr-web/AGENTS.md`، وتستخدم `proxy.ts` بدل `middleware.ts`.
+- **التطبيق:** Expo 57، وReact Native 0.86، وTypeScript، وExpo Router، وexpo-location، وexpo-secure-store، وreact-native-svg.
+- **الاستضافة:** Railway، مشروع `sparkling-learning`، ببيئتين (الإنتاج والعرض). GitHub `Faisal-Alrashed1/HR_ARIBA` (خاص). الرفع على `main` ينشر الاثنين.
+- **أدوات المطابقة:**
+  - `backend/tests_canonical/test_legacy_parity.py`: يشغّل دوال SQL القديمة في قاعدة مؤقتة ويقارنها بكودنا.
+  - `tools/legacy-parity`: Node + jsdom، يشغّل الـ HTML القديم ويقارن معادلات الموقع معه.
+
+## 3. الخط الزمني
+
+### 3.1 — 4 أكتوبر: النسخة الأولى (انلغت بعدين)
+- أساس الخادم: الدخول، والأدوار، والأمان، والموظفين.
+- السعودة، والتأمينات، ونهاية الخدمة، ولوحة التحكم، والتنبيهات، والمستندات، والصورة، والمرافقين.
+- تصميم V114، وأول نشر على Railway.
+
+### 3.2 — 5 أكتوبر: إعادة البناء من الـ HTML المقسّم
+- تصفير الريبو إلى `backend` و`frontend/hr-web` و`frontend/employee-app`، والـ HTML القديم مرجع في `frontend/legacy`.
+- نقلنا بنفس النتائج:
+  - التأمينات مع إعفاء V130.
+  - صفحة نهاية الخدمة والمخالصة.
+  - محرك المسير PAYX V119.
+  - القسيمة، والمواقع، والحضور.
+  - محرك أرصدة الإجازات.
+  - الإجازات، والوثائق، والتقارير التسعة، والإعدادات.
+  - النماذج التسعة بالترويسة.
+
+### 3.3 — 6 أكتوبر: إضافات وأول تطبيق
+- **الموقع:**
+  - تقارير الحضور V117.
+  - مستند المخالصة بالمبلغ بالحروف.
+  - أرشيف المسير.
+  - النماذج الجماعية والإنجليزية.
+  - مواقع عمل لكل موظف (V121).
+  - مرفقات الطلبات.
+  - نهاية العقد مع الإنهاء والإرجاع التلقائي.
+  - خيار «بدون خصم» للتأمينات.
+- **التطبيق:** بصمة GPS مع نطاق جغرافي في الخادم ودوام مرن، وطلباتي، ونسيان البصمة، والفريق، والموافقات، والنماذج، والقسائم، والإشعارات.
+
+### 3.4 — 8 أكتوبر: الانتقال لقاعدة زميلنا (canonical)
+- الخادم يشتغل على سكيما Supabase الأصلية عبر `backend/app/routers/canonical.py` (كل الـ routes، بأوامر SQL مباشرة).
+- خدمة القاعدة `Postgres-Q6OM`. التقرير في `docs/INTEGRATION_AUDIT.md`.
+- `backend/tools/create_account.py` ينشئ حساب دخول بكلمة مرور مؤقتة.
+- التطبيق صار بشكل V118 القديم.
+
+### 3.5 — 11 أكتوبر: العرض والهوية والواجهة
+- **بيئة العرض:** نسخة من الإنتاج والرواتب كلها 1000. إعداد في Railway، ما لها commit.
+- **الهوية:** أيقونات Tabler بدل الإيموجي، وألوان أريبا، وصور الرجل والمرأة والتمهير.
+- **الواجهة:**
+  - منتقي تاريخ ووقت موحد.
+  - صفحة «الطلبات والإجازات» بكل الأنواع.
+  - تنبيه نسيان البصمة.
+  - تحسينات لوحة التحكم.
+  - «تحديث البيانات» يعيد تحميل أي صفحة.
+- **الموظفين:** الحفظ يعيد حساب التأمينات والصافي المخزّن (`sEmp` القديمة)، ورسائل أوضح، وإصلاح فلتر «كل جهات العمل».
+
+### 3.6 — 11 و12 أكتوبر: تدقيق المطابقة مع القديم (`0f85a93`)
+- التقرير في `docs/LOGIC_AUDIT.md`. شغّلنا الـ HTML القديم في jsdom ودوال SQL القديمة في Postgres، وقارنّا رقم برقم.
+- **تقرير نهاية الخدمة** يعتمد المكافأة المسجّلة (84/84). نهاية العقد تنحسب عند الحفظ. والإرجاع للنشاط عند التجديد (V101).
+- **البصمة (V140 القديمة):**
+  - المضلّعات، والموقع الأصغر أولاً.
+  - «عن بعد» بس مع طلب معتمد لنفس اليوم.
+  - دقيقة تأخير على الأقل مع التقريب.
+  - وقت السماح 0 محترم.
+- **أرقام لوحة التحكم** مطابقة للقديم.
+- **إعفاء التأمينات** = `kindOf` القديمة (428/428).
+- **رصيد التطبيق** = `ariba_leave_calc` القديمة.
+- **الطلبات:**
+  - كل نوع: مدير ← HR ← رئيس تنفيذي، ونسيان البصمة عند HR بس.
+  - HR يتنبّه بكل طلب جديد، ونصوص الإشعارات مثل القديم.
+  - الاعتماد نيابة والنهائي مثل القديم.
+  - نسيان البصمة يندمج مع سجل اليوم.
+  - التحقق من رصيد الإجازة السنوية عند التقديم **باقي** (قرار صاحب المشروع).
+- **تقارير الحضور:** المنطق في `frontend/hr-web/src/lib/calc/att-reports.ts` (+ متوسط وقت الدخول). وتقرير الرواتب يعيد حساب الصافي.
+- **اختبارات مطابقة دائمة** (القسم 9).
+
+### 3.7 — 12 و13 أكتوبر
+- `683982d`: الملفات والصور داخل القاعدة (`ariba_documents`).
+- `c24e6d6`: صاحب المشروع حذف قسم الملاحظات المفتوحة من هذا الدليل.
+- `1d2bbed`: حافة خضراء غامقة لكل بطاقات لوحة التحكم.
+- `ad8ee40`: إصلاح حذف الطلب من HR. قوس ناقص كان يطلّع خطأ 500، والموقع يعرض «Cannot reach the server». وانضاف اختبار يمنع رجوعه.
+- **نقطة رجوع** `before-normalization` (القسم 8).
+
+### 3.8 — 13 أكتوبر: دمج نورملايزيشن زميلنا ونشره
+- زميلنا (Ghady Nafisah، ريبو `Dalteam/HR_ARIBA`) رتّب السكيما، وحدّث عمليات CRUD وroutes الـ API.
+- **`dbbee54`:** جبنا تعديلاته لكودنا.
+  - **انأخذ كما سلّمه:** `canonical.py`، و`models.py`، واختبار قائمة الجداول، و`create_account.py`، وإشعارات التطبيق (حالة القراءة من الخادم)، وصفحة الحضور (الجلسات لكل يوم).
+  - **بقى حقنا:** إصلاح حذف الطلب، وحواف الداشبورد.
+  - **دالة حذف وحدة:** تحذف الطلب مع كل شي مربوط فيه (الإجازة، والاستئذان، والمستندات، والإشعارات، والإجراءات). تُستخدم في حذف HR، وحذف الموظف، وحذف الخطاب، لأنها كانت تطيح على الروابط الجديدة بين الجداول.
+  - **اختبارات المطابقة** انعادت على السكيما الجديدة (وانضاف التصحيح K، القسم 6).
+- **`1ba1a42`:** سكربت `docs/db-normalization/run_on_railway.sh` ينقل بيئة Railway وحدة:
+  1. نسخة احتياطية كاملة يتأكد منها.
+  2. `railway_prep.sql`: يرجّع مفاتيح Supabase الأصلية اللي ضاعت في تصدير Railway، ويوحّد حالة اعتماد المسير (مع نسخة في `ops`).
+  3. `preflight_checks.sql` ← `pre_migration_fixes.sql` ← `preflight_checks.sql` مرة ثانية.
+  4. `ariba_normalization.sql`.
+- **انتقلت قاعدتي الإنتاج والعرض، وانتشر الكود (15:27).**
+  - **الفحص بعدها:** الخادم سليم، والدخول يرد، وما فيه أخطاء 500.
+  - أعداد الصفوف نفسها، ما عدا:
+    - **المسير:** 175 صار 171. أربع صفوف يتيمة لموظفين محذوفين، محفوظة في `ops.orphan_payrolls_backup`.
+    - **سجل الموافقات:** 12 صار 14. انضافت إجراءات ناقصة، وانحذفت سجلات «الاعتماد نيابة» القديمة (موجودة بس في نسخة ما قبل النقل).
+  - كل الاختبارات ناجحة.
+
+## 4. المعمارية
+```
+ موقع HR (Next.js)               تطبيق الموظف (Expo)
+ frontend/hr-web                 frontend/employee-app
+        │  HTTPS JSON /api/v1           │
+        └──────────────┬────────────────┘
+                       ▼
+          خادم FastAPI: backend/app/main.py ← routers/canonical.py (SQL مباشر)
+                       ▼
+          PostgreSQL على Railway (السكيما المرتبة)
+```
+- **الدخول:** `POST /api/v1/auth/login` يرجّع JWT موقّع من الخادم. الحسابات في `ariba_auth_accounts`، وكلمات مرور bcrypt القديمة تتحوّل تلقائياً لـ Argon2.
+- **الأدوار:** admin، وadmin_manager، وhr، وceo، وfinance، وmanager، وemployee. الخادم يتحقق من الصلاحية في كل route، والواجهة تعكسها بس.
+- **الملفات:** الصور والمرفقات والخطابات **داخل القاعدة** (`ariba_documents.file_data`). قرص `/data` في Railway ما يُستخدم.
+- **الواجهات تعتمد على JSON الـ API بس**، وما تعتمد على شكل القاعدة.
+
+## 5. قاعدة البيانات (مرتبة من 2026-10-13)
+- **`employee_directory`:**
+  - `employee_id`، والاسم، و`manager_id` (رابط)، و`active`.
+  - `employer_id` و`department_id` و`job_title_id` (روابط لجداول القوائم).
+  - `data` JSONB للحين فيه الحقول القديمة والأرقام المخزّنة.
+  - اسم المستخدم في `ariba_auth_accounts` بس.
+- **القوائم المرجعية:** `employers`، و`departments`، و`job_titles`، و`roles`، و`workflow_stages`، و`leave_types`، و`permission_types`، و`document_types`، و`workflow_request_types`.
+- **سير الموافقات:**
+  - `workflow_requests`: كل الطلبات، و`status` يتولّد من `current_stage`.
+  - `workflow_approvers`: hr = 40، وceo = 86.
+  - `workflow_actions`: الحساب اللي سوّى الإجراء والتعليق.
+  - `workflow_notifications.read_at`: يحدد المقروء.
+- **تفاصيل الطلبات:** `leave_requests` (`employee_id`، و`leave_type`، وفيه عرض بديل `leave_requests_v`)، و`permissions`.
+- **`attendance`:** `employee_id`، صف لكل جلسة، وجلسة مفتوحة وحدة بالأكثر لكل موظف في اليوم، والموقع عبر `location_id`.
+- **المسير:**
+  - `employee_payrolls` (`payload` JSONB لكل موظف وشهر)، و`payroll_archives_v2`.
+  - اعتماد الشهر في `payroll_periods`.
+  - `payroll_components`/`payroll_lines` موجودة بس **فاضية**، والتطبيق للحين يقرأ من الـ payload.
+- **جداول ثانية:** `ariba_auth_accounts`، و`ariba_sessions`، و`ariba_app_settings`، و`work_locations` (`employer_id`، والفاضي = الكل)، و`public_holidays`، و`company_settings` (ساعات الدوام من `shift_duration_minutes`)، و`ariba_documents`، و`ariba_audit_log`، و`ariba_deleted_items`.
+- **سكيما `ops`:** جداول النسخ القديمة، و`orphan_payrolls_backup`، و`employee_payrolls_approval_backup`.
+- **سكربتات النقل:** `docs/db-normalization/` (القسم 3.8).
+- **مشكلة بيانات معروفة، المعرّفات الطويلة:**
+  - 81 موظف (1 نشط و80 منتهي) معرّفهم بشكل `XLS-62d422dece6b`. السبب: الـ HTML القديم عطى هالمعرّفات للموظفين المستوردين من Excel، وصارت هي المفتاح الأساسي.
+  - 78 منهم عندهم رقم وظيفي حقيقي في `data.empNo`، والواجهة تعرضه.
+  - **3 منتهية خدماتهم ما عندهم رقم**، فيظهر المعرّف الطويل مكان رقمهم.
+  - 4 حسابات دخول أسماؤها `EMPXLS-…`.
+  - **ما انحلّت للحين.** الخيارات: نعطي الـ 3 رقم، أو نعيد ترقيم كل المعرّفات في كل الجداول.
+
+## 6. تصحيحات نظام العمل (فروق مقصودة عن القديم)
+| الرمز | التصحيح |
+|---|---|
+| A | الاستقالة (م.85): 5 سنوات بالضبط = الثلث، و10 بالضبط = كاملة |
+| B | وعاء نهاية الخدمة = الأجر الفعلي (الأساسي + كل البدلات الثابتة) |
+| C | م.77 للعقد المحدد = أجر الأشهر الباقية (شهرين على الأقل) |
+| D | خيار المكافأة الكاملة (م.87) |
+| E/F | ملاحظات نظامية لـ HR (درجات المرضية م.117، وحدود الزواج والوفاة والأبوة والأمومة، والحج). ملاحظات بس وما ينرفض شي |
+| G | تأمينات المسير على بدل السكن الفعلي |
+| H | المقسوم عليه في الإضافي بدون تغيير |
+| I | تنبيه لما أعياد السنة الحالية أو الجاية ناقصة |
+| J | رصيد ما بعد 5 سنوات صحيح للعقود أكثر من 21 يوم |
+| K | الدوام المرن: الخروج المبكر ينحسب على آخر جلسة (انضاف مع دمج النورملايزيشن) |
+
+## 7. البيئات والروابط
+| | الإنتاج (بيانات حقيقية) | العرض (الرواتب 1000) |
+|---|---|---|
+| الموقع | https://frontend-production-f9a8a.up.railway.app | https://frontend-demo-b5ec.up.railway.app |
+| الخادم | https://hrariba-production.up.railway.app | https://hrariba-demo.up.railway.app |
+| القاعدة | `Postgres-Q6OM` | `Postgres-Q6OM` (نسخة العرض) |
+
+- **الخدمات في كل بيئة:** `HR_ARIBA` (الخادم)، و`frontend`، و`Postgres-Q6OM`، و`Postgres` (القديمة، بدون لمس).
+- **Railway CLI** مربوط على الإنتاج، وأضف `-e demo` للعرض.
+- **متغيرات الخادم:** `DATABASE_URL`، و`JWT_SECRET`، و`CORS_ORIGINS`، و`RUN_MIGRATIONS_ON_STARTUP=false`، و`ENV=production`. **والموقع:** `NEXT_PUBLIC_API_URL` (يُقرأ وقت البناء).
+- **النظام للحين في مرحلة البناء، للمطورين بس.**
+- **التطبيق:** ما له بناء دائم (TestFlight/APK). شغّله بـ Expo:
+  ```
+  cd frontend/employee-app && npx expo start --lan --clear
+  ```
+  أو `--tunnel`. وملف `frontend/employee-app/.env` يأشّر على العرض.
+- **GitHub CLI:** الحساب النشط لازم يكون `Faisal-Alrashed1`، لأن الحساب الثاني ما يشوف الريبو الخاص.
+
+## 8. النسخ الاحتياطية والرجوع
+- **`before-normalization`:**
+  - علامة git = `ad8ee40`.
+  - نسخة في `~/Desktop/HR/backups/before-normalization/`: قاعدتي الإنتاج والعرض، ومتغيرات Railway، ونسخة الكود، و`README.txt` بخطوات الرجوع.
+- **`~/Desktop/HR/backups/before-migration-2026-10-13/`:** نسخ قاعدتي الإنتاج والعرض، أخذها `run_on_railway.sh` قبل النقل مباشرة.
+- **هالمجلدات فيها بيانات حقيقية:** مقفلة على صاحب المشروع، ولا ترتفع ولا تتشارك.
+- **الرجوع = الكود والقاعدة مع بعض:**
+  - **الكود:** `git checkout before-normalization -- .` ثم commit ثم رفع.
+  - **القاعدة:** نرجّع النسخة في قاعدة **جديدة** ونوجّه لها `DATABASE_URL`.
+
+## 9. التشغيل المحلي والفحوصات والاختبارات
+- **Postgres محلي (`host=/tmp`):**
+  - **سكيما جديدة:** `ariba_after`، و`ariba_after2`، و`ariba_norm_trial` (نسخ من الإنتاج بعد النقل).
+  - **سكيما قديمة، ما تشتغل مع الكود الحالي:** `ariba_demo`، و`ariba_verify`، و`ariba_before`.
+  - حسابات التجربة `ui.check` (مدير النظام) و`ui.emp` (موظف 10) موجودة بس في `ariba_demo` القديمة. على نسخة بالسكيما الجديدة، أنشئ حساب تجربة بـ `backend/tools/create_account.py`.
+- **الخادم:**
+  ```
+  cd backend && DATABASE_URL='postgresql:///ariba_after?host=/tmp' RUN_MIGRATIONS_ON_STARTUP=false ENV=development CORS_ORIGINS='http://localhost:3010,http://localhost:8082' .venv/bin/uvicorn app.main:app --port 8010
+  ```
+- **الموقع:**
+  ```
+  cd frontend/hr-web && NEXT_PUBLIC_API_URL=http://localhost:8010/api/v1 npx next dev -p 3010
+  ```
+- **التطبيق في المتصفح:**
+  ```
+  cd frontend/employee-app && EXPO_PUBLIC_API_URL=http://localhost:8010 npx expo start --web --port 8082
+  ```
+- **الفحوصات (كلها لازم تنجح قبل أي نشر):**
+  - `cd backend && LEGACY_PARITY_PG='postgresql:///postgres?host=/tmp' .venv/bin/python -m pytest -q` — 44 ناجح و1 متجاوز.
+  - `cd tools/legacy-parity && npm ci && npm test` — كل الوحدات مطابقة للـ HTML القديم.
+  - `cd frontend/hr-web && npx tsc --noEmit && npx eslint src --quiet`
+  - `cd frontend/employee-app && npx tsc --noEmit`
+- **الاختبارات:**
+  - `backend/tests_canonical/test_canonical_contract.py`: قائمة الجداول، والأمان، وإخفاء الحقول الحساسة.
+  - `test_legacy_parity.py`: دوال SQL القديمة على الشكل القديم، وكودنا على الشكل الجديد، بنفس الصفوف. يغطي البصمة، والتأخير والخروج المبكر، ورصيد الإجازة، والإشعارات، وسير الموافقات، والاعتماد نيابة والنهائي، ونسيان البصمة، والحذف، وملاحظات نظام العمل.
+  - `tools/legacy-parity`: معادلات الموقع مقابل الـ HTML القديم (PAYX، والمخالصة، ونهاية الخدمة، والتفقيط، وإعفاء التأمينات، وتقارير الحضور، وتصحيحات نظام العمل).
+  - `backend/tests/` (حوالي 70، قديمة) معطّلة ومؤرشفة.
+
+## 10. أهم الملفات
+- `backend/app/routers/canonical.py`: كل routes الـ API (SQL مباشر)، حوالي 2640 سطر.
+- `backend/app/services/`:
+  - `employee_map.py` (الترجمة بين البيانات وحقول الـ API، و`figures()`)، و`canonical_data.py` (قراءة البيانات للمحركات).
+  - `leave.py` (محرك الأرصدة)، و`gosi.py`، و`end_of_service.py`، و`contracts.py`.
+- `backend/app/models.py`: قائمة الجداول اللي تتحقق عند تشغيل الخادم.
+- `frontend/hr-web/src/app/(hr)/(portal)/*`: الصفحات (لوحة التحكم، والموظفين، والحضور، والمواقع، والطلبات، والمسير، والقسائم، ونهاية الخدمة، والمخالصة، والوثائق، والتقارير، والإعدادات، والنماذج).
+- `frontend/hr-web/src/lib/calc/*`: معادلات الموقع. `frontend/hr-web/src/lib/*.ts`: الاتصال بالـ API وأنواعه.
+- `frontend/employee-app/app/(tabs)/*`: تبويبات التطبيق. `frontend/employee-app/src/lib/api.ts`: الاتصال بالـ API.
+- `frontend/legacy/`: الـ HTML المرجعي.
+- `docs/`:
+  - `LOGIC_AUDIT.md`: القديم مقابل حقنا + القرارات.
+  - `INTEGRATION_AUDIT.md`: قاعدة canonical مقابل كودنا.
+  - `db-normalization/`: سكربتات النقل.
+  - `HANDOFF_NEXT.md` (محلي بس، وهذا الدليل يغني عنه).
+  - باقي الوثائق مراجع قديمة.
+
+## 11. الوضع الحالي
+- **الإنتاج والعرض:** نفس الكود (`1ba1a42`) على السكيما المرتبة، وكل الفحوصات ناجحة.
+- **ما انعمل للحين:**
+  - الـ 3 موظفين بدون رقم وظيفي (المعرّفات الطويلة، القسم 5).
+  - `payroll_lines` الفاضية.
+  - مرور يدوي على الشاشات بعد النقل.
+  - بناء دائم للتطبيق.
