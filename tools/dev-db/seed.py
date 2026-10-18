@@ -115,6 +115,19 @@ def main() -> None:
         for (eid,) in cur.fetchall():
             account(f"emp{eid}.test", "employee", eid)
 
+        # A default permission matrix (production keeps its own ariba_role_perms rows; only an empty table is filled).
+        cur.execute("SELECT count(*) FROM public.ariba_role_perms")
+        if not cur.fetchone()[0]:
+            hr_edit = ["staff", "employees", "employees_admin", "attachments", "attendance", "locations", "leaves", "requests", "payroll",
+                       "payroll_prepare", "settlement", "documents", "forms", "reports", "settings"]
+            matrix = {"hr": {**{m: "edit" for m in hr_edit}, "audit": "view", "assets": "view", "permissions": "view"},
+                      "admin_manager": {**{m: "edit" for m in hr_edit}, "audit": "view", "assets": "edit", "permissions": "view"},
+                      "finance": {"staff": "edit", "employees": "view", "payroll": "edit", "payroll_approve": "edit", "settlement": "edit",
+                                  "reports": "view", "assets": "edit", "audit": "edit", "documents": "view"},
+                      "ceo": {**{m: "view" for m in hr_edit + ["audit", "assets", "payroll_approve"]}, "requests": "edit", "payroll_approve": "edit"}}
+            for role, mods in matrix.items():
+                for module, level in mods.items():
+                    cur.execute("INSERT INTO public.ariba_role_perms(role,module,level,updated_by) VALUES(%s,%s,%s,'seed')", (role, module, level))
         cur.execute("""INSERT INTO public.work_locations(id,name,name_en,type,latitude,longitude,radius_m,active) VALUES
             ('loc-hq','المقر الرئيسي','Head office','office',24.7136,46.6753,300,true),('loc-remote','عن بعد','Remote','remote',24.7136,46.6753,50,true)
             ON CONFLICT(id) DO NOTHING""")

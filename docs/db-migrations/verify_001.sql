@@ -9,7 +9,7 @@ SELECT 'column ' || c, CASE WHEN EXISTS (SELECT 1 FROM information_schema.column
   AND column_name = split_part(c, '.', 2)) THEN 'ok' ELSE 'FAIL' END
 FROM (VALUES ('workflow_requests.submitted_by_employee_id'), ('workflow_requests.escalated_from'), ('workflow_requests.escalated_at'),
   ('workflow_requests.returned_at'), ('workflow_requests.return_note'), ('workflow_notifications.emailed_at'),
-  ('workflow_notifications.email_error'), ('workflow_notifications.email_tries'), ('payroll_periods.prepared_at'),
+  ('workflow_notifications.email_error'), ('workflow_notifications.email_tries'), ('workflow_notifications.pushed_at'), ('payroll_periods.prepared_at'),
   ('payroll_periods.reopen_reason')) AS x(c)
 UNION ALL
 SELECT 'lookup ' || code, CASE WHEN EXISTS (SELECT 1 FROM workflow_request_types w WHERE w.code = x.code) THEN 'ok' ELSE 'FAIL' END

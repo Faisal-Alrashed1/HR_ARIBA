@@ -7,6 +7,7 @@ and all writes target the source table and column names.
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import math
 import re
@@ -32,6 +33,7 @@ from app.database import get_db
 from app.services import canonical_data as cdata
 from app.services import employee_map as emap
 from app.services import gosi as gosi_calc
+from app.services import port_common as pc
 
 router = APIRouter()
 _hasher = PasswordHasher()
@@ -63,14 +65,15 @@ def _next_id(db: Session, table: str) -> int:
 
 def _write_audit(db: Session, actor: dict[str, Any] | None, request: Request | None, module: str, action: str,
                  entity: str | None = None, entity_id: Any = None, summary: str | None = None,
-                 details: dict[str, Any] | None = None) -> None:
+                 details: dict[str, Any] | None = None, entity_name: str | None = None) -> None:
     db.execute(text("""INSERT INTO public.ariba_audit_log
-        (id, actor_employee_id, actor_username, actor_name, actor_role, module, action, entity_type, entity_id, summary, details)
-        OVERRIDING SYSTEM VALUE VALUES (:id, :employee_id, :username, :name, :role, :module, :action, :entity_type, :entity_id, :summary, CAST(:details AS jsonb))"""), {
+        (id, actor_employee_id, actor_username, actor_name, actor_role, module, action, entity_type, entity_id, entity_name, summary, details)
+        OVERRIDING SYSTEM VALUE VALUES (:id, :employee_id, :username, :name, :role, :module, :action, :entity_type, :entity_id, :entity_name, :summary,
+        CAST(:details AS jsonb))"""), {"entity_name": entity_name,
         "employee_id": (actor or {}).get("employee_id"), "username": (actor or {}).get("username"),
         "name": (actor or {}).get("name_ar"), "role": (actor or {}).get("role"), "module": module,
         "action": action, "entity_type": entity, "entity_id": str(entity_id) if entity_id is not None else None,
-        "summary": summary, "details": json.dumps(details) if details is not None else None,
+        "summary": summary, "details": json.dumps(details, ensure_ascii=False, default=str) if details is not None else None,
         "id": _next_id(db, "ariba_audit_log"),
     })
 
@@ -342,17 +345,20 @@ def _delete_request_rows(db: Session, request_id: uuid.UUID) -> None:
 
 def _insert_notification(db: Session, employee_id: str | None, request_id: uuid.UUID | None,
                          title: str, body: str, stage: str, kind: str) -> None:
-    if employee_id:
-        db.execute(text("""INSERT INTO public.workflow_notifications
-            (recipient_employee_id,request_id,title,body,stage,kind)
-            VALUES (:employee_id,:request_id,:title,:body,:stage,:kind)"""),
-            {"employee_id": employee_id, "request_id": request_id, "title": title, "body": body, "stage": stage, "kind": kind})
+    pc.notify(db, employee_id, request_id, title, body, stage, kind)
 
 
 def _session_response(db: Session, account: dict[str, Any]) -> dict[str, Any]:
     result = _new_session(db, account)
     db.commit()
     return result
+
+
+def _use_temporary_password(db: Session, account_id: Any, password: str) -> bool:
+    """An unused, unexpired temporary password sent by POST /auth/password-recovery (consumed on use)."""
+    h = "temp:" + hashlib.sha256(password.encode()).hexdigest()
+    return db.execute(text("""UPDATE public.ariba_password_resets SET used_at=now() WHERE account_id=:a AND token_hash=:h
+        AND used_at IS NULL AND expires_at>now() RETURNING id"""), {"a": account_id, "h": h}).first() is not None
 
 
 @router.post("/auth/login")
@@ -363,6 +369,11 @@ def login(body: dict[str, Any], request: Request, db: Session = Depends(get_db))
         raise ApiError(422, "validation_error", "Username and password are required")
     account = _row(db, "SELECT * FROM public.ariba_auth_accounts WHERE lower(username)=:u", u=username)
     valid, was_bcrypt = _verify_password(db, account["password_hash"], password) if account and account["active"] else (False, False)
+    if not valid and account and account["active"] and _use_temporary_password(db, account["id"], password):
+        # password recovery: the e-mailed temporary password replaces the old one only now, and must be changed
+        account["password_hash"], account["must_change"], valid = _hasher.hash(password), True, True
+        db.execute(text("UPDATE public.ariba_auth_accounts SET password_hash=:h,must_change=true,updated_at=now() WHERE id=:id"),
+                   {"h": account["password_hash"], "id": account["id"]})
     if not valid:
         _write_audit(db, None, request, "auth", "login_failed", "account", summary="Failed login", details={"username": username})
         db.commit()
@@ -1396,16 +1407,19 @@ LEAVE_TYPES = {"annual", "sick", "emergency", "death", "marriage", "maternity", 
 HOURLY_TYPES = {"permission", "maternity_permission", "early_leave", "perm", "perm_mat"}
 
 
-def _stages(req_type: str, has_manager: bool = True) -> list[str]:
-    """Approval stages (legacy ariba_workflow_action, as decided with the business owner): every type goes
-    manager → HR → CEO; forgot-punch goes to HR only."""
+def _stages(req_type: str, has_manager: bool = True, db: Session | None = None) -> list[str]:
+    """Approval stages. With the database: their sql/10 rules (port_common.stages_for — manager → HR → CEO, the CEO
+    only when the type's final approver is the CEO, HR-direct types skip the manager). Without it (unit tests of the
+    legacy functions): the legacy manager → HR → CEO; forgot-punch to HR only."""
+    if db is not None:
+        return pc.stages_for(db, req_type, has_manager)
     if req_type == "forgot_punch":
         return ["hr"]
     return (["manager"] if has_manager else []) + ["hr", "ceo"]
 
 
-def _next_stage(req_type: str, stage: str, has_manager: bool = True) -> str:
-    st = _stages(req_type, has_manager)
+def _next_stage(req_type: str, stage: str, has_manager: bool = True, db: Session | None = None) -> str:
+    st = _stages(req_type, has_manager, db)
     return st[st.index(stage) + 1] if stage in st and st.index(stage) + 1 < len(st) else "completed"
 
 
@@ -1449,7 +1463,8 @@ def _can_act(db: Session, actor: dict[str, Any], item: dict[str, Any]) -> bool:
         return True
     if stage == "manager":
         manager = _row(db, "SELECT manager_id FROM public.employee_directory WHERE employee_id=:e", e=item["employee_id"])
-        return bool(actor.get("employee_id")) and (manager or {}).get("manager_id") == actor.get("employee_id")
+        mine = bool(actor.get("employee_id")) and (manager or {}).get("manager_id") == actor.get("employee_id")
+        return mine and pc.manager_perms(db, actor.get("employee_id"))["approve_requests"]  # sql/10 ariba_mgr_perm
     if stage in {"hr", "ceo"}:
         return actor.get("employee_id") in _stage_people(db, stage)
     return False
@@ -1516,6 +1531,14 @@ def _apply_forgot_punch(db: Session, item: dict[str, Any]) -> None:
         refresh_last_early()
 
 
+def _apply_completed(db: Session, item: dict[str, Any]) -> None:
+    """What an approved request changes (their sql/10): IBAN change updates the employee's IBAN/bank/account and keeps
+    the letter and certificate as documents; profile edit applies the allowed fields. Other types only record."""
+    if item.get("request_type") in {"iban_change", "profile_edit"}:
+        from app.routers.port_workflow import apply_completed
+        apply_completed(db, item)
+
+
 def _override(db: Session, actor: dict[str, Any], item: dict[str, Any], reason: str | None) -> None:
     """Legacy ariba_hr_override_workflow: HR approves on behalf of whoever holds the current stage and moves it on
     (forgot-punch: approved and applied at once)."""
@@ -1523,7 +1546,9 @@ def _override(db: Session, actor: dict[str, Any], item: dict[str, Any], reason: 
     if stage not in {"manager", "hr", "ceo"}:
         raise ApiError(409, "not_overrideable", "REQUEST_STAGE_NOT_OVERRIDEABLE")
     t = item["request_type"]
-    next_stage = "hr" if stage == "manager" else "ceo" if stage == "hr" else None
+    manager = _row(db, "SELECT manager_id FROM public.employee_directory WHERE employee_id=:e", e=item["employee_id"])
+    nxt_cfg = _next_stage(t, stage, bool((manager or {}).get("manager_id")), db)
+    next_stage = None if nxt_cfg == "completed" else nxt_cfg
     next_people = _require_stage_approver(db, next_stage) if t != "forgot_punch" and next_stage else []
     db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:r,:a,:s,'approved',:c)"),
                {"r": rid, "a": actor["account_id"], "s": stage,
@@ -1535,7 +1560,7 @@ def _override(db: Session, actor: dict[str, Any], item: dict[str, Any], reason: 
         db.execute(text(done), {"r": rid})
         _insert_notification(db, item["employee_id"], rid, "تمت الموافقة على نسيان البصمة", "تمت الموافقة على طلبك وتم تسجيل الحضور/الانصراف", "employee", "decision")
         return
-    if stage in {"manager", "hr"}:
+    if next_stage:
         nxt = next_stage
         db.execute(text("UPDATE public.workflow_requests SET current_stage=:n,updated_at=now() WHERE id=:r"), {"r": rid, "n": nxt})
         title, body = (("طلب بانتظار موافقة الموارد البشرية", "تم اعتماد الطلب نيابة عن المدير المباشر") if nxt == "hr"
@@ -1545,6 +1570,7 @@ def _override(db: Session, actor: dict[str, Any], item: dict[str, Any], reason: 
         return
     db.execute(text(done), {"r": rid})
     _set_permission_status(db, rid, "approved")
+    _apply_completed(db, item)
     _insert_notification(db, item["employee_id"], rid, "تمت الموافقة النهائية", "تمت الموافقة على طلبك بالكامل بواسطة الموارد البشرية نيابة عن المسؤول", "employee", "decision")
 
 
@@ -1555,7 +1581,7 @@ def _advance(db: Session, actor: dict[str, Any], item: dict[str, Any], action: s
     next_stage = None
     if action == "approve":
         manager = _row(db, "SELECT manager_id FROM public.employee_directory WHERE employee_id=:e", e=item["employee_id"])
-        next_stage = _next_stage(item["request_type"], stage, has_manager=bool((manager or {}).get("manager_id")))
+        next_stage = _next_stage(item["request_type"], stage, bool((manager or {}).get("manager_id")), db)
         if next_stage in {"hr", "ceo"}:
             _require_stage_approver(db, next_stage)
     db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:r,:a,:s,:act,:c)"),
@@ -1572,6 +1598,7 @@ def _advance(db: Session, actor: dict[str, Any], item: dict[str, Any], action: s
         _set_permission_status(db, rid, "approved")
         if item["request_type"] == "forgot_punch":
             _apply_forgot_punch(db, item)
+        _apply_completed(db, item)
         _insert_notification(db, item["employee_id"], rid, "تمت الموافقة النهائية", "تمت الموافقة على طلبك بالكامل", "employee", "decision")
     else:
         if nxt in {"hr", "ceo"}:
@@ -1617,12 +1644,6 @@ def my_requests(actor: dict[str, Any] = Depends(current_actor), db: Session = De
     return _me_requests_out(db, rows)
 
 
-@router.get("/me/team")
-def my_team(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    rows = _rows(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM} WHERE d.manager_id=:eid AND d.active ORDER BY d.name_ar", eid=actor.get("employee_id"))
-    return [{"id": e["employee_id"], "emp_no": e["emp_no"], "name_ar": e["name_ar"], "job_title": e["job_title"]} for e in map(_employee_dict, rows)]
-
-
 @router.get("/me/approvals")
 def approvals(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     rows = _rows(db, "SELECT * FROM public.workflow_requests WHERE status='pending' AND request_type NOT LIKE 'template:%' ORDER BY created_at")
@@ -1635,102 +1656,9 @@ def submit_request(body: dict[str, Any], request: Request, actor: dict[str, Any]
     if not eid:
         raise ApiError(404, "not_found", "Employee not found")
     emp = _employee_scope(db, actor, eid)
-    t = str(body.get("type") or "")
-    _require_lookup(db, "workflow_request_types", t, "request type")
-    notes = str(body.get("notes") or "").strip()
-    today = today_riyadh()
-    bad = lambda m: ApiError(422, "invalid_request", m)  # noqa: E731
-    payload: dict[str, Any] = {"notes": notes}
-    if t in LEAVE_TYPES or t == "mission":
-        _require_lookup(db, "leave_types", t, "leave type")
-        f, to = cdata._d(body.get("from_date") or body.get("from")), cdata._d(body.get("to_date") or body.get("to"))
-        if not f or not to or to < f:
-            raise bad("حدد الفترة بشكل صحيح")
-        emps = cdata.employees(db, employee_id=eid)
-        book = cdata.leave_book(db, today, emps)
-        days = book.count_workdays(f, to) if t == "annual" else (to - f).days + 1
-        if t == "annual" and days > book.current(emps[0]):
-            raise ApiError(422, "exceeds_balance", "يتجاوز الرصيد المتاح")
-        payload.update({"from": f.isoformat(), "to": to.isoformat(), "days": days})
-    elif t in HOURLY_TYPES:
-        _require_lookup(db, "permission_types", t, "permission type")
-        d, tm = cdata._d(body.get("on_date") or body.get("date")), body.get("time_from") or body.get("time")
-        if not d or not tm:
-            raise bad("حدد التاريخ والوقت")
-        payload.update({"date": d.isoformat(), "time": str(tm)[:5], "dur": float(body.get("hours") or 1)})
-    elif t == "advance":
-        try:
-            amount = float(body.get("amount") or 0)
-        except (TypeError, ValueError):
-            amount = 0
-        if amount <= 0:
-            raise bad("أدخل مبلغ السلفة")
-        payload["amount"] = amount
-    elif t == "overtime":
-        d = cdata._d(body.get("on_date") or body.get("date"))
-        hours = float(body.get("hours") or 0)
-        if not d or hours < 0.5:
-            raise bad("حدد التاريخ والساعات (0.5 على الأقل)")
-        payload.update({"date": d.isoformat(), "hours": hours})
-    elif t == "forgot_punch":
-        kind = body.get("punch_kind") or body.get("kind")
-        d = cdata._d(body.get("on_date") or body.get("date"))
-        t1, t2 = body.get("time_from") or body.get("time"), body.get("time_to") or body.get("time2")
-        if kind not in {"in", "out", "both"} or not d:
-            raise bad("حدد نوع البصمة والتاريخ")
-        if d > today:
-            raise bad("لا يمكن اختيار تاريخ في المستقبل")
-        if not t1:
-            raise bad("اختر الوقت")
-        if kind == "both" and (not t2 or str(t2)[:5] <= str(t1)[:5]):
-            raise bad("وقت الخروج لازم يكون بعد وقت الدخول")
-        if not notes:
-            raise bad("اكتب سبب نسيان البصمة")
-        if _row(db, "SELECT id FROM public.workflow_requests WHERE employee_id=:e AND request_type='forgot_punch' AND status='pending' AND payload->>'date'=:d AND payload->>'kind'=:k", e=eid, d=d.isoformat(), k=kind):
-            raise bad("يوجد طلب نسيان بصمة معلق لنفس اليوم")
-        payload.update({"kind": kind, "date": d.isoformat(), "time": str(t1)[:5]})
-        if kind == "both":
-            payload["time2"] = str(t2)[:5]
-    else:
-        raise bad("نوع طلب غير مدعوم")
-    payload.update({"submitted_from": "employee_app", "submitted_at": datetime.now(UTC).isoformat()})
-    manager = emp.get("manager_id") or None
-    stages = _stages(t, bool(manager))
-    stage = stages[0]
-    for configured_stage in stages:
-        if configured_stage in {"hr", "ceo"}:
-            _require_stage_approver(db, configured_stage)
-    row = _row(db, """INSERT INTO public.workflow_requests(employee_id,request_type,payload,current_stage)
-        VALUES(:eid,:type,CAST(:payload AS jsonb),:stage) RETURNING *""",
-        eid=eid, type=t, payload=json.dumps(payload, ensure_ascii=False), stage=stage)
-    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:rid,:account,'employee','submitted',:comment)"),
-               {"rid": row["id"], "account": actor["account_id"], "comment": notes or None})
-    if t in LEAVE_TYPES or t == "mission":
-        f = cdata._d(payload.get("from") or payload.get("date"))
-        to = cdata._d(payload.get("to")) or f
-        db.execute(text("""INSERT INTO public.leave_requests(employee_id,leave_type,from_date,to_date,days,notes,workflow_request_id)
-            VALUES(:eid,:type,:f,:t,:days,:notes,:rid)"""),
-            {"eid": eid, "type": t, "f": f, "t": to, "days": max(1, int(payload.get("days") or 1)), "notes": notes, "rid": row["id"]})
-    elif t in HOURLY_TYPES:
-        request_date = cdata._d(payload.get("date"))
-        db.execute(text("""INSERT INTO public.permissions(employee_id,permission_type,date,time,dur,notes,status,workflow_request_id)
-            VALUES(:eid,:type,:date,:time,:dur,:notes,'pending',:rid)"""),
-            {"eid": eid, "type": t, "date": request_date, "time": payload.get("time"), "dur": payload.get("dur"),
-             "notes": notes, "rid": row["id"]})
-    if t == "forgot_punch":
-        for h in _require_stage_approver(db, "hr"):
-            _insert_notification(db, h, row["id"], "طلب نسيان بصمة", "يوجد طلب نسيان بصمة بانتظار موافقتك", "hr", "request")
-    elif stage == "manager":
-        _insert_notification(db, manager, row["id"], "طلب جديد", "يوجد طلب جديد من الموظف بانتظار موافقتك", "manager", "request")
-    else:
-        _notify_stage(db, row, stage)
-    if stage == "hr" and t != "forgot_punch":  # legacy: no manager → the employee is told it went to HR
-        _insert_notification(db, eid, row["id"], "طلب جديد", "تم إرسال طلبك إلى الموارد البشرية", "hr", "request")
-    if stage == "manager":  # V115: HR hears of every new request (it can approve on the manager's behalf)
-        for h in _require_stage_approver(db, "hr"):
-            if h not in {eid, manager}:
-                _insert_notification(db, h, row["id"], f"طلب جديد من {emp.get('name_ar') or eid}",
-                                     "الطلب بانتظار المدير المباشر — تقدر تعتمده بالنيابة عنه من طلبات الموظفين", "hr", "request")
+    from app.routers.port_workflow import create_request  # their sql/10 rules for every type (incl. attachments)
+    row = create_request(db, actor, eid, emp, body)
+    t = row["request_type"]
     _write_audit(db, actor, request, "workflow", "submit", "workflow_request", row["id"], details={"type": t})
     db.commit()
     return _me_requests_out(db, [row])[0]
@@ -2130,38 +2058,95 @@ def put_sheet(key: str, body: dict[str, Any], request: Request, actor: dict[str,
     return get_sheet(key, actor, db)
 
 
-@router.post("/sheets/{key}/approve")
-def approve_sheet(key: str, request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    _require(actor, "finance", "hr", "admin", "admin_manager")
+def _pay_status(db: Session, year: int, month: int) -> dict[str, Any]:
+    """ariba_payroll_status_get: draft → prepared (HR) → approved (finance) → reopened (finance, with a reason)."""
+    p = _row(db, """SELECT approved,approved_at,approved_by,prepared_at,prepared_by,prepare_note,reopened_at,reopened_by,reopen_reason
+        FROM public.payroll_periods WHERE pay_year=:y AND pay_month=:m""", y=year, m=month) or {}
+    if p.get("approved"):
+        status = "approved"
+    elif p.get("prepared_at") and (not p.get("reopened_at") or p["prepared_at"] > p["reopened_at"]):
+        status = "prepared"
+    elif p.get("reopened_at"):
+        status = "reopened"
+    else:
+        status = "draft"
+    return {"status": status, **{k: p.get(k) for k in ("approved_at", "approved_by", "prepared_at", "prepared_by", "prepare_note",
+                                                      "reopened_at", "reopened_by", "reopen_reason")}}
+
+
+def _pay_key_or_422(key: str) -> tuple[int, int]:
     ym = _pay_key(key)
     if ym is None:
         raise ApiError(422, "invalid_key", "Invalid payroll sheet key")
-    year, month = ym
+    return ym
+
+
+@router.get("/sheets/{key}/status")
+def payroll_status(key: str, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
+    pc.require(db, actor, "payroll|payroll_prepare|payroll_approve")
+    return {**_pay_status(db, *_pay_key_or_422(key)), "role": actor.get("role")}
+
+
+@router.post("/sheets/{key}/prepare")
+def prepare_payroll(key: str, request: Request, body: dict[str, Any] | None = None, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
+    """ariba_payroll_prepare: HR sends the saved month to finance for approval."""
+    pc.require(db, actor, "payroll_prepare|payroll", "edit")
+    year, month = _pay_key_or_422(key)
+    rows, approved, _, _ = _month_rows(db, year, month)
+    if approved:
+        raise ApiError(409, "PAYROLL_ALREADY_APPROVED", "المسير معتمد بالفعل")
+    if not rows:
+        raise ApiError(409, "PAYROLL_NOT_SAVED", "المسير لسه ما اتحفظش")
+    note = str((body or {}).get("note") or "").strip()[:500] or None
+    db.execute(text("""INSERT INTO public.payroll_periods(pay_year,pay_month,approved,prepared_at,prepared_by,prepare_note) VALUES(:y,:m,false,now(),:by,:n)
+        ON CONFLICT(pay_year,pay_month) DO UPDATE SET prepared_at=now(),prepared_by=:by,prepare_note=:n"""),
+               {"y": year, "m": month, "by": actor.get("name_ar") or actor.get("username"), "n": note})
+    for e in [r[0] for r in db.execute(text("""SELECT DISTINCT a.employee_id FROM public.ariba_auth_accounts a JOIN public.employee_directory d ON d.employee_id=a.employee_id
+            WHERE a.active AND d.active AND a.role='finance'"""))]:
+        pc.notify(db, e, None, f"مسير {month}/{year} جاهز للاعتماد", note or "", "finance", "payroll")
+    _write_audit(db, actor, request, "payroll", "تجهيز المسير للمالية", "payroll_month", key, summary=f"تجهيز مسير {month}/{year} للمالية")
+    db.commit()
+    return payroll_status(key, actor, db)
+
+
+@router.post("/sheets/{key}/approve")
+def approve_sheet(key: str, request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
+    """Finance approves a prepared month (admin and chairman may approve directly)."""
+    if not pc.can(db, actor, "payroll_approve", "edit"):
+        raise ApiError(403, "APPROVAL_REQUIRES_FINANCE", "الاعتماد للمالية")
+    year, month = _pay_key_or_422(key)
     rows, approved, _, _ = _month_rows(db, year, month)
     if not rows:
         raise ApiError(404, "not_found", "Payroll not found")
+    if approved:
+        raise ApiError(409, "PAYROLL_APPROVED_LOCKED", "المسير معتمد ومقفول")
+    if actor.get("role") not in pc.FULL_ROLES and _pay_status(db, year, month)["status"] != "prepared":
+        raise ApiError(409, "PAYROLL_NOT_PREPARED", "المسير لسه ما اتجهّزش")
     payload = json.dumps(rows, ensure_ascii=False)
-    db.execute(text("""INSERT INTO public.payroll_periods(pay_year,pay_month,approved,approved_at) VALUES(:y,:m,true,now())
-        ON CONFLICT(pay_year,pay_month) DO UPDATE SET approved=true,approved_at=EXCLUDED.approved_at"""), {"y": year, "m": month})
+    by = actor.get("name_ar") or actor.get("username")
+    db.execute(text("""INSERT INTO public.payroll_periods(pay_year,pay_month,approved,approved_at,approved_by) VALUES(:y,:m,true,now(),:by)
+        ON CONFLICT(pay_year,pay_month) DO UPDATE SET approved=true,approved_at=EXCLUDED.approved_at,approved_by=:by"""), {"y": year, "m": month, "by": by})
     done = db.execute(text("UPDATE public.payroll_archives_v2 SET approved=true,approved_at=now()::text,rows=CAST(:rows AS jsonb),updated_at=now() WHERE pay_year=:y AND pay_month=:m"), {"rows": payload, "y": year, "m": month})
     if not done.rowcount:
         db.execute(text("INSERT INTO public.payroll_archives_v2(pay_year,pay_month,approved,approved_at,rows,saved_at,updated_at) VALUES(:y,:m,true,now()::text,CAST(:rows AS jsonb),now(),now())"), {"rows": payload, "y": year, "m": month})
-    _write_audit(db, actor, request, "payroll", "approve", "payroll_month", key)
+    _write_audit(db, actor, request, "payroll", "اعتماد المسير", "payroll_month", key, summary=f"اعتماد مسير {month}/{year}")
     db.commit()
     return get_sheet(key, actor, db)
 
 
 @router.post("/sheets/{key}/unapprove")
 def reopen_payroll(key: str, request: Request, body: dict[str, Any] | None = None, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    _require(actor, "finance", "hr", "admin", "admin_manager")
-    ym = _pay_key(key)
-    if ym is None:
-        raise ApiError(422, "invalid_key", "Invalid payroll sheet key")
-    year, month = ym
-    reason = str((body or {}).get("reason") or "Reopened for correction").strip()
-    db.execute(text("UPDATE public.payroll_periods SET approved=false,approved_at=NULL WHERE pay_year=:y AND pay_month=:m"), {"y": year, "m": month})
+    """ariba_payroll_reopen: finance only, with a reason (at least 5 characters)."""
+    if not pc.can(db, actor, "payroll_approve", "edit"):
+        raise ApiError(403, "NOT_AUTHORIZED", "الصلاحية للمالية فقط")
+    year, month = _pay_key_or_422(key)
+    reason = str((body or {}).get("reason") or "").strip()
+    if len(reason) < 5:
+        raise ApiError(422, "REASON_REQUIRED", "السبب مطلوب")
+    db.execute(text("""UPDATE public.payroll_periods SET approved=false,approved_at=NULL,reopened_at=now(),reopened_by=:by,reopen_reason=:r
+        WHERE pay_year=:y AND pay_month=:m"""), {"y": year, "m": month, "by": actor.get("name_ar") or actor.get("username"), "r": reason[:500]})
     db.execute(text("UPDATE public.payroll_archives_v2 SET approved=false,approved_at=NULL,updated_at=now() WHERE pay_year=:y AND pay_month=:m"), {"y": year, "m": month})
-    _write_audit(db, actor, request, "payroll", "reopen", "payroll_month", key, details={"reason": reason})
+    _write_audit(db, actor, request, "payroll", "إعادة فتح المسير", "payroll_month", key, summary=f"إعادة فتح مسير {month}/{year} — {reason}")
     db.commit()
     return get_sheet(key, actor, db)
 

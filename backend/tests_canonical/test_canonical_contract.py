@@ -266,6 +266,8 @@ def test_payroll_approve_flow_upserts_payroll_period(monkeypatch):
     monkeypatch.setattr(canonical_router, "_month_rows", month_rows)
     monkeypatch.setattr(canonical_router, "_require", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(canonical_router, "_write_audit", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(canonical_router.pc, "can", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr(canonical_router, "_pay_status", lambda *_args, **_kwargs: {"status": "prepared"})
     response = canonical_router.approve_sheet("pay_2026_03", request=None,
                                               actor={"role": "finance", "employee_id": "finance-1"}, db=db)
     assert response["approved"] is True
@@ -301,6 +303,8 @@ def test_leave_submission_links_leave_row_to_new_workflow_request(monkeypatch):
     monkeypatch.setattr(canonical_router, "_write_audit", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(canonical_router.cdata, "employees", lambda *_args, **_kwargs: [SimpleNamespace(id="emp-1")])
     monkeypatch.setattr(canonical_router.cdata, "leave_book", lambda *_args, **_kwargs: book)
+    monkeypatch.setattr(canonical_router.pc, "stages_for", lambda *_args, **_kwargs: ["hr", "ceo"])
+    monkeypatch.setattr(canonical_router.pc, "notify", lambda *_args, **_kwargs: None)
     response = canonical_router.submit_request(
         {"type": "annual", "from_date": "2026-04-01", "to_date": "2026-04-02"},
         request=None, actor={"employee_id": "emp-1", "account_id": uuid.uuid4()}, db=db,

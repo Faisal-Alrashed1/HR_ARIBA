@@ -34,15 +34,25 @@ ALTER TABLE workflow_requests
   ADD COLUMN IF NOT EXISTS escalated_at timestamptz,
   ADD COLUMN IF NOT EXISTS returned_at timestamptz,
   ADD COLUMN IF NOT EXISTS return_note text;
+-- The new workflow steps are recorded as actions too (HR returns a request to the manager; escalation after the wait).
+ALTER TABLE workflow_actions DROP CONSTRAINT IF EXISTS workflow_actions_action_check;
+ALTER TABLE workflow_actions ADD CONSTRAINT workflow_actions_action_check
+  CHECK (action IN ('submitted', 'approved', 'rejected', 'returned', 'escalated'));
 CREATE INDEX IF NOT EXISTS workflow_requests_pending_idx ON workflow_requests(current_stage, updated_at)
   WHERE current_stage NOT IN ('completed', 'rejected');
 
+-- The scheduler e-mails / pushes the rows whose emailed_at / pushed_at is empty. The existing notifications get the time of
+-- the migration (DEFAULT now() fills them when the column is added), so nothing old is sent; new rows start empty.
 ALTER TABLE workflow_notifications
-  ADD COLUMN IF NOT EXISTS emailed_at timestamptz,
+  ADD COLUMN IF NOT EXISTS emailed_at timestamptz DEFAULT now(),
   ADD COLUMN IF NOT EXISTS email_error text,
-  ADD COLUMN IF NOT EXISTS email_tries integer NOT NULL DEFAULT 0;
+  ADD COLUMN IF NOT EXISTS email_tries integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS pushed_at timestamptz DEFAULT now();
+ALTER TABLE workflow_notifications ALTER COLUMN emailed_at DROP DEFAULT, ALTER COLUMN pushed_at DROP DEFAULT;
 CREATE INDEX IF NOT EXISTS workflow_notifications_unsent_idx ON workflow_notifications(created_at)
   WHERE emailed_at IS NULL;
+CREATE INDEX IF NOT EXISTS workflow_notifications_unpushed_idx ON workflow_notifications(created_at)
+  WHERE pushed_at IS NULL;
 
 -- Delegation of the direct manager by the employee (sql/16) and the manager permissions HR grants (sql/10)
 CREATE TABLE IF NOT EXISTS ariba_delegations (

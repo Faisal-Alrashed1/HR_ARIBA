@@ -9,9 +9,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.core.errors import install_error_handlers
 from app.core.security import SecurityHeadersMiddleware
-from app.database import engine
+from app.database import SessionLocal, engine
 from app.models import configure_models
-from app.routers import canonical, health, port_settings
+from app.services import scheduler
+from app.routers import (
+    canonical,
+    health,
+    port_assets,
+    port_audit,
+    port_auth,
+    port_candidates,
+    port_docs,
+    port_employees,
+    port_goals,
+    port_mail,
+    port_settings,
+    port_tasks,
+    port_workflow,
+)
 
 API_PREFIX = "/api/v1"
 
@@ -33,7 +48,10 @@ async def lifespan(_app: FastAPI):
                 "for this FastAPI-only test phase. Do not disable or rewrite production policies here."
             )
     configure_models(engine)
+    tasks = scheduler.start(SessionLocal)
     yield
+    for t in tasks:
+        t.cancel()
 
 
 def create_app() -> FastAPI:
@@ -64,6 +82,8 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(canonical.router, prefix=API_PREFIX)
     app.include_router(port_settings.router, prefix=API_PREFIX)
+    for r in (port_workflow, port_audit, port_auth, port_candidates, port_employees, port_goals, port_docs, port_mail, port_tasks, port_assets):
+        app.include_router(r.router, prefix=API_PREFIX)
     return app
 
 
