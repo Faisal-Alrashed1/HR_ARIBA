@@ -39,8 +39,10 @@ def _staff(actor: dict[str, Any]) -> None:
 
 @router.get("/mail/{scope}")
 def mail_get(scope: str, actor: dict[str, Any] = Depends(c.current_actor), db: Session = Depends(get_db)):
-    """ariba_mail_get: the saved mailbox without its password."""
+    """ariba_mail_get: the saved mailbox without its password (an account with no employee has no own mailbox)."""
     _staff(actor)
+    if scope == "mine" and not actor.get("employee_id"):
+        return {"configured": False}
     row = c._row(db, "SELECT * FROM public.ariba_mail_accounts WHERE owner=:o", o=_owner(actor, scope))
     if not row:
         return {"configured": False}

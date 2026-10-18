@@ -24,6 +24,12 @@ INSERT INTO document_types(code, name_ar, name_en) VALUES
   ('iban_certificate', 'شهادة الآيبان', 'IBAN certificate'), ('signed_document', 'مستند موقّع', 'Signed document'),
   ('employee_upload', 'مستند مرفوع من الموظف', 'Uploaded by the employee')
 ON CONFLICT (code) DO NOTHING;
+INSERT INTO document_types(code, name_ar, name_en) VALUES
+  -- the attachment kinds of their employee file (EmpDocsBox EMP_DOC_TYPES)
+  ('identity', 'الهوية / الإقامة', 'ID / Iqama'), ('degree', 'شهادة التخرج', 'Degree certificate'),
+  ('social_insurance', 'شهادة التأمينات', 'Social insurance certificate'), ('contract', 'عقد العمل', 'Employment contract'),
+  ('profile_edit', 'مرفق تعديل بيانات', 'Profile edit attachment')
+ON CONFLICT (code) DO NOTHING;
 
 -- ---------------------------------------------------------------------
 -- 2. Workflow (sql/10: return to manager, escalation, submitted on behalf) and e-mail per notification (sql/15)

@@ -18,8 +18,11 @@ EL = {"salary": "الراتب الأساسي", "sal": "الراتب الأساس
       "passportNo": "رقم الجواز", "passportExpiry": "انتهاء الجواز", "contractJoin": "تاريخ المباشرة", "contractEnd": "انتهاء العقد", "iban": "الآيبان",
       "bank": "البنك", "insSystem": "نظام التأمينات", "mobile": "الجوال", "email": "البريد"}
 EIGN = {"ts", "updatedAt", "insuranceSub", "insuranceComp", "netSalary", "salaryTotal", "tot", "photoData", "photoUrl", "password", "pw", "pwd", "pass",
-        "passwordHash", "savedAt", "name_ar", "name_en", "job_title", "iqama_no", "join_date", "employee_id", "employeeId", "manager_id", "created_at", "updated_at"}
+        "passwordHash", "savedAt", "name_ar", "name_en", "job_title", "iqama_no", "join_date", "employee_id", "employeeId", "manager_id", "created_at", "updated_at",
+        # the server receives the record as their store holds it: our columns and the values it derives each load
+        "data", "emp_no", "id", "active", "department", "taxDeduct", "netSalarySAR", "netSalaryLocal"}
 EREG = re.compile(r"^(net|insurance|total|calc|gosi|eosAcc|accrued|yearsOfService$|leaveBalance|leaveRemaining)", re.I)
+_EMPTY = (None, 0, 0.0, "0", "[]", "{}", "false")
 PAYF = {"workDays": "أيام العمل", "insDays": "أيام التأمينات", "otHours": "ساعات الإضافي", "otAmount": "الإضافي", "leaveManual": "بدل أجازة (يدوي)",
         "otherAllow": "بدلات أخرى", "loanDeduct": "سلف / غياب", "otherDeduct": "خصومات أخرى", "payMethod": "طريقة الدفع", "notes": "ملاحظات",
         "reason": "سبب الإنهاء", "lastDay": "نهاية العقد / آخر يوم"}
@@ -54,7 +57,7 @@ def fv(v: Any) -> str:
 def _pick(e: dict[str, Any] | None) -> dict[str, Any]:
     o: dict[str, Any] = {}
     for k, v in (e or {}).items():
-        if k in EIGN or EREG.match(k) or k.startswith("_") or v is None or v == "":
+        if k in EIGN or EREG.match(k) or k.endswith("DaysLeft") or k.startswith("_") or v is None or v == "":
             continue
         o[k] = json.dumps(v, ensure_ascii=False, separators=(",", ":")) if isinstance(v, (dict, list)) else v
     return o
@@ -71,9 +74,17 @@ def employee_changes(old: dict[str, Any] | None, new: dict[str, Any]) -> tuple[s
     if not old:
         summary = "إضافة موظف جديد: " + nmx + (" — " + str(new["jobTitle"]) if new.get("jobTitle") else "") + (" (" + str(new["employer"]) + ")" if new.get("employer") else "")
         return "إضافة موظف", summary, {"salary": new.get("salary"), "employer": new.get("employer")}
+    old = {**old}
+    for k, v in (("currency", "ريال سعودي"), ("payMethod", "مدد"), ("extraAllowance", 0)):  # their normalizeEmployee defaults
+        if k in new:
+            old.setdefault(k, v)
+    if old.get("currency") == "ريال سعودي" and "exchRate" in new:
+        old.setdefault("exchRate", 1)
     a, b = _pick(old), _pick(new)
     keys = list(dict.fromkeys([*a.keys(), *b.keys()]))
-    ch = [{"field": k, "label": EL.get(k, k), "old": a.get(k), "new": b.get(k)} for k in keys if _js(a.get(k)) != _js(b.get(k))]
+    # a field the stored record never had, now sent with its empty/default value, is not a change (their store fills it on load)
+    ch = [{"field": k, "label": EL.get(k, k), "old": a.get(k), "new": b.get(k)} for k in keys
+          if _js(a.get(k)) != _js(b.get(k)) and not (k not in a and b.get(k) in _EMPTY)]
     if not ch:
         return "", "", {}
     summary = nmx + ": " + "؛".join(c["label"] + " من " + fv(c["old"]) + " إلى " + fv(c["new"]) for c in ch[:6]) + (f" … (+{len(ch) - 6})" if len(ch) > 6 else "")

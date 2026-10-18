@@ -24,6 +24,7 @@ from app.routers import (
     port_goals,
     port_mail,
     port_settings,
+    port_staff,
     port_tasks,
     port_workflow,
 )
@@ -82,7 +83,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(canonical.router, prefix=API_PREFIX)
     app.include_router(port_settings.router, prefix=API_PREFIX)
-    for r in (port_workflow, port_audit, port_auth, port_candidates, port_employees, port_goals, port_docs, port_mail, port_tasks, port_assets):
+    for r in (port_workflow, port_staff, port_audit, port_auth, port_candidates, port_employees, port_goals, port_docs, port_mail, port_tasks, port_assets):
         app.include_router(r.router, prefix=API_PREFIX)
     return app
 

@@ -20,6 +20,7 @@ from app.core.scheduling import today_riyadh
 from app.database import get_db
 from app.routers import canonical as c
 from app.services import canonical_data as cdata
+from app.services import employees_port as ep
 from app.services import port_common as pc
 
 router = APIRouter()
@@ -366,7 +367,24 @@ def staff_requests(actor: dict[str, Any] = Depends(c.current_actor), db: Session
     """ariba_staff_requests: every request (their AllRequests)."""
     pc.require(db, actor, "requests|leaves")
     rows = c._rows(db, "SELECT * FROM public.workflow_requests WHERE request_type NOT LIKE 'template:%' ORDER BY created_at DESC LIMIT 2000")
-    return {"requests": [_request_out(db, r) for r in rows]}
+    return {"requests": _items(db, rows)}
+
+
+def _items(db: Session, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Their queue/requests item: {request, employee (record shape), attachments}."""
+    if not rows:
+        return []
+    emps = {e["id"]: e for e in ep.legacy_employees(db)}
+    docs: dict[str, list[dict[str, Any]]] = {}
+    for d in c._rows(db, """SELECT id,request_id,document_type,file_name,mime_type,file_size,created_at FROM public.ariba_documents
+            WHERE request_id = ANY(:ids) ORDER BY created_at""", ids=[r["id"] for r in rows]):
+        docs.setdefault(str(d["request_id"]), []).append({**d, "id": str(d["id"]), "request_id": str(d["request_id"])})
+    out = []
+    for r in rows:
+        req = _request_out(db, r)
+        req["manager_id"] = (emps.get(r["employee_id"]) or {}).get("managerId") or None
+        out.append({"request": req, "employee": emps.get(r["employee_id"]) or {}, "attachments": docs.get(str(r["id"]), [])})
+    return out
 
 
 @router.get("/staff/queue")
@@ -377,7 +395,7 @@ def staff_queue(actor: dict[str, Any] = Depends(c.current_actor), db: Session = 
     rows = c._rows(db, "SELECT * FROM public.workflow_requests WHERE status='pending' AND request_type NOT LIKE 'template:%' ORDER BY created_at")
     if not pc.can(db, actor, "requests|leaves"):
         rows = [r for r in rows if c._can_act(db, actor, r)]
-    return {"queue": [_request_out(db, r) for r in rows]}
+    return {"queue": _items(db, rows)}
 
 
 @router.post("/requests/{request_id}/return")

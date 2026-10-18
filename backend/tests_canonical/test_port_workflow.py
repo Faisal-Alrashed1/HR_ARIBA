@@ -134,5 +134,5 @@ def test_workflow_settings_round_trip_and_validation(api):
 
 def test_staff_queue_and_requests_lists(api):
     q = api.get("/api/v1/staff/queue", headers=login(api, "hr.test")).json()["queue"]
-    assert q and {"request_type", "payload", "current_stage"} <= set(q[0])
+    assert q and {"request_type", "payload", "current_stage"} <= set(q[0]["request"]) and q[0]["employee"].get("nameAr")
     assert api.get("/api/v1/staff/requests", headers=login(api, "emp.test")).status_code == 403

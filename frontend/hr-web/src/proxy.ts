@@ -12,6 +12,7 @@ import { EMP_LOGIN, HR_LOGIN, canAccess, homeFor, isEmployeeApp } from "@/lib/ro
 import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/session";
 
 const ROLES: Role[] = ["employee", "manager", "finance", "hr", "ceo", "admin"];
+const PUBLIC_APPLY = "/apply";
 
 function roleFromToken(token: string | undefined): Role | null {
   if (!token) return null;
@@ -27,6 +28,8 @@ function roleFromToken(token: string | undefined): Role | null {
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+  // The public job-application form needs no sign-in (their apply.html).
+  if (pathname === PUBLIC_APPLY) return NextResponse.next();
   const access = request.cookies.get(ACCESS_COOKIE)?.value;
   const hasSession = !!access || !!request.cookies.get(REFRESH_COOKIE)?.value;
   const role = roleFromToken(access);

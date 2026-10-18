@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Their HR program, copied verbatim from ARIBA_HR_React/src (linted there by oxlint); only the transport/router files
+    // listed in src/port/ADAPTED.md were changed. The files written for the port are linted:
+    "src/port/**",
+    "!src/port/next/**",
+    "!src/port/router.jsx",
+    "!src/port/lib/api.js",
+    "!src/port/lib/auth.js",
   ]),
 ]);
 
