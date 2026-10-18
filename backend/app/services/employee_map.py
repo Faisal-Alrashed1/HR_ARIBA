@@ -99,25 +99,39 @@ def termination_date(row: dict, data: dict) -> date | None:
     return (d(data.get("terminationDate")) or d(data.get("lastDay"))) if terminated else None
 
 
-def figures(data: dict, *, saudi: bool, rules: list, birth: date | None, on: date, job: str | None, dept: str | None, employer: str | None,
-            override: dict | None = None) -> dict[str, Any]:
-    """Monthly salary figures (prototype cSP/sEmp): total = basic+housing+transport+project+other+extra,
-    net = total - GOSI(employee) - other deductions; `exempt` (V130) pays no GOSI."""
+def figures(data: dict, *, saudi: bool, rules: dict, birth: date | None, on: date, job: str | None, dept: str | None, employer: str | None,
+            override: dict | None = None, country: str = "SA", eg_rules: dict | None = None) -> dict[str, Any]:
+    """Monthly salary figures exactly as their employee form computes them (lib/employees.js salaryPreview / buildEmployee):
+    total = basic+housing+transport+project+other+extra; GOSI = calcIns(e, 31, 31) with the automatic statutory table
+    (`rules` = gosi.ins_settings(...)), from the form fields only (nationality text, insSystem, wpsType, birth date,
+    job title — not the department or workplace); net = total − GOSI(employee) − other deductions.
+    Unused arguments (saudi, dept, employer) are kept for the callers."""
     v = {**data, **(override or {})}
-    basic, housing = num(v.get("salary")), num(v.get("housingAllowance"))
-    total = (basic + housing + num(v.get("transportAllowance")) + num(v.get("projectAllowance"))
-             + num(v.get("otherAllowance")) + num(v.get("extraAllowance"))).quantize(CENT, ROUND_HALF_UP)
-    system = GosiSystem(gosi_system(v, saudi))
-    if str(v.get("insSystem")) == "exempt":
-        g = gosi.GosiResult.zero()
-    else:
-        g = gosi.calculate(rules=rules, system=system, wps_type=WpsType(wps(v)), category=EmployeeCategory(category(v)),
-                           basic=basic, housing=housing, birth_date=birth, on=on, job_title=job, department=dept, workplace=employer,
-                           emp_type=str(v.get("empType") or ""), excel_category=str(v.get("excelCategory") or ""))
-    net = (total - g.employee - num(v.get("otherDeductions"))).quantize(CENT, ROUND_HALF_UP)
-    rate = Decimal(1) if CURRENCY.get(str(v.get("currency") or "ريال سعودي"), "SAR") == "SAR" else num(v.get("exchRate") or 1)
-    return {"total": total, "gosi_employee": g.employee, "gosi_employer": g.employer, "net": net,
-            "net_sar": (net * rate).quantize(CENT, ROUND_HALF_UP), "gosi_system": system.value}
+    g = lambda k: float(num(v.get(k)))  # noqa: E731
+    sal, hou, tra, prj, oth, ext, ded = g("salary"), g("housingAllowance"), g("transportAllowance"), g("projectAllowance"), g("otherAllowance"), g("extraAllowance"), g("otherDeductions")
+    tot = sal + hou + tra + prj + oth + ext
+    nat = str(v.get("nationality") or "").strip()
+    is_sa = nat in ("سعودي", "سعودية")
+    emp = {"isSaudi": is_sa, "insSystem": v.get("insSystem") or "old", "wpsType": v.get("wpsType") or "wps", "dob": (birth.isoformat() if birth else v.get("dob") or ""),
+           "salary": sal, "housingAllowance": hou, "nationality": nat, "transportAllowance": tra, "projectAllowance": prj, "otherAllowance": oth,
+           "extraAllowance": ext, "jobTitle": job if job is not None else (v.get("jobTitle") or ""), "empType": ""}
+    c = gosi.react_calc_ins(emp, 31, 31, rules, on, country=country, eg_rules=eg_rules)
+    eg = "insOnly" in c
+    ins = c["insOnly"] if eg else c["empAmt"]
+    net = tot - c["empAmt"] - ded
+    cur = str(v.get("currency") or "ريال سعودي")
+    try:
+        exr = float(v.get("exchRate") or 0)
+    except (TypeError, ValueError):
+        exr = 0.0
+    if not exr > 0:
+        exr = 3.755 if cur == "دولار" else 1.0
+    net_sar = net if cur == "ريال سعودي" else net * exr
+    q = lambda x: Decimal(repr(round(x, 6))).quantize(CENT, ROUND_HALF_UP)  # noqa: E731
+    return {"total": q(tot), "gosi_employee": q(ins), "gosi_employer": q(c["erAmt"]), "net": q(net), "net_sar": q(net_sar),
+            "tax": q((c.get("taxAmt") or 0) + (c.get("mfAmt") or 0)) if eg else Decimal("0.00"), "is_saudi": is_sa, "exch_rate": exr,
+            "raw": {"total": tot, "ins": ins, "er": c["erAmt"], "net": net, "net_sar": net_sar, "tax": ((c.get("taxAmt") or 0) + (c.get("mfAmt") or 0)) if eg else 0},
+            "gosi_system": GosiSystem(gosi_system(v, saudi)).value}
 
 
 def employee_out(row: dict, *, may_salary: bool, may_ids: bool, manager: dict | None, has_account: bool, rules: list, today: date) -> dict[str, Any]:
@@ -133,7 +147,7 @@ def employee_out(row: dict, *, may_salary: bool, may_ids: bool, manager: dict | 
     job, dept, employer = row.get("job_title") or data.get("jobTitle"), row.get("department") or data.get("dept"), row.get("employer") or data.get("employer")
     salary = None
     if may_salary:
-        f = figures(data, saudi=saudi, rules=rules, birth=birth, on=today, job=job, dept=dept, employer=employer)
+        f = figures(data, saudi=saudi, rules=rules, birth=birth, on=today, job=job, dept=dept, employer=employer, override={"nationality": nat})
         salary = {
             "basic_salary": money(data.get("salary")), "housing_allowance": money(data.get("housingAllowance")),
             "transport_allowance": money(data.get("transportAllowance")), "project_allowance": money(data.get("projectAllowance")),

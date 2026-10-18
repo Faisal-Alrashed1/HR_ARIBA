@@ -311,6 +311,7 @@ def test_late_and_early_minutes_match_legacy(db, cs):
     assert not bad, f"{len(bad)} differ, e.g. {bad[:5]}"
 
 
+@pytest.mark.skip(reason="Superseded (docs/PORT_PLAN.md decision 4): the app balance is now their React engine's current balance; checked by tools/react-parity leave suites")
 def test_app_leave_balance_matches_legacy_leave_calc(db):
     """Employee-app balance (current / carried over / year end) vs ariba_leave_calc, on employees shaped like the imported
     data: every closed year has its imported override, the current year is imported (asOf snapshot), partly imported or

@@ -22,12 +22,10 @@ from app.services.leave import HolidayCalendar, LeaveBook  # noqa: E402
 D = date.fromisoformat
 
 
-def _gosi_settings():
-    return getattr(c, "GOSI_DEFAULT")
+c._app_setting = lambda db, key: None  # the production copy stores no GOSI / country settings
 
 
 def suite_rates(cases):
-    c._gosi_settings = lambda db: _gosi_settings()  # the production copy has no stored GOSI settings
     out = []
     for x in cases:
         r = c.gosi_rates(on=D(x["date"]), actor={"role": "admin"}, db=None)
@@ -36,48 +34,34 @@ def suite_rates(cases):
 
 
 def suite_figures(cases):
-    rules = gosi_calc.rules_from_settings(_gosi_settings())
     out = []
     for x in cases:
-        data = x["data"]
-        f = emap.figures(data, saudi=emap.is_saudi(data, data.get("nationality")), rules=rules,
-                         birth=emap.d(data.get("dob")), on=D(x["on"]), job=data.get("jobTitle"), dept=data.get("department"),
-                         employer=data.get("employer"))
+        data, on = x["data"], D(x["on"])
+        c.today_riyadh = lambda on=on: on
+        f = emap.figures(data, saudi=emap.is_saudi(data, data.get("nationality")), rules=c._gosi_settings(None),
+                         birth=emap.d(data.get("dob")), on=on, job=data.get("jobTitle"), dept=data.get("department"),
+                         employer=data.get("employer"), override={"nationality": data.get("nationality")}, **c._country(None))
         out.append({"total": float(f["total"]), "gosi_employee": float(f["gosi_employee"]), "gosi_employer": float(f["gosi_employer"]),
                     "net": float(f["net"])})
     return out
 
 
-def _book(x):
+def _book(x, method):
     today = D(x["today"])
     rows = [{"employee_id": str(e["id"]), "name_ar": e.get("nameAr"), "join_date": e.get("contractJoin"),
              "active": not e.get("isTerminated"), "data": e, "updated_at": None} for e in x["employees"]]
     emps = [cdata.emp_view(r) for r in rows]
-    data = {}
-    for e in emps:
-        d = e.data
-        entry = {}
-        if isinstance(d.get("leaveYearOverrides"), dict):
-            entry["years"] = d["leaveYearOverrides"]
-        if isinstance(d.get("leaveHistoryByYear"), dict):
-            entry["used_history"] = d["leaveHistoryByYear"]
-        if float(d.get("leaveEosExcess") or 0):
-            entry["eos_excess"] = float(d["leaveEosExcess"])
-        if entry:
-            data[e.id] = entry
     hol = HolidayCalendar([(D(h["date"]), int(h.get("days") or 1), bool(h.get("recurring"))) for h in x["holidays"]])
-    approved = {}
-    for lv in x["leaves"]:
-        if lv["type"] == "annual" and lv["status"] == "approved":
-            approved.setdefault(str(lv["empId"]), []).append((D(lv["from"]), D(lv["to"])))
-    adjustments = [{"employee_id": str(a["empId"]), "date": a["date"], "delta": a["delta"]} for a in x["adjustments"]]
-    return LeaveBook(holidays=hol, data=data, adjustments=adjustments, approved_annual=approved, today=today), emps, today
+    book = LeaveBook(holidays=hol, leaves=x["leaves"], adjustments=x["adjustments"], today=today, method=method,
+                     carry={"enabled": True, "days": 10})
+    return book, emps, today
 
 
 def suite_leave(cases):
     out = []
     for x in cases:
-        book, emps, today = _book(x)
+      for method in ("calendar", "monthly", "workdays"):
+        book, emps, today = _book(x, method)
         res = {}
         for e in emps:
             y = today.year

@@ -210,7 +210,7 @@ def _employee_detail(db: Session, row: dict[str, Any], actor: dict[str, Any]) ->
                 "name_ar": mgr["name_ar"], "name_en": mgr["name_en"]} if mgr else None)
     has_account = bool(_row(db, "SELECT 1 AS x FROM public.ariba_auth_accounts WHERE employee_id=:e LIMIT 1", e=row["employee_id"]))
     return emap.employee_out(row, may_salary=actor.get("role") in SALARY_ROLES or own, may_ids=actor.get("role") in HR_ROLES or own,
-                             manager=manager, has_account=has_account, rules=gosi_calc.rules_from_settings(_gosi_settings(db)), today=today_riyadh())
+                             manager=manager, has_account=has_account, rules=_gosi_settings(db), today=today_riyadh())
 
 
 def _account_user(db: Session, account: dict[str, Any]) -> dict[str, Any]:
@@ -551,24 +551,30 @@ def _contract_end(data: dict[str, Any]) -> None:
 
 
 def _store_figures(db: Session, data: dict[str, Any], top: dict[str, Any], old: dict[str, Any] | None = None) -> None:
-    """Stored figures as the legacy HTML keeps them (sEmp in js/main/06-employees.js + refreshInsuranceDependentViews in
-    js/calculations/05-gosi-social-insurance.js, which recomputes with the full employee, birth date included):
-    salaryTotal = salary+housing+transport+project+other+extra; insuranceSub/Comp = calcIns(e, 31, 31, today) with the
-    V130 consultant/trainee exemption; netSalary = netSalaryLocal = total - insuranceSub - otherDeductions;
-    netSalarySAR = net x rate, rate = exchRate or defaultExchangeRate (USD 3.755).
-    Checked against the legacy-stored values of the production copy (all active employees match except stale rows).
+    """Stored figures as their employee form keeps them (lib/employees.js buildEmployee + salaryPreview):
+    isSaudi from the nationality text; salaryTotal = salary+housing+transport+project+other+extra;
+    insuranceSub/Comp = calcIns(e, 31, 31) with the automatic GOSI table; taxDeduct (Egypt);
+    netSalary = netSalaryLocal = total − insuranceSub − otherDeductions (unrounded, as they store it);
+    netSalarySAR = net × rate, rate = exchRate or 3.755 for USD. Checked by tools/react-parity (figures).
     The employee list, reports and settlement read these stored values."""
     old = old or {}
     if str(data.get("currency") or "ريال سعودي") != "ريال سعودي" and not emap.num(data.get("exchRate")):
         data["exchRate"] = 3.755 if data.get("currency") == "دولار" else 1
     nat = top.get("nationality") or old.get("nationality") or data.get("nationality")
-    f = emap.figures(data, saudi=emap.is_saudi(data, nat), rules=gosi_calc.rules_from_settings(_gosi_settings(db)),
+    f = emap.figures(data, saudi=emap.is_saudi(data, nat), rules=_gosi_settings(db),
                      birth=emap.d(top.get("dob") or old.get("dob") or data.get("dob")), on=today_riyadh(), job=top.get("job_title") or old.get("job_title"),
-                     dept=top.get("department") or old.get("department"), employer=top.get("employer") or old.get("employer"))
-    data["salaryTotal"] = float(f["total"])
-    data["insuranceSub"], data["insuranceComp"] = float(f["gosi_employee"]), float(f["gosi_employer"])
-    data["netSalary"] = data["netSalaryLocal"] = float(f["net"])
-    data["netSalarySAR"] = float(f["net_sar"])
+                     dept=top.get("department") or old.get("department"), employer=top.get("employer") or old.get("employer"),
+                     override={"nationality": nat}, **_country(db))
+    raw = f["raw"]
+    data["isSaudi"] = f["is_saudi"]
+    data["salaryTotal"] = raw["total"]
+    data["insuranceSub"], data["insuranceComp"] = raw["ins"], raw["er"]
+    data["taxDeduct"] = raw["tax"]
+    data["netSalary"] = data["netSalaryLocal"] = raw["net"]
+    data["netSalarySAR"] = raw["net_sar"]
+    data["exchRate"] = f["exch_rate"]
+    data.setdefault("insSystem", "old")
+    data.setdefault("wpsType", "wps")
 
 
 @router.post("/employees", status_code=201)
@@ -666,8 +672,8 @@ def salary_preview(body: dict[str, Any], actor: dict[str, Any] = Depends(current
     data["empType"], data["wpsType"] = body.get("category") or "active", body.get("wps_type") or "wps"
     if not saudi:
         data["insSystem"] = "expat"
-    f = emap.figures(data, saudi=saudi, rules=gosi_calc.rules_from_settings(_gosi_settings(db)), birth=emap.d(body.get("birth_date")),
-                     on=today_riyadh(), job=None, dept=None, employer=None)
+    f = emap.figures(data, saudi=saudi, rules=_gosi_settings(db), birth=emap.d(body.get("birth_date")),
+                     on=today_riyadh(), job=body.get("job_title"), dept=None, employer=None, override={"nationality": nat}, **_country(db))
     return {"total_salary": str(f["total"]), "gosi_employee": str(f["gosi_employee"]), "gosi_employer": str(f["gosi_employer"]),
             "net_salary": str(f["net"]), "net_salary_sar": str(f["net_sar"]), "gosi_system": f["gosi_system"]}
 
@@ -851,9 +857,20 @@ GOSI_DEFAULT = {
 _GOSI_FIELDS = ("matchEmp", "matchEmp55", "matchEr", "matchEr55", "noMatchEmp", "noMatchEmp55", "noMatchEr", "noMatchEr55", "nonSaudiEr")
 
 
+def _country(db: Session) -> dict[str, Any]:
+    """{country, eg_rules} from the `country_system` setting (their V171 country layer)."""
+    from app.services.country import mode_of
+    country, eg_rules = mode_of(_app_setting(db, "country_system"))
+    return {"country": country, "eg_rules": eg_rules}
+
+
 def _gosi_settings(db: Session) -> dict[str, Any]:
-    value = _app_setting(db, "ins_settings")
-    return value if isinstance(value, dict) and value.get("effectiveRules") else GOSI_DEFAULT
+    """Their getInsSettings: the stored `insurance_rules` (older copies: `ins_settings`) with the automatic statutory
+    periods merged in (services/gosi.py ins_settings)."""
+    value = _app_setting(db, "insurance_rules")
+    if not (isinstance(value, dict) and value.get("effectiveRules")):
+        value = _app_setting(db, "ins_settings")
+    return gosi_calc.ins_settings(value if isinstance(value, dict) else None, today_riyadh())
 
 
 @router.get("/settings/gosi")
@@ -876,10 +893,10 @@ def update_gosi(body: dict[str, Any], request: Request, actor: dict[str, Any] = 
     if len({p["date"] for p in periods}) != len(periods):
         raise ApiError(422, "duplicate_date", "تاريخ السريان مكرر")
     value = {"wageCap": cap, "ageThreshold": age, "effectiveRules": sorted(periods, key=lambda p: p["date"])}
-    _set_app_setting(db, "ins_settings", value, actor)
-    _write_audit(db, actor, request, "settings", "update", "ins_settings", "ins_settings", details={"periods": len(periods)})
+    _set_app_setting(db, "insurance_rules", value, actor)
+    _write_audit(db, actor, request, "settings", "update", "insurance_rules", "insurance_rules", details={"periods": len(periods)})
     db.commit()
-    return value
+    return _gosi_settings(db)
 
 
 @router.get("/settings/gosi-rates")

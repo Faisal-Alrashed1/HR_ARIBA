@@ -46,7 +46,7 @@ if (want('eos')) results.push(EO.eosPage(ours));
 if (want('settle')) results.push(EO.settlement(ours));
 if (rateCases) results.push(IN.rates(rateCases, pyOut.rates));
 if (figCases) results.push(IN.figures(figCases, pyOut.figures));
-if (leaveData) for (const m of ['calendar', 'monthly', 'workdays']) results.push(LV.leave(leaveData, pyOut.leave[0], m));
+if (leaveData) ['calendar', 'monthly', 'workdays'].forEach((m, i) => results.push(LV.leave(leaveData, pyOut.leave[i], m)));
 if (want('attendance')) results.push(MI.attendance(ours));
 if (want('tafqeet')) results.push(MI.tafqeet(ours));
 if (alertEmps) results.push(MI.alerts(alertEmps, pyOut.alerts));

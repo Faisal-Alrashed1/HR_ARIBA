@@ -45,7 +45,7 @@ export function leaveData(seed = 300) {
       leaves.push({ id: 'L' + leaves.length, empId: e.id, type: 'annual', from: f, to, status: r.chance(0.85) ? 'approved' : 'pending' });
       if (!clean && r.chance(0.25)) { const s = addDays(f, r.int(0, 5)); leaves.push({ id: 'L' + leaves.length, empId: e.id, type: r.pick(OTHER), from: s, to: addDays(s, r.int(0, 4)), status: 'approved' }); }
     }
-    if (!clean && r.chance(0.2)) adjustments.push({ empId: e.id, date: iso(cy - r.int(0, 2), r.int(1, 9), r.int(1, 28)), delta: r.pick([-3, -2, 2, 5]) });
+    // their app never loads rt.adjustments (always []), and our canonical loader has none either: no adjustments here
     usedEnd[e.id] = e.terminationDate || iso(cy, 10, 31);
   }
   return { today, employees, leaves, adjustments, holidays, usedEnd, clean: new Set(employees.slice(0, 35).map((e) => e.id)) };
