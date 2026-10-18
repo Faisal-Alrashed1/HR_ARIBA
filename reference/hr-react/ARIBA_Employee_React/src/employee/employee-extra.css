@@ -1,0 +1,38 @@
+/* تعديلات خاصة بنسخة React من تطبيق الموظف (لا تغيّر شكل التصميم الأصلي) */
+#root{display:contents}
+#TC{position:fixed;top:16px;left:0;right:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+#TC .toast{position:static;margin-bottom:8px;bottom:auto!important;max-width:92vw;white-space:pre-line;opacity:1;background:var(--c);color:var(--tx)}
+#TC .toast.ter{border-color:var(--rd)}#TC .toast.tin{border-color:var(--gr)}
+.btn{cursor:pointer;font-family:inherit}
+.btn.bsm{padding:5px 10px;font-size:11px;border-radius:9px;border:1px solid var(--bd);background:var(--c2);color:var(--tx);cursor:pointer}
+.a9-bell{position:relative}.a9-badge{display:none}.a9-badge.on{display:flex}
+/* نوافذ مشتركة مع بعض مكوّنات برنامج الموارد (الاعتماد/المهام) داخل تطبيق الموظف */
+.mw{position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:14px}
+.mw .modal{background:#fff;color:#111;border-radius:14px;max-height:92vh;overflow:auto;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.mw .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.mw .mh h3{font-size:16px;font-weight:800}
+.mw .mf{display:flex;gap:8px;margin-top:12px}
+.mw .mf .btn,.mw .btn{padding:9px 14px;border-radius:9px;border:1px solid #ccc;background:#fff;color:#333;font-weight:700}
+.mw .btn.bpl{background:#014D3D;color:#fff;border-color:transparent}
+.mw label{display:block;font-size:12px;font-weight:700;color:#222;margin:6px 0 3px}
+.mw input,.mw textarea,.mw select{width:100%;box-sizing:border-box;padding:9px;border:1px solid #ccc;border-radius:8px;font-size:14px;margin-bottom:8px;background:#fff;color:#111;font-family:inherit}
+.mw .fg{display:block}.mw .ff{margin-bottom:4px}
+#TV_OVERLAY input,#TV_OVERLAY select,#TV_OVERLAY textarea{color:#111}
+#TV_OVERLAY input[type=checkbox]{width:auto}
+@media (max-width:520px){.hdr{flex-wrap:wrap}}
+/* أيقونات رسمية بدل الإيموجي — بلون البرنامج المعتمد */
+.ti-emo{color:var(--pri,var(--gr,#29B35E));font-size:1.08em;vertical-align:-.12em;font-style:normal;margin-inline:.1em}
+.btn .ti-emo,button .ti-emo,.b .ti-emo,.tin .ti-emo,.tok .ti-emo,.ter .ti-emo,[class*="bg"] .ti-emo{color:inherit}
+.card-title>.ti:not(.ti-emo),.card-title .ti-emo{color:var(--pri,var(--gr,#29B35E))}
+
+/* Login screen matches ARIBA's light beige/green login design; only login surface is changed. */
+#sc-login{background:#f4f0e4!important;color:#173d33!important}
+#sc-login .login-box{background:#fffdf8!important;color:#173d33!important;border:1px solid #d8d0bd!important;box-shadow:0 18px 44px rgba(20,35,29,.16)!important}
+#sc-login .logo-big{color:#29B35E!important}
+#sc-login .logo-sub,#sc-login .fg label{color:#56766d!important}
+#sc-login .fg input{background:#eee9db!important;color:#202522!important;border:1px solid #d8d0bd!important}
+#sc-login .btn-login{background:#29B35E!important;color:#fff!important;border-radius:12px!important}
+#sc-login #ax-bio{color:#014D3D!important;border-color:#d8d0bd!important;background:transparent!important}
+#sc-login #ax-forgot{color:#014D3D!important}
+#sc-login #ax-forget{color:#7a8d86!important}
+#sc-login #ax-row{color:#56766d!important}
+.a9-badge.on{display:flex!important;visibility:visible!important;opacity:1!important}

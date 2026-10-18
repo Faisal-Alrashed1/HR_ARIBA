@@ -1,0 +1,8 @@
+[functions.ariba-notify-dispatch]
+verify_jwt = false
+[functions.ariba-send-report]
+verify_jwt = true
+[functions.ariba-send-email]
+verify_jwt = false
+[functions.ariba-notify-email]
+verify_jwt = false

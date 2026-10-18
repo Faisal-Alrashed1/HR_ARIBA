@@ -1,0 +1,12 @@
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import '@tabler/icons-webfont/dist/tabler-icons.min.css';
+import './styles/legacy-base.css';
+import './styles/react-extra.css';
+import { initTheme } from './lib/theme.js';
+import App from './App.jsx';
+initTheme();
+document.documentElement.lang = localStorage.getItem('ariba_ui_lang') === 'en' ? 'en' : 'ar';
+document.documentElement.dir = localStorage.getItem('ariba_ui_lang') === 'en' ? 'ltr' : 'rtl';
+createRoot(document.getElementById('root')).render(<StrictMode><App /></StrictMode>);
+import('./lib/domTr.js').then((m) => m.syncDomTr()).catch(() => {});
