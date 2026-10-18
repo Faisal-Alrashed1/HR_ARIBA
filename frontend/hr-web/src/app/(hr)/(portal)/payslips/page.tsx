@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useToast } from "@/components/common/toast";
 import { PageState } from "@/components/hr/not-built";
+import { useRuntime } from "@/lib/calc/setup";
 import { calcEmployeeGosi, currencyLabel, isLocalCurrency, MONTHS_AR, money, num, p2, type PayRow } from "@/lib/calc/payroll";
 import { getGosiRates, getSalaryBasis, fN, type SalaryBasisRow } from "@/lib/salary";
 import { getSheet } from "@/lib/sheets";
@@ -20,6 +21,7 @@ const row = (l: string, v: React.ReactNode, color?: string) => (
 
 export default function Page() {
   const toast = useToast();
+  const { ready } = useRuntime();
   const now = new Date();
   const [basis, setBasis] = useState<SalaryBasisRow[] | null>(null);
   const [rates, setRates] = useState<Awaited<ReturnType<typeof getGosiRates>> | null>(null);
@@ -71,31 +73,33 @@ export default function Page() {
 
   const rowData = useMemo(() => {
     if (!emp) return null;
-    const pr = approved && sheetRows ? sheetRows.find((r) => String(r.id) === String(emp.id)) : null;
+    // Their Slip.jsx: the saved payroll row of the month when there is one, else calcFor (GOSI of the month).
+    const pr = sheetRows ? sheetRows.find((r) => String(r.id) === String(emp.id)) : null;
     if (pr) {
       return {
-        basic: num(pr.sal),
-        hou: num(pr.hou),
-        tra: num(pr.tra),
-        prj: num(pr.prj),
-        oth: num(pr.oth),
+        basic: num(pr.salByDays || pr.sal),
+        hou: num(pr.houPay),
+        tra: num(pr.traPay),
+        prj: num(pr.prjPay),
+        oth: num(pr.othPay) + num(pr.otherAllow) + num(pr.overtime) + num(pr.leaveComp) + num(pr.eosAmt),
         gross: num(pr.totalDue),
         ins: num(pr.insEmp),
-        ded: num(pr.otherDeduct) || num(pr.loanDeduct),
-        net: num(pr.net) || num(pr.netSAR),
+        ded: num(pr.otherDeduct) + num(pr.loanDeduct),
+        net: num(pr.net),
         employer: num(pr.insEr),
       };
     }
+    if (!ready) return null;
     const basic = num(emp.basic_salary);
     const hou = num(emp.housing_allowance);
     const tra = num(emp.transport_allowance);
     const prj = num(emp.project_allowance);
     const oth = num(emp.other_allowances);
     const gross = basic + hou + tra + prj + oth;
-    const g = rates ? calcEmployeeGosi(emp, rates, on) : { employee: 0, employer: 0 };
+    const g = calcEmployeeGosi(emp, year, month);
     const ded = num(emp.other_deductions);
     return { basic, hou, tra, prj, oth, gross, ins: g.employee, ded, net: gross - g.employee - ded, employer: g.employer };
-  }, [emp, approved, sheetRows, rates, on]);
+  }, [emp, sheetRows, ready, year, month]);
 
   function printOfficial() {
     if (!emp || !rowData) return toast("اختر الموظف أولاً", "err");

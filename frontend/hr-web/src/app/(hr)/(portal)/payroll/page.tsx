@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/common/toast";
 import { PageState } from "@/components/hr/not-built";
 import { PAYX } from "@/lib/calc/payx";
+import { useRuntime } from "@/lib/calc/setup";
 import {
   USED_CACHE,
   usedQueries,
@@ -109,6 +110,7 @@ const setField = (r: PayRow, k: string, v: unknown) => {
 
 export default function Page() {
   const toast = useToast();
+  const { ready } = useRuntime();
   const now = new Date();
   const [basis, setBasis] = useState<SalaryBasisRow[] | null>(null);
   const [rates, setRates] = useState<Awaited<ReturnType<typeof getGosiRates>> | null>(null);
@@ -175,7 +177,7 @@ export default function Page() {
   }, [reloadTick]);
 
   useEffect(() => {
-    if (!basis) return;
+    if (!basis || !ready) return;
     let alive = true;
     setLoading(true);
     setError(null);
@@ -206,7 +208,7 @@ export default function Page() {
     return () => {
       alive = false;
     };
-  }, [basis, year, month, days, key, empMap, m, reloadTick]);
+  }, [basis, ready, year, month, days, key, empMap, m, reloadTick]);
 
   function update(id: string, field: string, val: unknown) {
     if (approved || !rates) return;

@@ -1,26 +1,16 @@
-// End-of-service page by article — port of `rEOS` / `calcByLaw` in
-// frontend/legacy/hr-portal/js/calculations/04-eos-page-by-law.js (docs section 4.5.2), with the documented
-// labour-law corrections (docs/LOGIC_AUDIT.md section 4): art. 85 at exactly 5 years = one third, art. 87, art. 77 fixed-term.
+// End-of-service page by article — their formula (ARIBA_HR_React/src/pages/finance/Eos.jsx `eosByLaw`, copied in
+// eos-react.ts). Rows 67–77 of the comparison file: art. 85/75 at exactly 5 years = two thirds (`yrs < 5`), no art. 87,
+// art. 77 always the indefinite-contract compensation (docs/LOGIC_AUDIT.md section 9).
+import { eosByLaw, LAWS } from "./eos-react";
 
-export type EosLaw = "m84" | "m74" | "m85" | "m75" | "m77" | "m80" | "m74r" | "m74d" | "m87";
+export type EosLaw = "m84" | "m74" | "m85" | "m75" | "m77" | "m80" | "m74r" | "m74d";
 
-export const EOS_LAWS: { value: EosLaw; label: string }[] = [
-  { value: "m84", label: "م.84 — إنهاء من الشركة" },
-  { value: "m74", label: "م.74 — اتفاق الطرفين" },
-  { value: "m85", label: "م.85 — استقالة" },
-  { value: "m87", label: "م.87 — استقالة بمكافأة كاملة (قوة قاهرة / زواج أو وضع للمرأة)" },
-  { value: "m75", label: "م.75 — استقالة قسرية" },
-  { value: "m77", label: "م.77 — فصل تعسفي" },
-  { value: "m80", label: "م.80 — فصل تأديبي" },
-  { value: "m74r", label: "م.74(4) — تقاعد" },
-  { value: "m74d", label: "م.74(3) — وفاة/عجز" },
-];
+export const EOS_LAWS: { value: EosLaw; label: string }[] = (Object.keys(LAWS) as EosLaw[]).map((k) => ({ value: k, label: LAWS[k][0] }));
 
 export const EOS_LAW_NAMES: Record<EosLaw, string> = {
   m84: "م.84 إنهاء الشركة",
   m74: "م.74 اتفاق",
   m85: "م.85 استقالة",
-  m87: "م.87 استقالة كاملة",
   m75: "م.75 قسرية",
   m77: "م.77 تعسفي",
   m80: "م.80 تأديبي",
@@ -28,39 +18,30 @@ export const EOS_LAW_NAMES: Record<EosLaw, string> = {
   m74d: "م.74(3) وفاة",
 };
 
-const r2 = (x: number) => Math.round(x * 100) / 100;
-
-export function eosYears(join: string | null, end: Date, fallback = 0): number {
-  if (!join) return fallback;
-  return Math.max(0, Math.round(((end.getTime() - new Date(join).getTime()) / (365.25 * 24 * 3600 * 1000)) * 100) / 100);
+/** yyyy-mm-dd → local midnight (their `pd`). */
+export function localDate(s: string | null | undefined): Date | null {
+  const a = String(s || "").slice(0, 10).split("-");
+  return a.length === 3 && a[0] ? new Date(+a[0], +a[1] - 1, +a[2]) : null;
 }
 
-/** `fixedTermMonthsLeft`: art. 77 for a fixed-term contract = wage of the months left (two months at least). */
-export function calcByLaw(sal: number, hou: number, yrs: number, sel: EosLaw, fixedTermMonthsLeft?: number | null): number {
-  const base = sal + hou;
-  const y1 = Math.min(yrs, 5);
-  const y2 = Math.max(0, yrs - 5);
-  const eos84 = r2((base / 2) * y1 + base * y2);
-  if (sel === "m84" || sel === "m74" || sel === "m74r" || sel === "m74d" || sel === "m87") return eos84;
-  if (sel === "m85" || sel === "m75") {
-    if (yrs < 2) return 0;
-    if (yrs <= 5) return r2(eos84 / 3);
-    if (yrs < 10) return r2((eos84 * 2) / 3);
-    return eos84;
-  }
-  if (sel === "m77") {
-    const fixed = fixedTermMonthsLeft !== undefined && fixedTermMonthsLeft !== null && fixedTermMonthsLeft >= 0;
-    const c77 = fixed
-      ? Math.max(Math.round(base * 2), Math.round(base * (fixedTermMonthsLeft as number)))
-      : Math.max(Math.round(base * 2), Math.round((base / 30) * 15 * yrs));
-    return r2(eos84 + c77);
-  }
-  return 0;
+/** The end date the page uses: the picked date, or today at midnight. */
+export function endDateOf(s: string): Date {
+  return localDate(s) || new Date(new Date().toDateString());
+}
+
+export function eosYears(join: string | null, end: Date, fallback = 0): number {
+  const j = localDate(join);
+  if (!j) return fallback;
+  return Math.max(0, Math.round(((end.getTime() - j.getTime()) / (365.25 * 86400000)) * 100) / 100);
+}
+
+export function calcByLaw(sal: number, hou: number, yrs: number, sel: EosLaw): number {
+  return eosByLaw(sal, hou, yrs, sel);
 }
 
 /** "N سنة N شهر N يوم" exactly as the page builds it. */
 export function durationText(join: string, endD: Date): string {
-  const d1 = new Date(join);
+  const d1 = localDate(join) ?? new Date(join);
   let fy = endD.getFullYear() - d1.getFullYear();
   if (endD.getMonth() < d1.getMonth() || (endD.getMonth() === d1.getMonth() && endD.getDate() < d1.getDate())) fy--;
   let tmp = new Date(d1.getFullYear() + fy, d1.getMonth(), d1.getDate());

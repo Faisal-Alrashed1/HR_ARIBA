@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import json
 import math
+import re
 import secrets
 import uuid
 from datetime import UTC, date, datetime, time, timedelta
@@ -34,7 +35,9 @@ from app.services import gosi as gosi_calc
 
 router = APIRouter()
 _hasher = PasswordHasher()
-SESSION_HOURS = 8
+# Their session (lib/auth.js + config.js, row 187): a 1-hour access token renewed while the user is active, for at most
+# 24 hours from sign-in; the idle sign-out (5 + 3 minutes) runs in the site and the app.
+SESSION_HOURS = 24
 SESSION_MAX_HOURS = 24
 HR_ROLES = {"hr", "admin", "admin_manager"}
 HR_READ_ROLES = HR_ROLES | {"ceo"}
@@ -398,12 +401,9 @@ def refresh(body: dict[str, Any], db: Session = Depends(get_db)):
     if not account or not current:
         raise ApiError(401, "session_expired", "Your session has expired. Please sign in again.")
     now = datetime.now(UTC)
-    maximum = current["created_at"] + timedelta(hours=SESSION_MAX_HOURS)
-    expires_at = min(now + timedelta(hours=SESSION_HOURS), maximum)
-    if expires_at <= current["expires_at"] + timedelta(minutes=1):
+    expires_at = min(current["expires_at"], current["created_at"] + timedelta(hours=SESSION_MAX_HOURS))
+    if expires_at <= now:
         raise ApiError(401, "session_expired", "Your session has reached its maximum lifetime")
-    db.execute(text("UPDATE public.ariba_sessions SET expires_at=:expires WHERE token=:sid"),
-               {"expires": expires_at, "sid": claims["sid"]})
     result = _session_tokens(db, account, uuid.UUID(str(claims["sid"])), expires_at)
     db.commit()
     return result
@@ -805,10 +805,57 @@ def update_company_settings(body: dict[str, Any], request: Request, actor: dict[
     return {"company_name_ar": value["coAr"], "company_name_en": value["coEn"], "labour_law_country": "SA"}
 
 
+def _ramadan_flex(db: Session) -> dict[str, Any]:
+    from app.services.schedule import norm_ramadan_flex
+    return norm_ramadan_flex(_app_setting(db, "ramadan_flex"))
+
+
+def _effective_cs(db: Session, cs: dict[str, Any], day: date) -> dict[str, Any]:
+    """company_settings as the punch applies them on `day`: during Ramadan with the Ramadan flexible hours enabled,
+    flexible hours with the Ramadan window and shift (their punch.jsx expectedOut / the Ramadan flex card)."""
+    from app.services.schedule import ramadan_today
+    rf = _ramadan_flex(db)
+    if not (rf["enabled"] and ramadan_today(day, rf)):
+        return cs
+    t = lambda v, d: v if isinstance(v, time) else time.fromisoformat(str(v or d)[:5])  # noqa: E731
+    return {**cs, "flexible_enabled": True, "shift_duration_minutes": round(float(rf["shift_hours"] or 6) * 60),
+            "flex_window_start": t(rf["window_start"], "09:00"), "flex_window_end": t(rf["window_end"], "15:00")}
+
+
 @router.get("/settings/attendance")
 def attendance_settings(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
+    """Their ariba_get_attendance_settings (+ the Ramadan flexible hours and whether today is in Ramadan)."""
+    from app.services.schedule import ramadan_today
     row = _row(db, "SELECT * FROM public.company_settings WHERE id='default'") or {}
-    return {"work_start": row.get("work_start"), "tolerance_minutes": row.get("tolerance_minutes", 15), "remote_days_per_year": row.get("remote_days_per_year", 10), "flexible_enabled": row.get("flexible_enabled", False), "shift_hours": float(row.get("shift_duration_minutes") or 480) / 60, "window_start": row.get("flex_window_start"), "window_end": row.get("flex_window_end")}
+    rf = _ramadan_flex(db)
+    hours = float(row.get("shift_duration_minutes") or 480) / 60
+    return {"work_start": row.get("work_start"), "tolerance_minutes": row.get("tolerance_minutes", 15), "remote_days_per_year": row.get("remote_days_per_year", 10),
+            "flexible_enabled": row.get("flexible_enabled", False), "shift_hours": hours, "window_start": row.get("flex_window_start"), "window_end": row.get("flex_window_end"),
+            "flex_window_start": row.get("flex_window_start"), "flex_window_end": row.get("flex_window_end"),
+            "ramadan_flex_enabled": rf["enabled"], "ramadan_window_start": rf["window_start"], "ramadan_window_end": rf["window_end"],
+            "ramadan_shift_hours": rf["shift_hours"], "ramadan_from": rf["from"] or None, "ramadan_to": rf["to"] or None,
+            "is_ramadan_today": ramadan_today(today_riyadh(), rf)}
+
+
+@router.put("/settings/attendance/ramadan")
+def update_ramadan_flex(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
+    """The missing ariba_hr_set_ramadan_flex: enabled, window, shift hours and optional dates (auto Hijri otherwise)."""
+    _require(actor, *HR_ROLES)
+    try:
+        start, end = time.fromisoformat(str(body.get("window_start") or "09:00")[:5]), time.fromisoformat(str(body.get("window_end") or "15:00")[:5])
+        hours = float(body.get("shift_hours") or 6)
+        d1 = date.fromisoformat(str(body["from"])[:10]).isoformat() if body.get("from") else ""
+        d2 = date.fromisoformat(str(body["to"])[:10]).isoformat() if body.get("to") else ""
+    except (TypeError, ValueError) as exc:
+        raise ApiError(422, "validation_error", "إعدادات رمضان غير صحيحة") from exc
+    if not 1 <= hours <= 16 or end <= start or (d1 and d2 and d2 < d1):
+        raise ApiError(422, "validation_error", "إعدادات رمضان غير صحيحة")
+    value = {"enabled": bool(body.get("enabled")), "window_start": start.strftime("%H:%M"), "window_end": end.strftime("%H:%M"),
+             "shift_hours": hours, "from": d1, "to": d2}
+    _set_app_setting(db, "ramadan_flex", value, actor)
+    _write_audit(db, actor, request, "settings", "update", "ariba_app_settings", "ramadan_flex", details=value)
+    db.commit()
+    return attendance_settings(actor, db)
 
 
 @router.put("/settings/attendance")
@@ -946,27 +993,56 @@ _FEMALE_NAMES = ("منى", "زينب", "ريم", "بدريه", "ساره", "نو
                  "أثير", "هيا", "نورة", "فاطمة", "عائشة", "أفنان")
 
 
+def _js_date(y: int, m0: int, d: int) -> date | None:
+    """JavaScript `new Date(y, m0, d)`: the month and the day overflow into the next ones."""
+    y, m0 = y + m0 // 12, m0 % 12
+    try:
+        return date(y, m0 + 1, 1) + timedelta(days=d - 1)
+    except (ValueError, OverflowError):
+        return None
+
+
+def _pdate(raw: Any) -> date | None:
+    try:
+        return date.fromisoformat(str(raw)[:10]) if raw else None
+    except ValueError:
+        return None
+
+
+_ALERT_LIMITS = {"iqama": 60, "passport": 90, "contract": 60, "probation": 30}
+
+
 def _dashboard_alerts(active: list[dict[str, Any]], today: date) -> list[dict[str, Any]]:
-    """Dashboard alerts for the current employees (iqama, passport, insurance, contract)."""
+    """Their proactive alerts (lib/util.js `collectAlerts`, V142): iqama ≤ 60 days, passport ≤ 90, contract ≤ 60 (the
+    end, or join + duration when the contract is not open-ended), probation ≤ 30 (probationEnd, else join + 90 days;
+    only from −7 days, within 400 days of joining, never for consultants / Tamheer / trainees). Sorted by days left."""
     alerts: list[dict[str, Any]] = []
     for row in active:
         data = row.get("data") or {}
+        if data.get("isTerminated") or data.get("term") or data.get("isHourly") or row.get("active") is False:
+            continue
         brief = {"id": row["employee_id"], "emp_no": str(data.get("empNo") or row.get("username") or row["employee_id"]),
                  "name_ar": row.get("name_ar"), "name_en": row.get("name_en")}
-        for kind, field in (("iqama", "iqamaExpiry"), ("passport", "passportExpiry"), ("insurance", "insuranceExpiry"), ("contract", "contractEnd")):
-            raw = data.get(field)
-            if not raw:
-                continue
-            try:
-                expires = date.fromisoformat(str(raw)[:10])
-            except ValueError:
-                continue
-            days_left = (expires-today).days
-            if kind == "contract" and str(data.get("contractNature") or "") == "indefinite":
-                continue  # legacy getAlerts: no contract alert for an indefinite contract
-            if days_left <= 90:
-                alerts.append({"employee": brief, "kind": kind, "expires_on": expires, "days_left": days_left,
-                               "level": "expired" if days_left < 0 else "urgent" if days_left <= 30 else "soon"})
+        join = _pdate(data.get("contractJoin") or data.get("cj") or row.get("join_date"))
+        contract = _pdate(data.get("contractEnd") or data.get("ce"))
+        dur = _num(data.get("contractDuration") or data.get("dur"))
+        if not contract and join and dur > 0 and not re.search(r"غير محدد|open|unlimited", str(data.get("contractNature") or ""), re.I):
+            contract = _js_date(join.year, join.month - 1 + int(dur), join.day)
+        def push(kind: str, expires: date | None) -> None:
+            if expires is None:
+                return
+            n = (expires - today).days
+            if n <= _ALERT_LIMITS[kind]:
+                alerts.append({"employee": brief, "kind": kind, "expires_on": expires, "days_left": n,
+                               "level": "expired" if n < 0 else "urgent" if n <= 30 else "soon"})
+        push("iqama", _pdate(data.get("iqamaExpiry") or data.get("iqe")))
+        push("passport", _pdate(data.get("passportExpiry") or data.get("ppe")))
+        push("contract", contract)
+        if not gosi_calc.react_no_eos(data):
+            pe = _pdate(data.get("probationEnd")) or (join + timedelta(days=90) if join else None)
+            if pe and join and -7 <= (pe - today).days <= _ALERT_LIMITS["probation"] and (today - join).days <= 400:
+                push("probation", pe)
+    alerts.sort(key=lambda a: a["days_left"])
     return alerts
 
 
@@ -1000,7 +1076,9 @@ def dashboard(actor: dict[str, Any] = Depends(current_actor), db: Session = Depe
     workplaces = group_count(active, "employer")
     for item in workplaces:
         if payroll_allowed:
-            item["salary_total"] = sum(float((r.get("data") or {}).get("salaryTotal") or 0) for r in active if (r.get("employer") or "غير محدد") == item["name_ar"])
+            # Their Dashboard.jsx byEmp: basic + housing + transport, employees with a positive sum only.
+            item["salary_total"] = sum(s for s in (sum(_num((r.get("data") or {}).get(k)) for k in ("salary", "housingAllowance", "transportAllowance"))
+                                                   for r in active if (r.get("employer") or "غير محدد") == item["name_ar"]) if s > 0)
         else:
             item["salary_total"] = None
     return {"current": len(active), "saudi": saudi, "expat": len(active)-saudi,
@@ -1148,12 +1226,15 @@ def my_attendance(actor: dict[str, Any] = Depends(current_actor), db: Session = 
     else:
         locs = _rows(db, "SELECT * FROM public.work_locations WHERE active AND (employer_id IS NULL OR employer_id=:employer_id)", employer_id=emp.get("employer_id"))
     settings = attendance_settings(actor, db)
+    cs = _effective_cs(db, _row(db, "SELECT * FROM public.company_settings WHERE id='default'") or {}, today)
+    # Their punch.jsx expectedOut: flexible (or Ramadan flexible) only — first check-in + shift hours, capped at the
+    # window end when the first session is late.
     expected = None
-    if settings["flexible_enabled"] and sessions and sessions[0].get("time_in"):
-        first = sessions[0]
-        exp_t = (datetime.combine(today, first["time_in"]) + timedelta(hours=float(settings["shift_hours"] or 8))).time()
-        if int(first.get("late_minutes") or 0) > 0 and settings["window_end"]:
-            exp_t = min(exp_t, settings["window_end"] if isinstance(settings["window_end"], time) else time.fromisoformat(str(settings["window_end"])[:5]))
+    first = next((x for x in sessions if x.get("time_in")), None)
+    if cs.get("flexible_enabled") and first:
+        exp_t = (datetime.combine(today, first["time_in"]) + timedelta(hours=float(cs.get("shift_duration_minutes") or 480) / 60)).time()
+        if first.get("status") == "late" and cs.get("flex_window_end"):
+            exp_t = min(exp_t, cs["flex_window_end"])
         expected = exp_t.strftime("%H:%M")
     remote_used = db.scalar(text("SELECT count(DISTINCT date) FROM public.attendance WHERE employee_id=:eid AND status='remote' AND date>=:year_start AND date<=:day"),
                             {"eid": eid, "year_start": date(today.year, 1, 1), "day": today}) or 0
@@ -1161,7 +1242,10 @@ def my_attendance(actor: dict[str, Any] = Depends(current_actor), db: Session = 
             "locations": locs, "flexible_enabled": settings["flexible_enabled"], "shift_hours": settings["shift_hours"],
             "window_start": str(settings["window_start"] or "08:00")[:5], "window_end": str(settings["window_end"] or "17:00")[:5],
             "work_start": str(settings["work_start"] or "08:00")[:5], "tolerance_minutes": settings["tolerance_minutes"],
-            "expected_checkout": expected, "remote_limit": settings["remote_days_per_year"], "remote_used": remote_used}
+            "expected_checkout": expected, "remote_limit": settings["remote_days_per_year"], "remote_used": remote_used,
+            # their app tile «عن بعد المتبقي» (decision 1): the yearly limit minus the remote days used
+            "remote_left": (settings["remote_days_per_year"] if settings["remote_days_per_year"] is not None else 10) - remote_used,
+            "is_ramadan_today": settings["is_ramadan_today"], "ramadan_flex_enabled": settings["ramadan_flex_enabled"]}
 
 
 def _distance_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -1295,8 +1379,8 @@ def punch(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depend
                     e=eid, t=today_s):
             raise ApiError(409, "remote_not_approved", "أنت خارج مواقع العمل — العمل عن بعد يحتاج طلب عن بعد معتمد لليوم")
         loc, d = remote[0], 0.0
-    cs = _row(db, "SELECT * FROM public.company_settings WHERE id='default'") or {}
     today = today_riyadh()
+    cs = _effective_cs(db, _row(db, "SELECT * FROM public.company_settings WHERE id='default'") or {}, today)
     nowt = now_riyadh().time().replace(tzinfo=None, microsecond=0)
     flex = bool(cs.get("flexible_enabled"))
     w_start = cs.get("flex_window_start") or time(8)
@@ -1310,10 +1394,6 @@ def punch(body: dict[str, Any], request: Request, actor: dict[str, Any] = Depend
         if flex and not first_rec and nowt < w_start:
             raise ApiError(409, "too_early_for_flexible_window", f"لا يمكن تسجيل الحضور قبل بداية الدوام المرن {w_start.strftime('%H:%M')}")
         late = 0 if first_rec else _punch_late(cs, nowt)
-        if first_rec:
-            db.execute(text("""UPDATE public.attendance SET early_minutes=0 WHERE id=(
-                SELECT id FROM public.attendance WHERE employee_id=:e AND date=:d AND time_out IS NOT NULL
-                ORDER BY time_in DESC NULLS LAST,created_at DESC LIMIT 1)"""), {"e": eid, "d": today})
         extra = " (دخول إضافي في نفس اليوم)" if first_rec else ""
         row = _row(db, """INSERT INTO public.attendance(employee_id,date,time_in,location_id,lat,lng,status,notes,late_minutes,early_minutes)
             VALUES(:e,:d,:t,:loc,:lat,:lng,:st,:n,:late,0)
@@ -2151,7 +2231,7 @@ def salary_basis(actor: dict[str, Any] = Depends(current_actor), db: Session = D
         result.append({"id": emp["employee_id"], "emp_no": emp["emp_no"], "name_ar": emp["name_ar"],
                        "workplace": emp["employer"], "department": emp["department"], "job_title": emp["job_title"],
                        "nationality": emp["nationality"], "is_saudi": bool(data.get("isSaudi")), "birth_date": emp["dob"],
-                       "category": data.get("empType", "active"), "excel_category": data.get("excelCategory"), "wps_type": data.get("wpsType", "wps"),
+                       "category": data.get("empType", "active"), "excel_category": data.get("excelCategory"), "is_hourly": bool(data.get("isHourly")), "wps_type": data.get("wpsType", "wps"),
                        "gosi_system": data.get("insSystem"), "join_date": emp["join_date"],
                        "contract_duration_months": data.get("contractDuration"), "contract_end_date": data.get("contractEnd"),
                        "annual_leave_days": data.get("leaveDaysContract", 21), "basic_salary": basic, "housing_allowance": housing,

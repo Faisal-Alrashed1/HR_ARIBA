@@ -130,7 +130,8 @@ export default function Page() {
   if (loading) return <PageState loading />;
 
   const presentCard = counts.present + counts.late;
-  const absentCard = Math.max(0, emps.length - presentCard - counts.remote - counts.leave);
+  // Their attendance page (row 141): absent = employees − present (present + late).
+  const absentCard = Math.max(0, emps.length - presentCard);
 
   return (
     <div className="pg on" id="pg-att">

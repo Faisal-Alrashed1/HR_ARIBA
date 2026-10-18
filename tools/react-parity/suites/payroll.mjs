@@ -74,12 +74,12 @@ export function toBasis(e) {
   const g = (k, d) => (e[k] === undefined ? d : e[k]);
   return {
     id: e.id, emp_no: e.empNo, name_ar: e.nameAr, workplace: e.employer, department: e.department, job_title: e.jobTitle, nationality: e.nationality,
-    is_saudi: !!e.isSaudi, birth_date: e.dob, category: g('empType', 'active'), excel_category: e.excelCategory, wps_type: g('wpsType', 'wps'),
+    is_saudi: !!e.isSaudi, birth_date: e.dob, category: g('empType', 'active'), is_hourly: !!e.isHourly, excel_category: e.excelCategory, wps_type: g('wpsType', 'wps'),
     gosi_system: e.insSystem, join_date: e.contractJoin, contract_duration_months: g('contractDuration', null), contract_end_date: e.contractEnd || null,
     annual_leave_days: g('leaveDaysContract', 21), basic_salary: Number(e.salary || 0), housing_allowance: Number(e.housingAllowance || 0),
     transport_allowance: g('transportAllowance', 0), project_allowance: g('projectAllowance', 0), other_allowances: g('otherAllowance', 0),
     extra_allowance: g('extraAllowance', 0), other_deductions: g('otherDeductions', 0), currency: g('currency', 'SAR'), exchange_rate: g('exchRate', 1),
-    payment_method: e.payMethod, bank_name: e.bank, iban: e.iban, exclude_from_payroll: !!e.excludeFromPayroll, exclude_from_eos: !!e.excludeFromEos,
+    payment_method: e.payMethod, bank_name: e.bank, iban: e.iban, exclude_from_payroll: !!e.excludeFromPayroll, exclude_from_eos: !!(e.excludeFromEOS || e.excludeFromEos),
     is_terminated: !!e.isTerminated, termination_date: e.terminationDate || e.lastDay || null, termination_article: e.terminationArticle || null,
     termination_reason: e.terminationReason || null,
   };

@@ -11,7 +11,7 @@ from app.core.errors import install_error_handlers
 from app.core.security import SecurityHeadersMiddleware
 from app.database import engine
 from app.models import configure_models
-from app.routers import canonical, health
+from app.routers import canonical, health, port_settings
 
 API_PREFIX = "/api/v1"
 
@@ -63,6 +63,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(canonical.router, prefix=API_PREFIX)
+    app.include_router(port_settings.router, prefix=API_PREFIX)
     return app
 
 

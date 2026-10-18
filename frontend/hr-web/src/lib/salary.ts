@@ -12,6 +12,7 @@ export interface SalaryBasisRow {
   is_saudi: boolean;
   birth_date: string | null;
   excel_category?: string | null;
+  is_hourly?: boolean;
   category: string;
   wps_type: string;
   gosi_system: string;

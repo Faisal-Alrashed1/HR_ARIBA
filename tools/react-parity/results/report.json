@@ -3,8 +3,8 @@
   "now": "2026-10-18",
   "at": "2026-10-18T07:00:00.000Z"
  },
- "total": 81615,
- "diff": 6801,
+ "total": 81428,
+ "diff": 0,
  "unexplained": 0,
  "suites": [
   {
@@ -93,804 +93,22 @@
     41,
     42
    ],
-   "cases": 5238,
-   "diffCases": 2584,
-   "fields": {
-    "otAmount": 419,
-    "costY": 1523,
-    "eos": 1524,
-    "totalDue": 620,
-    "net": 799,
-    "netSAR": 799,
-    "member": 339,
-    "overtime": 197,
-    "insStatus": 238,
-    "insEmp": 301,
-    "insEr": 324,
-    "totalDeduct": 301,
-    "insBase": 69,
-    "costM": 5,
-    "costD": 5,
-    "eosAmt": 8
-   },
-   "causes": {
-    "noEos + ترحيل الإضافي القديم": 34,
-    "noEos": 1394,
-    "ترحيل الإضافي القديم + G": 190,
-    "noEos + ترحيل الإضافي القديم + G": 95,
-    "consultant_external": 187,
-    "يتبع فروق الصفوف": 222,
-    "ترحيل الإضافي القديم": 71,
-    "اسم البوصيري مكتوب في الكود": 152,
-    "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + G": 100,
-    "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا)": 77,
-    "insSystem exempt لا يُعفى في صفحة المسيّر عندنا (خطأ عندنا)": 9,
-    "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + ترحيل الإضافي القديم + G": 22,
-    "noEos + G": 1,
-    "insSystem exempt لا يُعفى في صفحة المسيّر عندنا (خطأ عندنا) + G": 23,
-    "insSystem exempt لا يُعفى في صفحة المسيّر عندنا (خطأ عندنا) + ترحيل الإضافي القديم + G": 2,
-    "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + ترحيل الإضافي القديم": 4,
-    "insSystem exempt لا يُعفى في صفحة المسيّر عندنا (خطأ عندنا) + ترحيل الإضافي القديم": 1
-   },
+   "cases": 5051,
+   "diffCases": 0,
+   "fields": {},
+   "causes": {},
    "unexplained": 0,
    "rowCases": {
     "32": 6000,
-    "33": 4659,
-    "34": 4659,
-    "36": 4659,
-    "37": 4659,
-    "41": 4659,
+    "33": 4811,
+    "34": 4811,
+    "36": 4811,
+    "37": 4811,
+    "41": 4811,
     "42": 240
    },
-   "rowDiffs": {
-    "32": 339,
-    "34": 238,
-    "37": 1524,
-    "41": 419,
-    "42": 222
-   },
-   "samples": [
-    {
-     "input": {
-      "id": "100",
-      "insSystem": "expat",
-      "employer": "أريبا للاستشارات",
-      "jobTitle": "مطور برمجيات",
-      "wpsType": "tamheer",
-      "empType": "active",
-      "prev": {
-       "overtime": 1400
-      }
-     },
-     "bad": {
-      "otAmount": {
-       "theirs": 1400,
-       "ours": 0
-      },
-      "costY": {
-       "theirs": 0,
-       "ours": 32197.5
-      },
-      "eos": {
-       "theirs": 0,
-       "ours": 32197.5
-      },
-      "totalDue": {
-       "theirs": 65795,
-       "ours": 64395
-      },
-      "net": {
-       "theirs": 65795,
-       "ours": 64395
-      },
-      "netSAR": {
-       "theirs": 65795,
-       "ours": 64395
-      }
-     },
-     "cause": "noEos + ترحيل الإضافي القديم"
-    },
-    {
-     "input": {
-      "id": "108",
-      "insSystem": "old",
-      "employer": "أريبا للاستشارات",
-      "jobTitle": "متدرب",
-      "wpsType": "wps",
-      "empType": "active"
-     },
-     "bad": {
-      "costY": {
-       "theirs": 0,
-       "ours": 20857.5
-      },
-      "eos": {
-       "theirs": 0,
-       "ours": 20857.5
-      }
-     },
-     "cause": "noEos"
-    },
-    {
-     "input": {
-      "id": "109",
-      "insSystem": "expat",
-      "employer": "مشروع الرياض",
-      "jobTitle": "استشاري أول",
-      "wpsType": "trainee",
-      "empType": "active"
-     },
-     "bad": {
-      "costY": {
-       "theirs": 0,
-       "ours": 34360
-      },
-      "eos": {
-       "theirs": 0,
-       "ours": 34360
-      }
-     },
-     "cause": "noEos"
-    },
-    {
-     "input": {
-      "id": "118",
-      "insSystem": "old",
-      "employer": "تدريب",
-      "jobTitle": "متدرب",
-      "wpsType": "wps",
-      "empType": "active",
-      "prev": {
-       "overtime": 650
-      }
-     },
-     "bad": {
-      "otAmount": {
-       "theirs": 650,
-       "ours": 0
-      },
-      "totalDue": {
-       "theirs": 25500,
-       "ours": 24850
-      },
-      "net": {
-       "theirs": 25500,
-       "ours": 24850
-      },
-      "netSAR": {
-       "theirs": 25500,
-       "ours": 24850
-      }
-     },
-     "cause": "ترحيل الإضافي القديم + G"
-    },
-    {
-     "input": {
-      "id": "119",
-      "insSystem": "expat",
-      "employer": "أريبا للاستشارات",
-      "jobTitle": "محاسب",
-      "wpsType": "no_wps",
-      "empType": "active",
-      "prev": {
-       "overtime": 1100
-      }
-     },
-     "bad": {
-      "otAmount": {
-       "theirs": 1100,
-       "ours": 0
-      },
-      "costY": {
-       "theirs": 0,
-       "ours": 85650
-      },
-      "eos": {
-       "theirs": 0,
-       "ours": 85650
-      },
-      "totalDue": {
-       "theirs": 32412.903225806447,
-       "ours": 31312.903225806447
-      },
-      "net": {
-       "theirs": 32412.903225806447,
-       "ours": 31312.903225806447
-      },
-      "netSAR": {
-       "theirs": 32412.903225806447,
-       "ours": 31312.903225806447
-      }
-     },
-     "cause": "noEos + ترحيل الإضافي القديم + G"
-    },
-    {
-     "input": {
-      "e": {
-       "nameAr": "عبدالله العتيبي",
-       "empType": "consultant_external"
-      }
-     },
-     "bad": {
-      "member": {
-       "theirs": false,
-       "ours": true
-      }
-     },
-     "cause": "consultant_external"
-    },
-    {
-     "input": {
-      "month": "2025-01"
-     },
-     "bad": {
-      "overtime": {
-       "theirs": 3800,
-       "ours": 650
-      },
-      "totalDue": {
-       "theirs": 683130.9032258064,
-       "ours": 679980.9032258064
-      },
-      "net": {
-       "theirs": 683130.9032258064,
-       "ours": 679980.9032258064
-      },
-      "netSAR": {
-       "theirs": 955793.2532258064,
-       "ours": 952643.2532258064
-      }
-     },
-     "cause": "يتبع فروق الصفوف"
-    },
-    {
-     "input": {
-      "e": {
-       "nameAr": "فاطمة العتيبي",
-       "empType": "consultant_external"
-      }
-     },
-     "bad": {
-      "member": {
-       "theirs": false,
-       "ours": true
-      }
-     },
-     "cause": "consultant_external"
-    },
-    {
-     "input": {
-      "id": "111",
-      "insSystem": "expat",
-      "employer": "وزارة الطاقة",
-      "jobTitle": "مطور برمجيات",
-      "wpsType": "wps",
-      "empType": "consultant",
-      "prev": {
-       "overtime": 1900
-      }
-     },
-     "bad": {
-      "otAmount": {
-       "theirs": 1900,
-       "ours": 0
-      },
-      "totalDue": {
-       "theirs": 45475,
-       "ours": 43575
-      },
-      "net": {
-       "theirs": 45475,
-       "ours": 43575
-      },
-      "netSAR": {
-       "theirs": 45475,
-       "ours": 43575
-      }
-     },
-     "cause": "ترحيل الإضافي القديم"
-    },
-    {
-     "input": {
-      "month": "2026-05"
-     },
-     "bad": {
-      "overtime": {
-       "theirs": 3800,
-       "ours": 1900
-      },
-      "totalDue": {
-       "theirs": 482340,
-       "ours": 480440
-      },
-      "net": {
-       "theirs": 478835.625,
-       "ours": 476935.625
-      },
-      "netSAR": {
-       "theirs": 780538.4299999999,
-       "ours": 778638.4299999999
-      }
-     },
-     "cause": "يتبع فروق الصفوف"
-    },
-    {
-     "input": {
-      "id": "101",
-      "insSystem": "expat",
-      "employer": "مشروع الرياض",
-      "jobTitle": "سكرتير",
-      "wpsType": "wps",
-      "empType": "active",
-      "prev": {
-       "overtime": 550
-      }
-     },
-     "bad": {
-      "otAmount": {
-       "theirs": 550,
-       "ours": 0
-      },
-      "totalDue": {
-       "theirs": 20738,
-       "ours": 20188
-      },
-      "net": {
-       "theirs": 20738,
-       "ours": 20188
-      },
-      "netSAR": {
-       "theirs": 20738,
-       "ours": 20188
-      }
-     },
-     "cause": "ترحيل الإضافي القديم + G"
-    },
-    {
-     "input": {
-      "e": {
-       "nameAr": "البوصيري سارة القحطاني",
-       "empType": "training"
-      }
-     },
-     "bad": {
-      "member": {
-       "theirs": true,
-       "ours": false
-      }
-     },
-     "cause": "اسم البوصيري مكتوب في الكود"
-    },
-    {
-     "input": {
-      "id": "123",
-      "insSystem": "new",
-      "employer": "وزارة الطاقة",
-      "jobTitle": "سكرتير",
-      "wpsType": "wps",
-      "empType": "active"
-     },
-     "bad": {
-      "insStatus": {
-       "theirs": "يطابق",
-       "ours": "لا يطابق"
-      },
-      "insEmp": {
-       "theirs": 4500,
-       "ours": 4050
-      },
-      "insEr": {
-       "theirs": 5400,
-       "ours": 4950
-      },
-      "totalDeduct": {
-       "theirs": 4500,
-       "ours": 4050
-      },
-      "net": {
-       "theirs": 68260,
-       "ours": 68710
-      },
-      "netSAR": {
-       "theirs": 68260,
-       "ours": 68710
-      }
-     },
-     "cause": "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + G"
-    },
-    {
-     "input": {
-      "id": "124",
-      "insSystem": "new",
-      "employer": "هيئة السياحة",
-      "jobTitle": "محاسب",
-      "wpsType": "wps",
-      "empType": "active"
-     },
-     "bad": {
-      "insStatus": {
-       "theirs": "يطابق",
-       "ours": "لا يطابق"
-      },
-      "insEmp": {
-       "theirs": 1204.375,
-       "ours": 1145.625
-      },
-      "insEr": {
-       "theirs": 1439.375,
-       "ours": 1380.625
-      },
-      "totalDeduct": {
-       "theirs": 1204.375,
-       "ours": 1145.625
-      },
-      "net": {
-       "theirs": 12065.625,
-       "ours": 12124.375
-      },
-      "netSAR": {
-       "theirs": 12065.625,
-       "ours": 12124.375
-      }
-     },
-     "cause": "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + G"
-    },
-    {
-     "input": {
-      "id": "102",
-      "insSystem": "new",
-      "employer": "وزارة الطاقة",
-      "jobTitle": "مدير مشروع",
-      "wpsType": "wps",
-      "empType": "active"
-     },
-     "bad": {
-      "insStatus": {
-       "theirs": "يطابق",
-       "ours": "لا يطابق"
-      },
-      "insEmp": {
-       "theirs": 2447.1875,
-       "ours": 2327.8125
-      },
-      "insEr": {
-       "theirs": 2924.6875,
-       "ours": 2805.3125
-      },
-      "totalDeduct": {
-       "theirs": 2447.1875,
-       "ours": 2327.8125
-      },
-      "net": {
-       "theirs": 23337.8125,
-       "ours": 23457.1875
-      },
-      "netSAR": {
-       "theirs": 23337.8125,
-       "ours": 23457.1875
-      }
-     },
-     "cause": "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا)"
-    },
-    {
-     "input": {
-      "e": {
-       "nameAr": "البوصيري أحمد الشهري",
-       "empType": "مهمة محددة"
-      }
-     },
-     "bad": {
-      "member": {
-       "theirs": true,
-       "ours": false
-      }
-     },
-     "cause": "اسم البوصيري مكتوب في الكود"
-    },
-    {
-     "input": {
-      "id": "124",
-      "insSystem": "expat",
-      "employer": "تدريب",
-      "jobTitle": "سكرتير",
-      "wpsType": "wps",
-      "empType": "active",
-      "prev": {
-       "overtime": 400
-      }
-     },
-     "bad": {
-      "otAmount": {
-       "theirs": 400,
-       "ours": 0
-      },
-      "totalDue": {
-       "theirs": 54600,
-       "ours": 54200
-      },
-      "net": {
-       "theirs": 54600,
-       "ours": 54200
-      },
-      "netSAR": {
-       "theirs": 205023,
-       "ours": 203521
-      }
-     },
-     "cause": "ترحيل الإضافي القديم"
-    },
-    {
-     "input": {
-      "id": "101",
-      "insSystem": "new",
-      "employer": "مشروع الرياض",
-      "jobTitle": "متدرب",
-      "wpsType": "wps",
-      "empType": "active",
-      "prev": {
-       "overtime": 350
-      }
-     },
-     "bad": {
-      "otAmount": {
-       "theirs": 350,
-       "ours": 0
-      },
-      "costY": {
-       "theirs": 0,
-       "ours": 15087
-      },
-      "eos": {
-       "theirs": 0,
-       "ours": 15087
-      },
-      "totalDue": {
-       "theirs": 10408,
-       "ours": 10058
-      },
-      "net": {
-       "theirs": 10408,
-       "ours": 10058
-      },
-      "netSAR": {
-       "theirs": 10408,
-       "ours": 10058
-      }
-     },
-     "cause": "noEos + ترحيل الإضافي القديم + G"
-    },
-    {
-     "input": {
-      "id": "123",
-      "insSystem": "exempt",
-      "employer": "هيئة السياحة",
-      "jobTitle": "مدير مشروع",
-      "wpsType": "wps",
-      "empType": "active"
-     },
-     "bad": {
-      "insStatus": {
-       "theirs": "غير خاضع",
-       "ours": "لا يطابق"
-      },
-      "insEmp": {
-       "theirs": 0,
-       "ours": 4387.5
-      },
-      "insEr": {
-       "theirs": 0,
-       "ours": 5287.5
-      },
-      "insBase": {
-       "theirs": 0,
-       "ours": 45000
-      },
-      "totalDeduct": {
-       "theirs": 0,
-       "ours": 4387.5
-      },
-      "net": {
-       "theirs": 74075,
-       "ours": 69687.5
-      },
-      "netSAR": {
-       "theirs": 74075,
-       "ours": 69687.5
-      }
-     },
-     "cause": "insSystem exempt لا يُعفى في صفحة المسيّر عندنا (خطأ عندنا)"
-    },
-    {
-     "input": {
-      "id": "119",
-      "insSystem": "expat",
-      "employer": "وزارة الطاقة",
-      "jobTitle": "مهندس مدني",
-      "wpsType": "wps",
-      "empType": "training",
-      "prev": {
-       "overtime": 200
-      }
-     },
-     "bad": {
-      "otAmount": {
-       "theirs": 200,
-       "ours": 0
-      },
-      "costY": {
-       "theirs": 0,
-       "ours": 77152.5
-      },
-      "eos": {
-       "theirs": 0,
-       "ours": 77152.5
-      },
-      "totalDue": {
-       "theirs": 51635,
-       "ours": 51435
-      },
-      "net": {
-       "theirs": 51635,
-       "ours": 51435
-      },
-      "netSAR": {
-       "theirs": 193889.425,
-       "ours": 193138.425
-      }
-     },
-     "cause": "noEos + ترحيل الإضافي القديم"
-    },
-    {
-     "input": {
-      "id": "111",
-      "insSystem": "new",
-      "employer": "مشروع الرياض",
-      "jobTitle": "مدير مشروع",
-      "wpsType": "wps",
-      "empType": "active",
-      "prev": {
-       "overtime": 1800
-      }
-     },
-     "bad": {
-      "insStatus": {
-       "theirs": "يطابق",
-       "ours": "لا يطابق"
-      },
-      "otAmount": {
-       "theirs": 1800,
-       "ours": 0
-      },
-      "totalDue": {
-       "theirs": 11453,
-       "ours": 9653
-      },
-      "net": {
-       "theirs": 10581.59375,
-       "ours": 8781.59375
-      },
-      "netSAR": {
-       "theirs": 10581.59375,
-       "ours": 8781.59375
-      }
-     },
-     "cause": "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + ترحيل الإضافي القديم + G"
-    },
-    {
-     "input": {
-      "id": "117",
-      "insSystem": "old",
-      "employer": "مشروع الرياض",
-      "jobTitle": "متدرب",
-      "wpsType": "wps",
-      "empType": "training"
-     },
-     "bad": {
-      "costM": {
-       "theirs": 0,
-       "ours": 26468.75
-      },
-      "costD": {
-       "theirs": 0,
-       "ours": 1844.7916666666665
-      },
-      "eos": {
-       "theirs": 0,
-       "ours": 28313.541666666668
-      },
-      "eosAmt": {
-       "theirs": 0,
-       "ours": 28313.541666666668
-      },
-      "totalDue": {
-       "theirs": 65948.01612903226,
-       "ours": 94261.55779569893
-      },
-      "net": {
-       "theirs": 65948.01612903226,
-       "ours": 94261.55779569893
-      },
-      "netSAR": {
-       "theirs": 65948.01612903226,
-       "ours": 94261.55779569893
-      }
-     },
-     "cause": "noEos + G"
-    },
-    {
-     "input": {
-      "id": "118",
-      "insSystem": "new",
-      "employer": "هيئة السياحة",
-      "jobTitle": "مهندس مدني",
-      "wpsType": "wps",
-      "empType": "active",
-      "prev": {
-       "overtime": 600
-      }
-     },
-     "bad": {
-      "insStatus": {
-       "theirs": "يطابق",
-       "ours": "لا يطابق"
-      },
-      "otAmount": {
-       "theirs": 600,
-       "ours": 0
-      },
-      "totalDue": {
-       "theirs": 600,
-       "ours": 0
-      },
-      "net": {
-       "theirs": 600,
-       "ours": 0
-      },
-      "netSAR": {
-       "theirs": 600,
-       "ours": 0
-      }
-     },
-     "cause": "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + ترحيل الإضافي القديم + G"
-    },
-    {
-     "input": {
-      "id": "100",
-      "insSystem": "new",
-      "employer": "وزارة الطاقة",
-      "jobTitle": "مهندس مدني",
-      "wpsType": "wps",
-      "empType": "active"
-     },
-     "bad": {
-      "insStatus": {
-       "theirs": "يطابق",
-       "ours": "لا يطابق"
-      },
-      "insEmp": {
-       "theirs": 658.4375,
-       "ours": 597.1875
-      },
-      "insEr": {
-       "theirs": 780.9375,
-       "ours": 719.6875
-      },
-      "totalDeduct": {
-       "theirs": 658.4375,
-       "ours": 597.1875
-      },
-      "net": {
-       "theirs": 5956.5625,
-       "ours": 6017.8125
-      },
-      "netSAR": {
-       "theirs": 5956.5625,
-       "ours": 6017.8125
-      }
-     },
-     "cause": "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا)"
-    }
-   ],
+   "rowDiffs": {},
+   "samples": [],
    "notes": []
   },
   {
@@ -908,15 +126,9 @@
     76
    ],
    "cases": 4787,
-   "diffCases": 365,
-   "fields": {
-    "v": 365
-   },
-   "causes": {
-    "A الاستقالة 5 سنوات بالضبط": 6,
-    "D م.87": 300,
-    "C م.77 للعقد المحدد": 59
-   },
+   "diffCases": 0,
+   "fields": {},
+   "causes": {},
    "unexplained": 0,
    "rowCases": {
     "67": 303,
@@ -928,101 +140,8 @@
     "73": 303,
     "76": 2000
    },
-   "rowDiffs": {
-    "69": 6,
-    "70": 300,
-    "72": 59
-   },
-   "samples": [
-    {
-     "input": {
-      "law": "m85",
-      "yrs": 5,
-      "sal": 5000,
-      "hou": 1250
-     },
-     "bad": {
-      "v": {
-       "theirs": 10416.67,
-       "ours": 5208.33
-      }
-     },
-     "cause": "A الاستقالة 5 سنوات بالضبط"
-    },
-    {
-     "input": {
-      "law": "m85",
-      "yrs": 5,
-      "sal": 12000,
-      "hou": 3000
-     },
-     "bad": {
-      "v": {
-       "theirs": 25000,
-       "ours": 12500
-      }
-     },
-     "cause": "A الاستقالة 5 سنوات بالضبط"
-    },
-    {
-     "input": {
-      "law": "m87",
-      "yrs": 0.25,
-      "sal": 5000,
-      "hou": 1250
-     },
-     "bad": {
-      "v": {
-       "theirs": 0,
-       "ours": 781.25
-      }
-     },
-     "cause": "D م.87"
-    },
-    {
-     "input": {
-      "law": "m87",
-      "yrs": 0.25,
-      "sal": 12000,
-      "hou": 3000
-     },
-     "bad": {
-      "v": {
-       "theirs": 0,
-       "ours": 1875
-      }
-     },
-     "cause": "D م.87"
-    },
-    {
-     "input": {
-      "law": "m77",
-      "yrs": 1,
-      "left": 3
-     },
-     "bad": {
-      "v": {
-       "theirs": 31250,
-       "ours": 43750
-      }
-     },
-     "cause": "C م.77 للعقد المحدد"
-    },
-    {
-     "input": {
-      "law": "m77",
-      "yrs": 2,
-      "left": 3
-     },
-     "bad": {
-      "v": {
-       "theirs": 37500,
-       "ours": 50000
-      }
-     },
-     "cause": "C م.77 للعقد المحدد"
-    }
-   ],
+   "rowDiffs": {},
+   "samples": [],
    "notes": []
   },
   {
@@ -1045,23 +164,9 @@
     91
    ],
    "cases": 19868,
-   "diffCases": 3445,
-   "fields": {
-    "ef": 2532,
-    "total": 2762,
-    "ldue": 998,
-    "lrem": 631,
-    "lcomp": 631,
-    "lexc": 425,
-    "lded": 425
-   },
-   "causes": {
-    "D م.87": 1832,
-    "الكسور (Math.trunc)": 913,
-    "C م.77 المحدد": 557,
-    "C م.77 المحدد + الكسور (Math.trunc)": 40,
-    "D م.87 + الكسور (Math.trunc)": 103
-   },
+   "diffCases": 0,
+   "fields": {},
+   "causes": {},
    "unexplained": 0,
    "rowCases": {
     "78": 19868,
@@ -1079,367 +184,8 @@
     "90": 18812,
     "91": 2112
    },
-   "rowDiffs": {
-    "82": 1935,
-    "83": 597,
-    "90": 1971,
-    "91": 1056
-   },
-   "samples": [
-    {
-     "input": {
-      "start": "2012-01-16",
-      "end": "2016-07-26",
-      "sal": 56150,
-      "reason": "m87",
-      "leaveD": 30,
-      "taken": 24,
-      "wd": 0,
-      "ad": 0,
-      "extras": [],
-      "deds": [],
-      "fixedLeft": null
-     },
-     "bad": {
-      "ef": {
-       "theirs": 0,
-       "ours": 127195.35
-      },
-      "total": {
-       "theirs": 265626.93,
-       "ours": 392822.28
-      }
-     },
-     "cause": "D م.87"
-    },
-    {
-     "input": {
-      "start": "2005-08-17",
-      "end": "2016-05-09",
-      "sal": 11250,
-      "reason": "m85",
-      "leaveD": 30.5,
-      "taken": 91.5,
-      "wd": 29,
-      "ad": 0,
-      "extras": [],
-      "deds": [],
-      "fixedLeft": null
-     },
-     "bad": {
-      "ldue": {
-       "theirs": 327.28,
-       "ours": 321.92
-      },
-      "lrem": {
-       "theirs": 235.78,
-       "ours": 230.92
-      },
-      "lcomp": {
-       "theirs": 88417.5,
-       "ours": 86595
-      },
-      "total": {
-       "theirs": 192261.25,
-       "ours": 190438.75
-      }
-     },
-     "cause": "الكسور (Math.trunc)"
-    },
-    {
-     "input": {
-      "start": "2020-10-29",
-      "end": "2025-12-24",
-      "sal": 47500,
-      "reason": "m87",
-      "leaveD": 21,
-      "taken": 90,
-      "wd": 0,
-      "ad": 28,
-      "extras": [],
-      "deds": [
-       {
-        "v": 7,
-        "t": "amount"
-       }
-      ],
-      "fixedLeft": null
-     },
-     "bad": {
-      "ef": {
-       "theirs": 0,
-       "ours": 126138.89
-      },
-      "total": {
-       "theirs": 76420.5,
-       "ours": 202559.39
-      }
-     },
-     "cause": "D م.87"
-    },
-    {
-     "input": {
-      "start": "2021-10-28",
-      "end": "2021-10-28",
-      "sal": 47700,
-      "reason": "m53",
-      "leaveD": 30.5,
-      "taken": 96.5,
-      "wd": 0,
-      "ad": 5,
-      "extras": [
-       {
-        "v": 3200
-       }
-      ],
-      "deds": [],
-      "fixedLeft": null
-     },
-     "bad": {
-      "lexc": {
-       "theirs": 96.42,
-       "ours": 95.92
-      },
-      "lded": {
-       "theirs": 153307.8,
-       "ours": 152512.8
-      }
-     },
-     "cause": "الكسور (Math.trunc)"
-    },
-    {
-     "input": {
-      "start": "2005-12-07",
-      "end": "2006-06-12",
-      "sal": 50650,
-      "reason": "m77",
-      "leaveD": 25,
-      "taken": 72,
-      "wd": 0,
-      "ad": 0,
-      "extras": [],
-      "deds": [
-       {
-        "v": 5,
-        "t": "days"
-       }
-      ],
-      "fixedLeft": 30
-     },
-     "bad": {
-      "ef": {
-       "theirs": 114384.58,
-       "ours": 1532584.58
-      },
-      "total": {
-       "theirs": 56846.18,
-       "ours": 1475046.18
-      }
-     },
-     "cause": "C م.77 المحدد"
-    },
-    {
-     "input": {
-      "start": "2005-08-05",
-      "end": "2026-03-22",
-      "sal": 38050,
-      "reason": "m77",
-      "leaveD": 25,
-      "taken": 69,
-      "wd": 30,
-      "ad": 0,
-      "extras": [
-       {
-        "v": 200
-       }
-      ],
-      "deds": [],
-      "fixedLeft": 29
-     },
-     "bad": {
-      "ef": {
-       "theirs": 1082522.33,
-       "ours": 1793423.33
-      },
-      "total": {
-       "theirs": 1687501.71,
-       "ours": 2398402.71
-      }
-     },
-     "cause": "C م.77 المحدد"
-    },
-    {
-     "input": {
-      "start": "2016-12-03",
-      "end": "2020-01-11",
-      "sal": 46250,
-      "reason": "m77",
-      "leaveD": 21.5,
-      "taken": 23.5,
-      "wd": 31,
-      "ad": 17,
-      "extras": [],
-      "deds": [
-       {
-        "v": 9,
-        "t": "days"
-       }
-      ],
-      "fixedLeft": 7
-     },
-     "bad": {
-      "ef": {
-       "theirs": 164380.21,
-       "ours": 395630.21
-      },
-      "ldue": {
-       "theirs": 66.83,
-       "ours": 65.28
-      },
-      "lrem": {
-       "theirs": 43.33,
-       "ours": 42.28
-      },
-      "lcomp": {
-       "theirs": 66800.42,
-       "ours": 65181.67
-      },
-      "total": {
-       "theirs": 243116.11,
-       "ours": 472747.36
-      }
-     },
-     "cause": "C م.77 المحدد + الكسور (Math.trunc)"
-    },
-    {
-     "input": {
-      "start": "2006-06-28",
-      "end": "2024-10-02",
-      "sal": 47450,
-      "reason": "m77",
-      "leaveD": 21.5,
-      "taken": 24.5,
-      "wd": 0,
-      "ad": 0,
-      "extras": [],
-      "deds": [
-       {
-        "v": 6,
-        "t": "days"
-       }
-      ],
-      "fixedLeft": 19
-     },
-     "bad": {
-      "ef": {
-       "theirs": 1181307.53,
-       "ours": 1649546.53
-      },
-      "ldue": {
-       "theirs": 392.67,
-       "ours": 383.54
-      },
-      "lrem": {
-       "theirs": 368.17,
-       "ours": 359.54
-      },
-      "lcomp": {
-       "theirs": 582322.22,
-       "ours": 568672.43
-      },
-      "total": {
-       "theirs": 1801589.75,
-       "ours": 2256178.96
-      }
-     },
-     "cause": "C م.77 المحدد + الكسور (Math.trunc)"
-    },
-    {
-     "input": {
-      "start": "2013-10-12",
-      "end": "2021-03-24",
-      "sal": 13650,
-      "reason": "m87",
-      "leaveD": 30.5,
-      "taken": 137.5,
-      "wd": 0,
-      "ad": 0,
-      "extras": [
-       {
-        "v": 750
-       }
-      ],
-      "deds": [],
-      "fixedLeft": null
-     },
-     "bad": {
-      "ef": {
-       "theirs": 0,
-       "ours": 67605.42
-      },
-      "ldue": {
-       "theirs": 227.31,
-       "ours": 223.58
-      },
-      "lrem": {
-       "theirs": 89.81,
-       "ours": 86.58
-      },
-      "lcomp": {
-       "theirs": 40863.55,
-       "ours": 39393.9
-      },
-      "total": {
-       "theirs": 55263.55,
-       "ours": 121399.32
-      }
-     },
-     "cause": "D م.87 + الكسور (Math.trunc)"
-    },
-    {
-     "input": {
-      "start": "2008-01-23",
-      "end": "2017-08-11",
-      "sal": 48250,
-      "reason": "m87",
-      "leaveD": 30.5,
-      "taken": 114.5,
-      "wd": 28,
-      "ad": 29,
-      "extras": [],
-      "deds": [
-       {
-        "v": 10,
-        "t": "days"
-       }
-      ],
-      "fixedLeft": null
-     },
-     "bad": {
-      "ef": {
-       "theirs": 0,
-       "ours": 340430.56
-      },
-      "ldue": {
-       "theirs": 291.44,
-       "ours": 286.67
-      },
-      "lrem": {
-       "theirs": 176.94,
-       "ours": 172.67
-      },
-      "lcomp": {
-       "theirs": 284578.5,
-       "ours": 277710.92
-      },
-      "total": {
-       "theirs": 317319.57,
-       "ours": 650882.55
-      }
-     },
-     "cause": "D م.87 + الكسور (Math.trunc)"
-    }
-   ],
+   "rowDiffs": {},
+   "samples": [],
    "notes": []
   },
   {
@@ -1666,105 +412,17 @@
     61
    ],
    "cases": 3000,
-   "diffCases": 407,
-   "fields": {
-    "has": 407
-   },
-   "causes": {
-    "التأمين الطبي ليس في collectAlerts": 225,
-    "حدود V142 (60/90/60) مقابل 90": 177,
-    "تنبيه التجربة عندهم فقط": 5
-   },
+   "diffCases": 0,
+   "fields": {},
+   "causes": {},
    "unexplained": 0,
    "rowCases": {
     "61": 2400,
     "147": 2400,
     "148": 600
    },
-   "rowDiffs": {
-    "147": 402,
-    "148": 5
-   },
-   "samples": [
-    {
-     "input": {
-      "id": "9001",
-      "kind": "insurance"
-     },
-     "bad": {
-      "has": {
-       "theirs": false,
-       "ours": true
-      }
-     },
-     "cause": "التأمين الطبي ليس في collectAlerts"
-    },
-    {
-     "input": {
-      "id": "9005",
-      "kind": "insurance"
-     },
-     "bad": {
-      "has": {
-       "theirs": false,
-       "ours": true
-      }
-     },
-     "cause": "التأمين الطبي ليس في collectAlerts"
-    },
-    {
-     "input": {
-      "id": "9006",
-      "kind": "contract"
-     },
-     "bad": {
-      "has": {
-       "theirs": true,
-       "ours": false
-      }
-     },
-     "cause": "حدود V142 (60/90/60) مقابل 90"
-    },
-    {
-     "input": {
-      "id": "9011",
-      "kind": "iqama"
-     },
-     "bad": {
-      "has": {
-       "theirs": false,
-       "ours": true
-      }
-     },
-     "cause": "حدود V142 (60/90/60) مقابل 90"
-    },
-    {
-     "input": {
-      "id": "9193",
-      "kind": "probation"
-     },
-     "bad": {
-      "has": {
-       "theirs": true,
-       "ours": false
-      }
-     },
-     "cause": "تنبيه التجربة عندهم فقط"
-    },
-    {
-     "input": {
-      "id": "9205",
-      "kind": "probation"
-     },
-     "bad": {
-      "has": {
-       "theirs": true,
-       "ours": false
-      }
-     },
-     "cause": "تنبيه التجربة عندهم فقط"
-    }
-   ],
+   "rowDiffs": {},
+   "samples": [],
    "notes": []
   },
   {
@@ -2113,7 +771,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2141,7 +799,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2155,7 +813,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2169,7 +827,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2183,7 +841,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2197,7 +855,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2211,7 +869,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2225,7 +883,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2239,7 +897,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2253,7 +911,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2267,7 +925,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2295,7 +953,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2309,7 +967,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2323,7 +981,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2337,7 +995,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2351,7 +1009,7 @@
    "cases": 20006,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "payx"
@@ -2365,7 +1023,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "egypt"
@@ -2377,8 +1035,8 @@
    "formula": "من يدخل المسيّر",
    "status": "شبه مطابق",
    "cases": 6000,
-   "diffs": 339,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2390,7 +1048,7 @@
    "area": "صفوف المسيّر",
    "formula": "أيام العمل/التأمينات الافتراضية",
    "status": "مطابق",
-   "cases": 4659,
+   "cases": 4811,
    "diffs": 0,
    "found": false,
    "agrees": true,
@@ -2404,11 +1062,11 @@
    "area": "صفوف المسيّر",
    "formula": "حالة التأمينات الافتراضية",
    "status": "مطابق",
-   "cases": 4659,
-   "diffs": 238,
-   "found": true,
-   "agrees": false,
-   "note": "خطأ عندنا كشفته الأداة: /salary/basis يرسل insSystem كما هو (new/old) وصفحة المسيّر تقارنه بـ \"matching\"، فالمطابق يظهر «لا يطابق». يُصلَح في المهمة 3.",
+   "cases": 4811,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
    "suites": [
     "rows"
    ]
@@ -2418,11 +1076,11 @@
    "area": "صفوف المسيّر",
    "formula": "أيام الإجازة السنوية في الصف",
    "status": "شبه مطابق",
-   "cases": 4659,
+   "cases": 4811,
    "diffs": 0,
    "found": false,
-   "agrees": false,
-   "note": "نفس المصدر للسعودية؛ الفرق لمصر فقط (يُغطّى في مجموعة egypt).",
+   "agrees": true,
+   "note": "",
    "suites": [
     "rows"
    ]
@@ -2432,9 +1090,9 @@
    "area": "صفوف المسيّر",
    "formula": "تمرير noEos للمحرك",
    "status": "غير مطابق",
-   "cases": 4659,
-   "diffs": 1524,
-   "found": true,
+   "cases": 4811,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2446,9 +1104,9 @@
    "area": "صفوف المسيّر",
    "formula": "ترحيل الإضافي القديم لمبلغ يدوي",
    "status": "عندهم فقط",
-   "cases": 4659,
-   "diffs": 419,
-   "found": true,
+   "cases": 4811,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2461,8 +1119,8 @@
    "formula": "مجاميع المسيّر",
    "status": "شبه مطابق",
    "cases": 240,
-   "diffs": 222,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2477,7 +1135,7 @@
    "cases": 900,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_calendar",
@@ -2493,7 +1151,7 @@
    "cases": 60,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "rates"
@@ -2507,7 +1165,7 @@
    "cases": 24,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "rates"
@@ -2549,7 +1207,7 @@
    "cases": 3000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "figures"
@@ -2563,7 +1221,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "egypt"
@@ -2591,7 +1249,7 @@
    "cases": 3000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "figures"
@@ -2645,8 +1303,8 @@
    "formula": "م.85 / م.75 الاستقالة",
    "status": "غير مطابق",
    "cases": 606,
-   "diffs": 6,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2659,8 +1317,8 @@
    "formula": "م.87 مكافأة كاملة",
    "status": "عندنا فقط",
    "cases": 303,
-   "diffs": 300,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2687,8 +1345,8 @@
    "formula": "م.77 عقد محدد المدة",
    "status": "عندنا فقط",
    "cases": 60,
-   "diffs": 59,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2773,8 +1431,8 @@
    "cases": 4012,
    "diffs": 0,
    "found": false,
-   "agrees": false,
-   "note": "في المخالصة لا تساوي المدة 5 سنوات بالضبط (اليوم الأخير يُحسب، fd ≥ 1)، فالفرق بين < و ≤ نظري. يُعدَّل الشرط ليطابقهم.",
+   "agrees": true,
+   "note": "",
    "suites": [
     "settle"
    ]
@@ -2785,8 +1443,8 @@
    "formula": "م.87",
    "status": "عندنا فقط",
    "cases": 1935,
-   "diffs": 1935,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2799,8 +1457,8 @@
    "formula": "م.77",
    "status": "شبه مطابق",
    "cases": 1975,
-   "diffs": 597,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2897,8 +1555,8 @@
    "formula": "الصافي",
    "status": "غير مطابق",
    "cases": 18812,
-   "diffs": 1971,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2911,8 +1569,8 @@
    "formula": "تقريب المدخلات",
    "status": "شبه مطابق",
    "cases": 2112,
-   "diffs": 1056,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -2927,7 +1585,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "egypt"
@@ -2941,7 +1599,7 @@
    "cases": 600,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_calendar",
@@ -2956,7 +1614,7 @@
    "cases": 900,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_calendar",
@@ -2972,7 +1630,7 @@
    "cases": 300,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_workdays"
@@ -2986,7 +1644,7 @@
    "cases": 795,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_calendar",
@@ -3002,7 +1660,7 @@
    "cases": 300,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_workdays"
@@ -3016,7 +1674,7 @@
    "cases": 795,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_calendar",
@@ -3032,7 +1690,7 @@
    "cases": 795,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_calendar",
@@ -3048,7 +1706,7 @@
    "cases": 900,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_calendar",
@@ -3080,7 +1738,7 @@
    "cases": 300,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_workdays"
@@ -3094,7 +1752,7 @@
    "cases": 300,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_workdays"
@@ -3108,7 +1766,7 @@
    "cases": 300,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "leave_workdays"
@@ -3122,7 +1780,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "egypt"
@@ -3178,7 +1836,7 @@
    "cases": 400,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "attendance"
@@ -3192,7 +1850,7 @@
    "cases": 400,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "attendance"
@@ -3204,8 +1862,8 @@
    "formula": "تنبيهات لوحة التحكم",
    "status": "غير مطابق",
    "cases": 2400,
-   "diffs": 402,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -3218,8 +1876,8 @@
    "formula": "تنبيه نهاية فترة التجربة",
    "status": "عندهم فقط",
    "cases": 600,
-   "diffs": 5,
-   "found": true,
+   "diffs": 0,
+   "found": false,
    "agrees": true,
    "note": "",
    "suites": [
@@ -3248,7 +1906,7 @@
    "cases": 4000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "salcalc"
@@ -3262,7 +1920,7 @@
    "cases": 4000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "salcalc"
@@ -3276,7 +1934,7 @@
    "cases": 4000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "salcalc"
@@ -3290,7 +1948,7 @@
    "cases": 4000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "salcalc"
@@ -3304,7 +1962,7 @@
    "cases": 4000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "salcalc"
@@ -3318,7 +1976,7 @@
    "cases": 1000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "tax"
@@ -3332,7 +1990,7 @@
    "cases": 1000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "tax"
@@ -3346,7 +2004,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "inscalc"
@@ -3360,7 +2018,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "prov"
@@ -3374,7 +2032,7 @@
    "cases": 1000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "wps"
@@ -3388,7 +2046,7 @@
    "cases": 1000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "wps"
@@ -3402,7 +2060,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "assets"
@@ -3416,7 +2074,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "assets"
@@ -3430,7 +2088,7 @@
    "cases": 1560,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "assets",
@@ -3445,7 +2103,7 @@
    "cases": 1000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "goals"
@@ -3459,7 +2117,7 @@
    "cases": 1000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "goals"
@@ -3473,7 +2131,7 @@
    "cases": 1000,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "goals"
@@ -3487,7 +2145,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "egypt"
@@ -3501,7 +2159,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "egypt"
@@ -3515,7 +2173,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "egypt"
@@ -3529,7 +2187,7 @@
    "cases": 1500,
    "diffs": 0,
    "found": false,
-   "agrees": false,
+   "agrees": true,
    "note": "",
    "suites": [
     "egypt"

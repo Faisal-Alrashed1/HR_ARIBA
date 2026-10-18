@@ -33,7 +33,6 @@ export default function Page() {
   const [end, setEnd] = useState("");
   const [sal, setSal] = useState("");
   const [reason, setReason] = useState<SettlementReason>("m84");
-  const [contractEnd, setContractEnd] = useState(""); // art. 77 on a fixed-term contract (blank = indefinite)
   const [leaveD, setLeaveD] = useState("21");
   const [leaveTaken, setLeaveTaken] = useState("0");
   const [wd, setWd] = useState("");
@@ -56,7 +55,6 @@ export default function Page() {
     if (!e) return;
     setStart(e.join_date ?? "");
     setSal(e.total_salary ?? "0");
-    setContractEnd(e.contract_end_date ?? "");
     setLeaveD("21");
     setLeaveTaken("0");
     setEnd(today());
@@ -69,15 +67,14 @@ export default function Page() {
         end,
         salary: parseFloat(sal) || 0,
         reason,
-        leavePerYear: parseInt(leaveD) || 21,
-        leaveTaken: parseInt(leaveTaken) || 0,
-        monthDays: parseInt(wd) || 0,
-        attendanceDays: parseInt(ad) || 0,
+        leavePerYear: parseFloat(leaveD) || 21,
+        leaveTaken: parseFloat(leaveTaken) || 0,
+        monthDays: parseFloat(wd) || 0,
+        attendanceDays: parseFloat(ad) || 0,
         extras: extras.map((x) => parseFloat(x.value) || 0),
         deductions: deds.map((d) => ({ value: parseFloat(d.value) || 0, type: d.type })),
-        fixedTermMonthsLeft: contractEnd && end ? Math.max(0, (new Date(contractEnd).getTime() - new Date(end).getTime()) / 86400000 / 30) : null,
       }),
-    [start, end, sal, reason, leaveD, leaveTaken, wd, ad, extras, deds, contractEnd],
+    [start, end, sal, reason, leaveD, leaveTaken, wd, ad, extras, deds],
   );
 
   async function printOfficial() {
@@ -102,7 +99,6 @@ export default function Page() {
     setEnd("");
     setSal("");
     setReason("m84");
-    setContractEnd("");
     setLeaveD("21");
     setLeaveTaken("0");
     setWd("");
@@ -204,12 +200,6 @@ export default function Page() {
                 ))}
               </select>
             </div>
-            {reason === "m77" && (
-              <div>
-                <label style={lbl}>نهاية العقد المحدد (فاضي = غير محدد المدة)</label>
-                <DateField id="sContractEnd" value={contractEnd} onChange={(v) => setContractEnd(v)} style={inp} />
-              </div>
-            )}
             <div>
               <label style={lbl}>إجازة/سنة</label>
               <input type="number" id="sLeaveD" value={leaveD} onChange={(e) => setLeaveD(e.target.value)} style={inp} />

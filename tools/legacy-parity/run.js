@@ -15,15 +15,11 @@ const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647
 const pick = (a) => a[Math.floor(rnd() * a.length)];
 const near = (a, b) => (typeof a === "number" && typeof b === "number" ? (Number.isNaN(a) && Number.isNaN(b)) || Math.abs(a - b) <= 1e-6 : JSON.stringify(a) === JSON.stringify(b));
 
-// Labour-law corrections we made on purpose (docs/LOGIC_AUDIT.md section 4). The legacy side is compared *with* these
-// applied, so any other difference still fails; each one also has a direct check in the «law» suite below.
-const CORRECTIONS = [
-  { id: "A", file: "js/payroll/107-ariba-v119-payroll.js", from: "if(K<=10) return 2/3", to: "if(K<10) return 2/3" },
-  { id: "A", file: "js/calculations/07-settlement-calculator.js", from: "else if(ty<5){", to: "else if(ty<=5){" },
-  { id: "A", file: "js/calculations/04-eos-page-by-law.js", from: "if(yrs<5)return", to: "if(yrs<=5)return" },
-  { id: "G", file: "js/payroll/107-ariba-v119-payroll.js", from: "Q+Q*0.25", to: "Q+Q*houRate", all: true },
-  { id: "J", file: "js/payroll/107-ariba-v119-payroll.js", from: "105+((K-5)*30)", to: "5*M+((K-5)*Math.max(M,30))" },
-];
+// Since the React port (docs/LOGIC_AUDIT.md section 9) our formulas are theirs, and their React kept the legacy HTML's
+// formulas for everything compared here, so the legacy side runs unpatched: the labour-law corrections A–K are gone.
+// Their React only *adds* the Egypt items (TAX, MF, ARB in PAYX), which the legacy HTML does not return.
+const CORRECTIONS = [];
+const REACT_ONLY_KEYS = new Set(["TAX", "MF", "ARB"]);
 
 const results = [];
 function suite(name, cases, fn) {
@@ -61,7 +57,7 @@ const range = (n, f) => Array.from({ length: n }, (_, i) => f(i));
     let a, b;
     try { a = LP.compute({ ...x, asOf: new w.Date(2026, 9, x.asOfDay) }); } catch (e) { a = { err: String(e.message) }; }
     try { b = OP.compute({ ...x, asOf: new Date(2026, 9, x.asOfDay) }); } catch (e) { b = { err: String(e.message) }; }
-    const keys = [...new Set([...Object.keys(a), ...Object.keys(b)])];
+    const keys = [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => !(REACT_ONLY_KEYS.has(k) && a[k] === undefined && !b[k]));
     const diff = keys.filter((k) => !near(a[k], b[k]));
     return diff.length ? { x, diff: diff.slice(0, 5).map((k) => [k, a[k], b[k]]) } : null;
   });
@@ -188,19 +184,19 @@ const range = (n, f) => Array.from({ length: n }, (_, i) => f(i));
     return a.length === b.length ? null : { len: [a.length, b.length] };
   });
 
-  // ---- the corrections themselves, straight from the law
+  // ---- the corrections are gone: our site now gives the legacy / React result on the cases that used to differ
   const law = [
-    ["A م.85: 5 سنوات بالضبط = الثلث", E.calcByLaw(10000, 0, 5, "m85"), Math.round((5000 * 5) / 3 * 100) / 100],
-    ["A م.85: 10 سنوات بالضبط = كاملة (المسير)", OP.eosFactor("resign", 10), 1],
+    ["A م.85: 5 سنوات بالضبط = الثلثان (الصفحة)", E.calcByLaw(10000, 0, 5, "m85"), Math.round((5000 * 5) * 2 / 3 * 100) / 100],
+    ["A م.85: 10 سنوات بالضبط = الثلثان (المسير)", OP.eosFactor("resign", 10), 2 / 3],
     ["A م.85: 5 سنوات بالضبط = الثلث (المسير)", OP.eosFactor("resign", 5), 1 / 3],
-    ["A م.85: 5 سنوات بالضبط = الثلث (المخالصة)", S.runSettlement({ start: "2020-01-01", end: "2024-12-30", salary: 9000, reason: "m85", leavePerYear: 21, leaveTaken: 0, monthDays: 0, attendanceDays: 0, extras: [], deductions: [] }).award, Math.round(22500 / 3 * 100) / 100],
-    ["D م.87: مكافأة كاملة", E.calcByLaw(8000, 2000, 3, "m87"), E.calcByLaw(8000, 2000, 3, "m84")],
-    ["D م.87 في المسير", OP.eosFactor("art87", 1.5), 1],
-    ["C م.77 عقد محدد: أجر المدة الباقية", E.calcByLaw(10000, 0, 1, "m77", 7) - E.calcByLaw(10000, 0, 1, "m84"), 70000],
-    ["C م.77 عقد محدد: شهرين على الأقل", E.calcByLaw(10000, 0, 1, "m77", 0.5) - E.calcByLaw(10000, 0, 1, "m84"), 20000],
-    ["G التأمينات على السكن الفعلي", OP.compute({ basic: 10000, houRate: 0.4, traRate: 0, days: 30, work: 30, insStatus: "يطابق", saudi: true, asOf: new Date(2026, 9, 1) }).AQ, 14000],
+    ["A م.85: أقل من 5 سنوات = الثلث (المخالصة)", S.runSettlement({ start: "2020-01-01", end: "2024-06-30", salary: 9000, reason: "m85", leavePerYear: 21, leaveTaken: 0, monthDays: 0, attendanceDays: 0, extras: [], deductions: [] }).award, 6750],
+    ["D م.87: غير موجودة (لا مكافأة)", E.calcByLaw(8000, 2000, 3, "m87"), 0],
+    ["D م.87: ليست سبب إنهاء في المسير", OP.findReason("art87") ? 1 : 0, 0],
+    ["C م.77: نفس التعويض لكل العقود", E.calcByLaw(10000, 0, 1, "m77", 7), E.calcByLaw(10000, 0, 1, "m77")],
+    ["G التأمينات على 25% من الأساسي", OP.compute({ basic: 10000, houRate: 0.4, traRate: 0, days: 30, work: 30, insStatus: "يطابق", saudi: true, asOf: new Date(2026, 9, 1) }).AQ, 12500],
+    ["J رصيد ما بعد 5 سنوات: 105 + (K − 5) × 30", OP.compute({ basic: 10000, houRate: 0.25, traRate: 0, days: 30, work: 30, insStatus: "يطابق", saudi: true, join: "2015-01-01", lastDay: "2024-12-31", reason: "expiry", leaveDays: 30, asOf: new Date(2024, 11, 31) }).N, 105 + (10 - 5) * 30],
   ];
-  suite("تصحيحات نظام العمل", law, ([name, got, want]) => (Math.abs(got - want) < 1e-6 ? null : { name, got, want }));
+  suite("تصحيحات نظام العمل (أُلغيت)", law, ([name, got, want]) => (Math.abs(got - want) < 1e-6 ? null : { name, got, want }));
 
   if (WRITE) {
     fs.mkdirSync(FIXTURES, { recursive: true });

@@ -14,8 +14,9 @@ node --import ./freeze.mjs run.mjs --only=payx,leave   # some suites only (TZ=As
 - `reference/` is a verbatim copy of `ARIBA_HR_React/src/engines/*`, `lib/{schedule,tafqeet,goals,util}.js`, the pure helpers of
   `lib/finance.js`, `lib/employees.js` (salaryPreview), `lib/data.js` (normalizeEmployee) and the pure functions of
   `pages/finance/*` (each file names the lines it was cut from). Do not edit it; the HR department sends no more updates.
-- Every compared field is tied to its row in `~/Desktop/HR/مقارنة_المعادلات.xlsx` (`comparison_rows.json`), and the run
-  checks the file: a row the file calls different must show differences, a matching row must show none.
+- Every compared field is tied to its row in `docs/port-context/مقارنة_المعادلات.xlsx` (`comparison_rows.json`). Before the
+  port the run reproduced the file's differences (`results/BASELINE_2026-10-18.md`); since task 3 every tested row must show
+  none — the exit code is 1 while any case or row still differs.
 - Suites: `payx` (A..AW), `rows` (payroll rows layer), `eos`, `settle`, `rates`, `figures`, `leave_{calendar,monthly,workdays}`,
   `attendance` (+ schedule/Ramadan), `tafqeet`, `alerts`, and the formulas only they had (`salcalc`, `tax`, `assets`,
   `yearreport`, `wps`, `goals`, `egypt`, `inscalc`, `prov`) — counted as missing until our module exists.

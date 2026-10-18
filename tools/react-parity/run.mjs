@@ -59,16 +59,11 @@ results.forEach((t) => {
   Object.entries(t.rowCases).forEach(([r, n]) => { (tested[r] = tested[r] || { cases: 0, diffs: 0, suites: new Set() }).cases += n; tested[r].suites.add(t.id); });
   Object.entries(t.rowDiffs).forEach(([r, n]) => { tested[r].diffs += n; });
 });
-// Rows where the run and the file legitimately disagree, with the reason (checked by hand).
-const EXPLAIN = {
-  34: 'خطأ عندنا كشفته الأداة: /salary/basis يرسل insSystem كما هو (new/old) وصفحة المسيّر تقارنه بـ "matching"، فالمطابق يظهر «لا يطابق». يُصلَح في المهمة 3.',
-  36: 'نفس المصدر للسعودية؛ الفرق لمصر فقط (يُغطّى في مجموعة egypt).',
-  81: 'في المخالصة لا تساوي المدة 5 سنوات بالضبط (اليوم الأخير يُحسب، fd ≥ 1)، فالفرق بين < و ≤ نظري. يُعدَّل الشرط ليطابقهم.',
-};
-const EXPECT_DIFF = new Set(['شبه مطابق', 'غير مطابق', 'عندهم فقط', 'عندنا فقط']);
+// After the port (task 3) every tested row must show no difference: the file's status says what changed in our code
+// (🟠/🔴 changed to their formula, 🔵 added, 🟣 removed) — the run proves it now gives their result.
 const verdict = Object.entries(tested).sort((a, b) => +a[0] - +b[0]).map(([r, v]) => {
-  const m = rowsMeta[r] || {}, expected = EXPECT_DIFF.has(m.status), found = v.diffs > 0;
-  return { row: +r, area: m.area, formula: m.formula, status: m.status, cases: v.cases, diffs: v.diffs, found, agrees: expected === found, note: EXPLAIN[r] || '', suites: [...v.suites] };
+  const m = rowsMeta[r] || {};
+  return { row: +r, area: m.area, formula: m.formula, status: m.status, cases: v.cases, diffs: v.diffs, found: v.diffs > 0, agrees: v.diffs === 0, note: '', suites: [...v.suites] };
 });
 
 // ---- output
@@ -80,8 +75,9 @@ results.forEach((t) => {
   t.notes.forEach((n) => console.log('    ' + n));
 });
 const disagree = verdict.filter((v) => !v.agrees);
-console.log(`rows tested: ${verdict.length} · agree with the comparison file: ${verdict.length - disagree.length} · disagree: ${disagree.length}`);
-disagree.forEach((v) => console.log(`   row ${v.row} (${v.status}) ${v.formula}: ${v.found ? `${v.diffs} diff found` : 'no diff found'} [${v.suites.join(',')}]${v.note ? ' — ' + v.note : ''}`));
+const changed = verdict.filter((v) => v.status !== 'مطابق').length;
+console.log(`rows tested: ${verdict.length} (${changed} were different in the comparison file) · matching theirs now: ${verdict.length - disagree.length} · still different: ${disagree.length}`);
+disagree.forEach((v) => console.log(`   row ${v.row} (${v.status}) ${v.formula}: ${v.diffs} diff [${v.suites.join(',')}]`));
 
 if (write) {
   const dir = path.join(here, 'results');
@@ -91,10 +87,10 @@ if (write) {
   const md = [`# react-parity — النتيجة`, '', `اليوم المثبّت: ${stamp.now} · ${results.length} مجموعة · ${total.toLocaleString('en-US')} حالة · ${diff.toLocaleString('en-US')} فيها فرق · غير مفسَّر: ${unexpl}`, '',
     '| المجموعة | الحالات | فيها فرق | الأسباب |', '|---|---|---|---|',
     ...results.map((t) => `| ${t.title} | ${t.cases.toLocaleString('en-US')} | ${t.diffCases.toLocaleString('en-US')} | ${Object.entries(t.causes).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} (${v})`).join('، ') || '—'} |`),
-    '', '## الصفوف المفحوصة مقابل ملف المقارنة', '', '| الصف | المعادلة | حالته في الملف | حالات | فيها فرق | يوافق الملف |', '|---|---|---|---|---|---|',
-    ...verdict.map((v) => `| ${v.row} | ${v.formula} | ${v.status} | ${v.cases} | ${v.diffs} | ${v.agrees ? '✅' : '❌ ' + v.note} |`), ''];
+    '', '## الصفوف المفحوصة مقابل ملف المقارنة', '', '| الصف | المعادلة | حالته في ملف المقارنة | حالات | فيها فرق | يطابقهم الآن |', '|---|---|---|---|---|---|',
+    ...verdict.map((v) => `| ${v.row} | ${v.formula} | ${v.status} | ${v.cases} | ${v.diffs} | ${v.agrees ? '✅' : '❌'} |`), ''];
   results.forEach((t) => t.notes.forEach((n) => md.push(`- ${t.id}: ${n}`)));
   fs.writeFileSync(path.join(dir, 'REPORT.md'), md.join('\n'));
   console.log('wrote results/report.json and results/REPORT.md');
 }
-process.exitCode = diff ? 1 : 0;
+process.exitCode = diff || disagree.length ? 1 : 0;

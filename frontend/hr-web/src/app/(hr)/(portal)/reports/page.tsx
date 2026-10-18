@@ -51,13 +51,13 @@ function DBadge({ d }: { d: number | null }) {
   return <span className="b bg">{d}ي</span>;
 }
 
-/** Legacy rptAlerts `left`: ceil((date − today)/day). */
+/** Their util.js daysLeft (row 150): round((date − today)/day). */
 function left(v: string | null): number | null {
   if (!v) return null;
   const d = new Date(v + "T00:00:00");
   const t = new Date();
   t.setHours(0, 0, 0, 0);
-  return Math.ceil((d.getTime() - t.getTime()) / 86400000);
+  return Math.round((d.getTime() - t.getTime()) / 86400000);
 }
 
 export default function Page() {
