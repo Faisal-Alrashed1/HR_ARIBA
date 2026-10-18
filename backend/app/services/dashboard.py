@@ -35,9 +35,6 @@ def _female(e: Employee) -> bool:
 
 
 def build(db: Session, user: User) -> DashboardOut:
-    from app.services.contracts import apply_auto_terminations
-
-    apply_auto_terminations(db, today_riyadh())
     today = today_riyadh()
     all_emps = list(db.scalars(select(Employee).where(Employee.deleted_at.is_(None))).unique())
     current = [e for e in all_emps if e.termination_date is None]

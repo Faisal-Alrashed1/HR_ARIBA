@@ -220,7 +220,7 @@ def test_employee_update_resolves_changed_lookup_names(monkeypatch):
     monkeypatch.setattr(canonical_router, "_employee_scope", lambda *_args, **_kwargs: old)
     monkeypatch.setattr(canonical_router, "_row", lambda *_args, **_kwargs: returned)
     monkeypatch.setattr(canonical_router, "_store_figures", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(canonical_router, "_reactivate_if_renewed", lambda *_args, **_kwargs: False)
+    monkeypatch.setattr(canonical_router, "_reactivate_on_save", lambda *_args, **_kwargs: False)
     monkeypatch.setattr(canonical_router, "_write_audit", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(canonical_router, "_employee_detail", lambda _db, row, _actor: row)
     canonical_router.update_employee("900", {"workplace_id": "New", "department_id": "Ops", "job_title": "Lead"},

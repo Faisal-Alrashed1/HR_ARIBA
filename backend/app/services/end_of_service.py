@@ -4,8 +4,8 @@ As in the HTML (frontend/legacy/hr-portal/js/calculations/04-eos-page-by-law.js,
 service years = round2(days / 365.25).
 
     Arts. 84, 74, 74(3), 74(4): e84 = base/2 x min(y, 5) + base x max(0, y - 5)
-    Arts. 85, 75 (resignation): < 2 y: 0 · 2–5 (5 included): 1/3 · over 5 and under 10: 2/3 · >= 10: full e84
-    (art. 85 text; the HTML gave 2/3 at exactly 5 years — corrected, docs/LOGIC_AUDIT.md section 4 A)
+    Arts. 85, 75 (resignation): < 2 y: 0 · 2 to under 5: 1/3 · 5 to under 10: 2/3 · >= 10: full e84
+    (their React eosByLaw; correction A removed, docs/LOGIC_AUDIT.md section 9)
     Art. 77: e84 + max(round(2 x base), round(base/30 x 15 x y))
     Arts. 80, 53: 0
 
@@ -37,7 +37,7 @@ def eos_award(base: Decimal, years: Decimal, article: A) -> Decimal:
     elif article in _RESIGN:
         if years < 2:
             amount = Decimal(0)
-        elif years <= 5:
+        elif years < 5:
             amount = e84 / 3
         elif years < 10:
             amount = e84 * 2 / 3

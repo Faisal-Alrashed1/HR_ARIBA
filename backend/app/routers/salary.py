@@ -68,9 +68,6 @@ class SalaryBasisRow(BaseModel):
 
 @router.get("/basis", response_model=list[SalaryBasisRow])
 def salary_basis(_: User = Depends(require_roles(*SALARY_ROLES)), db: Session = Depends(get_db)):
-    from app.services.contracts import apply_auto_terminations
-
-    apply_auto_terminations(db, today_riyadh())
     emps = db.scalars(select(Employee).where(Employee.deleted_at.is_(None)).order_by(Employee.name_ar)).unique()
     today, rules = today_riyadh(), gosi.load_rules(db)
 

@@ -229,7 +229,6 @@ export type MyRequest = {
   notes: string | null;
   rejection_reason: string | null;
   /** Labour-law reminder on a pending leave (sick tiers, statutory days of special leave, hajj). */
-  law_note?: string | null;
   created_at: string;
 };
 

@@ -61,14 +61,14 @@ def test_gosi_exemption_matches_legacy_kind_of():
     assert not bad, f"{len(bad)}/{len(rows)} differ, e.g. {bad[:3]}"
 
 
-def test_reactivate_if_renewed_only_after_automatic_end():
+def test_reactivation_on_save_is_theirs_not_the_legacy_auto_end():
+    """Legacy V101 brought back only automatic ends; their EmpForm.jsx brings back any terminated employee whose fixed
+    contract has not expired (row 66, decision 2 — docs/LOGIC_AUDIT.md section 10)."""
     future = (date.today() + timedelta(days=200)).isoformat()
-    auto = {"isTerminated": True, "terminationReason": "انتهاء مدة العقد", "lastDay": "2026-01-31", "contractEnd": future}
-    assert c._reactivate_if_renewed(auto, False) and auto["isTerminated"] is False and auto["lastDay"] == ""
-    resigned = {"isTerminated": True, "terminationReason": "استقالة", "lastDay": "2026-01-31", "contractEnd": future}
-    assert not c._reactivate_if_renewed(resigned, False) and resigned["isTerminated"] is True
-    expired = {"isTerminated": True, "terminationReason": "انتهاء العقد", "lastDay": "2026-01-31", "contractEnd": "2026-01-31"}
-    assert not c._reactivate_if_renewed(expired, False)
+    resigned = {"isTerminated": True, "terminationReason": "استقالة", "lastDay": "2026-01-31", "contractEnd": future, "contractNature": "fixed"}
+    assert c._reactivate_on_save(resigned, True) and resigned["isTerminated"] is False and resigned["lastDay"] == ""
+    expired = {"isTerminated": True, "terminationReason": "انتهاء العقد", "lastDay": "2026-01-31", "contractEnd": "2026-01-31", "contractNature": "fixed"}
+    assert not c._reactivate_on_save(expired, True)
 
 
 def test_round_half_up_is_postgres_numeric_rounding():
@@ -651,30 +651,15 @@ def test_resignation_tiers_follow_article_85():
     base = Decimal(9000)
     e84 = lambda y: base / 2 * min(y, 5) + base * max(0, y - 5)  # noqa: E731
     assert eos_award(base, Decimal("1.99"), A.art_85) == 0
-    assert eos_award(base, Decimal(5), A.art_85) == (e84(5) / 3).quantize(Decimal("0.01"))  # 5 years exactly: one third
+    assert eos_award(base, Decimal("4.99"), A.art_85) == (e84(Decimal("4.99")) / 3).quantize(Decimal("0.01"))
+    assert eos_award(base, Decimal(5), A.art_85) == (e84(5) * 2 / 3).quantize(Decimal("0.01"))  # 5 years exactly: two thirds (theirs)
     assert eos_award(base, Decimal("5.01"), A.art_85) == (e84(Decimal("5.01")) * 2 / 3).quantize(Decimal("0.01"))
     assert eos_award(base, Decimal(10), A.art_85) == e84(10)  # 10 years: full
 
 
-def test_law_note_on_pending_leave(db):
-    _employee(db, "630", join=date(2025, 6, 1))
-    with _normalized(db):  # status is generated from current_stage
-        def req(t: str, f: str, days: int, status: str = "pending") -> dict:
-            rid = uuid.uuid4()
-            _exec(db, "INSERT INTO public.workflow_requests(id,employee_id,request_type,payload,current_stage) VALUES(:r,'630',:t,CAST(:p AS jsonb),:s)",
-                  r=rid, t=t, p=json.dumps({"from": f, "days": days}), s="hr" if status == "pending" else "completed")
-            return dict(db.execute(text("SELECT * FROM public.workflow_requests WHERE id=:r"), {"r": rid}).mappings().one())
-        note = lambda r: c._law_note(db, r, date.fromisoformat(r["payload"]["from"]), r["payload"]["days"])  # noqa: E731
-        assert note(req("marriage", "2026-11-01", 5)) is None
-        assert "5 يوم" in note(req("marriage", "2026-11-01", 7))
-        assert note(req("paternity", "2026-11-01", 4)).startswith("المدة النظامية 3")
-        assert note(req("sick", "2026-03-01", 20)) is None
-        req("sick", "2026-01-10", 25, "approved")
-        n = note(req("sick", "2026-03-01", 20))  # 25 before + 20 = 45: 15 days at three quarters
-        assert "45 يوم" in n and "15 يوم بثلاثة أرباع الأجر" in n
-        h = note(req("hajj", "2026-05-20", 16))  # under two years of service, and over 15 days
-        assert "أقل من سنتين" in h and "16" in h
-        assert note(req("marriage", "2026-11-01", 9, "approved")) is None  # decided requests carry no note
+def test_no_law_note_on_pending_leave():
+    """Notes E/F were ours only and are removed (row 153 — docs/LOGIC_AUDIT.md section 10)."""
+    assert not hasattr(c, "_law_note")
 
 
 def test_hr_delete_request_archives_and_removes(db):

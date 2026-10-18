@@ -361,17 +361,9 @@ def login(body: dict[str, Any], request: Request, db: Session = Depends(get_db))
     password = str(body.get("password") or "")
     if not username or not password:
         raise ApiError(422, "validation_error", "Username and password are required")
-    ip = request.client.host if request.client else None
-    cutoff = datetime.now(UTC) - timedelta(minutes=15)
-    counts = _row(db, """SELECT count(*) FILTER (WHERE uname=:u) AS user_count,
-        count(*) FILTER (WHERE ip=:ip AND :ip IS NOT NULL) AS ip_count FROM public.ariba_login_attempts WHERE at>:cutoff""",
-        u=username, ip=ip, cutoff=cutoff) or {}
-    if counts.get("user_count", 0) >= 25 or counts.get("ip_count", 0) >= 40:
-        raise ApiError(429, "rate_limited", "Too many login attempts")
     account = _row(db, "SELECT * FROM public.ariba_auth_accounts WHERE lower(username)=:u", u=username)
     valid, was_bcrypt = _verify_password(db, account["password_hash"], password) if account and account["active"] else (False, False)
     if not valid:
-        db.execute(text("INSERT INTO public.ariba_login_attempts(id,uname,ip) OVERRIDING SYSTEM VALUE VALUES(:id,:u,:ip)"), {"id": _next_id(db, "ariba_login_attempts"), "u": username, "ip": ip})
         _write_audit(db, None, request, "auth", "login_failed", "account", summary="Failed login", details={"username": username})
         db.commit()
         raise ApiError(401, "invalid_credentials", "Invalid username or password")
@@ -379,7 +371,6 @@ def login(body: dict[str, Any], request: Request, db: Session = Depends(get_db))
         account["password_hash"] = _hasher.hash(password)
         db.execute(text("UPDATE public.ariba_auth_accounts SET password_hash=:hash,updated_at=now() WHERE id=:id"),
                    {"hash": account["password_hash"], "id": account["id"]})
-    db.execute(text("DELETE FROM public.ariba_login_attempts WHERE uname=:u"), {"u": username})
     _write_audit(db, {**account, "name_ar": username}, request, "auth", "login", "account", account["id"])
     return _session_response(db, account)
 
@@ -508,29 +499,15 @@ def _employee_top_fields(body: dict[str, Any], data: dict[str, Any], active: boo
     }
 
 
-_AUTO_END = __import__("re").compile("انتهاء (مدة )?العقد|انتهاء فترة التدريب|انتهاء التدريب")
-
-
-def _reactivate_if_renewed(data: dict[str, Any], active: bool) -> bool:
-    """Legacy V101 reactivateIfRenewed (js/employees-data/088-…): an employee closed automatically because the
-    contract/training ended comes back active when the contract is renewed (indefinite, or the new end is today or
-    later and after the last day). A manual termination is never touched."""
-    if active and not (data.get("isTerminated") or data.get("term")):
+def _reactivate_on_save(data: dict[str, Any], was_terminated: bool) -> bool:
+    """Their EmpForm.jsx (row 66, decision 2): saving a terminated employee whose contract is not an expired fixed-term
+    one brings them back (isTerminated/term off, reason and last day cleared). No automatic termination exists."""
+    if not was_terminated:
         return False
-    reason = str(data.get("terminationReason") or data.get("reason") or "")
-    if reason and not _AUTO_END.search(reason):
+    end = str(data.get("contractEnd") or "")[:10]
+    if str(data.get("contractNature") or "") == "fixed" and end and end < today_riyadh().isoformat():
         return False
-    end = str(data.get("contractEnd") or data.get("ce") or "")[:10]
-    indefinite = str(data.get("contractNature") or "") == "indefinite"
-    if not indefinite and not (end and end >= today_riyadh().isoformat()):
-        return False
-    last = str(data.get("lastDay") or "")[:10]
-    if not indefinite and last and end <= last:
-        return False
-    data.update({"isTerminated": False, "term": False})
-    for f in ("lastDay", "terminationReason", "reason", "terminationDate", "ld", "tr"):
-        if f in data:
-            data[f] = ""
+    data.update({"isTerminated": False, "term": False, "terminationReason": "", "lastDay": ""})
     return True
 
 
@@ -616,7 +593,7 @@ def update_employee(employee_id: str, body: dict[str, Any], request: Request, ac
     _validate_manager(db, employee_id, top.get("manager_id", old.get("manager_id")))
     _contract_end(data)
     _store_figures(db, data, top, old)
-    renewed = _reactivate_if_renewed(data, bool(old.get("active")))
+    renewed = _reactivate_on_save(data, not old.get("active") or bool((old.get("data") or {}).get("isTerminated") or (old.get("data") or {}).get("term")))
     lookup_columns = {"employer": "employer_id", "department": "department_id", "job_title": "job_title_id"}
     sets = ["data=CAST(:data AS jsonb)", "updated_at=now()"]
     params = {**top, "id": employee_id, "data": json.dumps(data, ensure_ascii=False)}
@@ -2273,44 +2250,6 @@ def hr_leave_requests(actor: dict[str, Any] = Depends(current_actor), db: Sessio
     return _rows(db, "SELECT * FROM public.workflow_requests WHERE request_type NOT LIKE 'template:%' ORDER BY created_at DESC")
 
 
-_LAW_DAYS = {"marriage": (5, "م.113"), "death": (5, "م.113"), "paternity": (3, "م.113"), "maternity": (84, "م.151")}
-
-
-def _law_note(db: Session, row: dict[str, Any], f: date | None, days: int) -> str | None:
-    """A labour-law reminder for HR on a pending leave (docs/LOGIC_AUDIT.md section 4, E/F): the request is kept, the
-    note says what the law pays. Sick leave (art. 117, a rolling year): 30 days full pay, 60 at three quarters, 30
-    unpaid; marriage / death 5 days, paternity 3 (art. 113); maternity 12 weeks (art. 151); hajj (art. 114): after two
-    years of service, once, 10–15 days."""
-    t = row["request_type"]
-    if row.get("status") != "pending" or not f or days <= 0:
-        return None
-    if t in _LAW_DAYS:
-        cap, art = _LAW_DAYS[t]
-        return f"المدة النظامية {cap} يوم ({art}) — الطلب {days} يوم، والزيادة تُعامل بدون أجر أو من الرصيد السنوي" if days > cap else None
-    if t == "sick":
-        prior = _row(db, """SELECT coalesce(sum(coalesce(nullif(payload->>'days','')::int, (nullif(payload->>'to','')::date - nullif(payload->>'from','')::date) + 1)),0) AS n
-            FROM public.workflow_requests WHERE employee_id=:e AND request_type='sick' AND status='approved' AND id<>:id
-            AND nullif(payload->>'from','')::date >= :a AND nullif(payload->>'from','')::date < :f""", e=row["employee_id"], id=row["id"], a=f - timedelta(days=365), f=f)
-        before = int((prior or {}).get("n") or 0)
-        total = before + days
-        if total <= 30:
-            return None
-        part = lambda lo, hi: max(0, min(total, hi) - max(before, lo))  # noqa: E731
-        bits = [f"{n} يوم {label}" for n, label in ((part(30, 90), "بثلاثة أرباع الأجر"), (part(90, 120), "بدون أجر"), (part(120, 10**6), "تتجاوز 120 يوم في السنة")) if n]
-        return f"مرضية آخر 12 شهر: {total} يوم (م.117: 30 بأجر كامل، 60 بثلاثة أرباعه، 30 بدون أجر) — من هذا الطلب " + "، ".join(bits)
-    if t == "hajj":
-        emp = _row(db, "SELECT join_date FROM public.employee_directory WHERE employee_id=:e", e=row["employee_id"]) or {}
-        notes = []
-        if emp.get("join_date") and (f - emp["join_date"]).days < 730:
-            notes.append("الخدمة أقل من سنتين")
-        if _row(db, "SELECT 1 AS x FROM public.workflow_requests WHERE employee_id=:e AND request_type='hajj' AND status='approved' AND id<>:id LIMIT 1", e=row["employee_id"], id=row["id"]):
-            notes.append("سبق له إجازة حج معتمدة")
-        if days > 15:
-            notes.append(f"المدة {days} يوم أكثر من 15")
-        return ("إجازة الحج (م.114): " + "، ".join(notes)) if notes else None
-    return None
-
-
 def _workflow_out(db: Session, row: dict[str, Any]) -> dict[str, Any]:
     payload = row.get("payload") or {}
     leave = _row(db, "SELECT * FROM public.leave_requests WHERE workflow_request_id=:id", id=row["id"])
@@ -2322,8 +2261,7 @@ def _workflow_out(db: Session, row: dict[str, Any]) -> dict[str, Any]:
             "days": (leave or {}).get("days") or payload.get("days"), "on_date": payload.get("date"),
             "time_from": payload.get("time"), "time_to": payload.get("time2"), "hours": payload.get("hours") or payload.get("dur"),
             "amount": payload.get("amount"), "punch_kind": payload.get("kind"), "notes": (leave or {}).get("notes") or payload.get("notes"),
-            "rejection_reason": (rejected or {}).get("comment"), "attachment_id": (leave or {}).get("doc_attachment_id"), "created_at": row["created_at"],
-            "law_note": _law_note(db, row, cdata._d((leave or {}).get("from_date") or payload.get("from")), int((leave or {}).get("days") or payload.get("days") or 0))}
+            "rejection_reason": (rejected or {}).get("comment"), "attachment_id": (leave or {}).get("doc_attachment_id"), "created_at": row["created_at"]}
 
 
 @router.get("/requests")

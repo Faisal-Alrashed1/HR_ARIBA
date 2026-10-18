@@ -23,7 +23,6 @@ export interface HrRequest {
   notes: string | null;
   rejection_reason: string | null;
   /** Labour-law reminder on a pending leave (sick tiers, statutory days of special leave, hajj). */
-  law_note?: string | null;
   attachment_id: string | null;
   created_at: string;
 }
