@@ -27,6 +27,10 @@ EXPECTED_TABLES = {
     "leave_types", "payroll_archives_v2", "payroll_components", "payroll_lines", "payroll_periods", "permissions", "permission_types",
     "public_holidays", "roles", "work_locations", "workflow_actions", "workflow_approvers",
     "workflow_notifications", "workflow_request_types", "workflow_requests", "workflow_stages",
+    # docs/db-migrations/001_react_port.sql
+    "ariba_candidates", "ariba_candidate_files", "ariba_candidate_invites", "ariba_targets", "ariba_evaluations",
+    "ariba_delegations", "ariba_manager_perms", "ariba_doc_signing", "ariba_leave_files", "ariba_mail_accounts",
+    "ariba_mail_log", "ariba_tasks", "ariba_webauthn_credentials", "ariba_push_tokens",
 }
 
 RETIRED_TABLES = {

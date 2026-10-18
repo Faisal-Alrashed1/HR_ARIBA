@@ -41,3 +41,6 @@ supabase_*.sql
 
 logs/
 *.bak
+# React port: schema migrations and the synthetic dev-db seed (no data)
+!docs/db-migrations/*.sql
+!tools/dev-db/*.sql
