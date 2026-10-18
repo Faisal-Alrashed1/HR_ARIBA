@@ -28,7 +28,7 @@ INSERT INTO document_types(code, name_ar, name_en) VALUES
   -- the attachment kinds of their employee file (EmpDocsBox EMP_DOC_TYPES)
   ('identity', 'الهوية / الإقامة', 'ID / Iqama'), ('degree', 'شهادة التخرج', 'Degree certificate'),
   ('social_insurance', 'شهادة التأمينات', 'Social insurance certificate'), ('contract', 'عقد العمل', 'Employment contract'),
-  ('profile_edit', 'مرفق تعديل بيانات', 'Profile edit attachment')
+  ('profile_edit', 'مرفق تعديل بيانات', 'Profile edit attachment'), ('graduation', 'شهادة التخرج', 'Graduation certificate')
 ON CONFLICT (code) DO NOTHING;
 
 -- ---------------------------------------------------------------------

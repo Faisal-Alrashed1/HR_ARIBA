@@ -10,9 +10,11 @@ import { useTheme } from "@/theme";
 export const TYPES: [RequestType, string][] = [
   ["annual", "سنوية"], ["sick", "مرضية"], ["emergency", "اضطرارية"], ["death", "وفاة"], ["marriage", "زواج"], ["maternity", "أمومة"],
   ["paternity", "أبوة"], ["umrah", "عمرة"], ["hajj", "حج"], ["remote", "عن بعد"], ["permission", "استئذان"],
-  ["maternity_permission", "استئذان أمومة"], ["early_leave", "خروج مبكر"], ["advance", "سلفة"], ["mission", "مهمة خارجية"], ["forgot_punch", "نسيان بصمة"],
+  ["maternity_permission", "استئذان أمومة"], ["early_leave", "خروج مبكر"], ["unpaid", "بدون راتب"], ["salary_advance", "راتب مقدم"],
+  ["advance", "سلفة"], ["mission", "مهمة خارجية"], ["forgot_punch", "نسيان بصمة"],
 ];
-export const NAME = Object.fromEntries([...TYPES, ["overtime", "عمل إضافي"]]) as Record<string, string>;
+export const NAME = Object.fromEntries([...TYPES, ["overtime", "عمل إضافي"], ["unpaid", "إجازة بدون راتب"], ["salary_advance", "طلب راتب مقدم"],
+  ["iban_change", "تغيير الآيبان"], ["profile_edit", "تعديل بيانات"], ["document", "رفع مستند"]]) as Record<string, string>;
 export const HOURLY: RequestType[] = ["permission", "maternity_permission", "early_leave"];
 const TONE = { gr: "bg", rd: "br", am: "ba" } as const;
 
@@ -34,6 +36,9 @@ export function RequestItem({ r, onDelete }: { r: MyRequest; onDelete?: (r: MyRe
       </View>
       <T size={11} color={t.mu} style={{ marginTop: 4 }}>{requestDetail(r)}</T>
       {r.notes ? <T size={10} color={t.dm} style={{ marginTop: 3 }}>{r.notes}</T> : null}
+      {r.payload?.submitted_by_manager ? <T size={10} color={t.bl} style={{ marginTop: 3 }}>👤 قدّمه عنك مديرك: {r.payload.submitted_by_name ?? ""}</T> : null}
+      {r.payload?.escalated_from && r.status === "pending" ? <T size={10} color={t.am} style={{ marginTop: 3 }}>⏱ انتقل للموارد البشرية لانتهاء مهلة الرد</T> : null}
+      {r.payload?.returned && r.status === "pending" ? <T size={10} color={t.am} style={{ marginTop: 3 }}>↩ أعادته الموارد البشرية لمديرك: {r.payload.return_note ?? ""}</T> : null}
       {r.rejection_reason ? <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 }}><Icon name="xCircle" size={13} color={t.rd} stroke={2} /><T size={11} color={t.rd} style={{ flexShrink: 1 }}>سبب الرفض: {r.rejection_reason}</T></View> : null}
     </View>
   );

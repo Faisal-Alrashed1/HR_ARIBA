@@ -1,7 +1,10 @@
-// ملفي — legacy payroll/019 renderProf (profile-hero, البيانات الشخصية، الوظيفة والعقد، الراتب، بيانات البنك)
-// + 026 (🔒 الأمان) + 033 (جهة العمل ومواقع العمل).
-import { useState } from "react";
-import { View } from "react-native";
+// ملفي — their Prof.jsx: profile hero, personal data (+ «طلب تعديل»), job and contract, leave balances, salary,
+// bank (+ «طلب تغيير الآيبان»), «وثائقي» (+ «رفع مستند للمراجعة»), security, employer and work locations.
+import { useEffect, useState } from "react";
+import { Pressable, View } from "react-native";
+import { router } from "expo-router";
+import { api } from "@/lib/api";
+import { openDocument } from "@/lib/open-doc";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { PasswordSheet } from "@/components/password-sheet";
 import { dmy, LocationsCard, sar } from "@/components/shared";
@@ -14,6 +17,13 @@ export default function Profile() {
   const toast = useToast();
   const { employee: e, refresh } = useData();
   const [pw, setPw] = useState(false);
+  const { leave, requests } = useData();
+  const [docs, setDocs] = useState<{ id: string; type: string; file_name: string }[]>([]);
+  const [opening, setOpening] = useState("");
+  useEffect(() => {
+    if (e?.id) api<{ id: string; type: string; file_name: string }[]>(`/employees/${encodeURIComponent(e.id)}/documents`).then(setDocs).catch(() => setDocs([]));
+  }, [e?.id]);
+  const ibanPending = requests.some((r) => r.type === "iban_change" && r.status === "pending");
   const s = e?.salary;
   return (
     <Page onRefresh={refresh}>
@@ -39,7 +49,10 @@ export default function Profile() {
       </View>
 
       <Card>
-        <CardTitle>البيانات الشخصية</CardTitle>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <CardTitle>البيانات الشخصية</CardTitle>
+          <Btn kind="ghost" title="✏️ طلب تعديل" onPress={() => router.push("/profile-edit")} style={{ marginTop: 0, paddingVertical: 6 }} />
+        </View>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           <InfoBox label="الرقم الوظيفي" value={e?.emp_no} />
           <InfoBox label="الجنسية" value={e?.nationality?.name_ar} />
@@ -60,6 +73,14 @@ export default function Profile() {
           <InfoBox label="انتهاء العقد" value={dmy(e?.contract_end_date)} />
         </View>
       </Card>
+      {leave ? (
+        <Card>
+          <CardTitle>🏖 أرصدة الإجازات</CardTitle>
+          <PayRow label="الرصيد حتى اليوم" value={`${leave.current.toFixed(2)} يوم`} />
+          <PayRow label="رصيد نهاية العام" value={`${leave.year_end.toFixed(2)} يوم`} />
+          <PayRow label="المرحل" value={`${leave.carry.toFixed(2)} يوم`} />
+        </Card>
+      ) : null}
       {s ? (
         <Card>
           <CardTitle icon="wallet">الراتب</CardTitle>
@@ -73,6 +94,24 @@ export default function Profile() {
       <Card>
         <CardTitle icon="bank">بيانات البنك</CardTitle>
         <View style={{ flexDirection: "row" }}><InfoBox label="الإيبان" value={s?.iban} /></View>
+        <Btn kind="ghost" title={ibanPending ? "⏳ طلب تغيير الآيبان قيد المراجعة" : "✏️ طلب تغيير الآيبان"} onPress={() => router.push("/iban-change")} style={{ marginTop: 8 }} />
+      </Card>
+      <Card>
+        <CardTitle>📎 وثائقي</CardTitle>
+        <Btn kind="ghost" title="📤 رفع مستند للمراجعة" onPress={() => router.push("/upload-document")} style={{ marginTop: 0, marginBottom: 8 }} />
+        {!docs.length ? <T size={11} color={t.mu} center>لا توجد وثائق مرفوعة</T> : null}
+        {docs.map((d) => (
+          <View key={d.id} style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: t.bd }}>
+            <View style={{ flex: 1 }}>
+              <T size={12} weight={700}>{DOCL[d.type] ?? d.type}</T>
+              <T size={10} color={t.mu}>{d.file_name}</T>
+            </View>
+            <Pressable disabled={opening === d.id} onPress={async () => { setOpening(d.id); try { await openDocument(d.id, d.file_name); } catch { toast("تعذر تحميل الوثيقة", "err"); } setOpening(""); }}
+              style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: t.bd, backgroundColor: t.c2 }}>
+              <T size={11} weight={700}>⬇ فتح</T>
+            </Pressable>
+          </View>
+        ))}
       </Card>
       <Card>
         <CardTitle icon="lock">الأمان</CardTitle>
@@ -83,3 +122,7 @@ export default function Profile() {
     </Page>
   );
 }
+
+const DOCL: Record<string, string> = { identity: "الهوية / الإقامة", id: "الهوية / الإقامة", passport: "جواز السفر", degree: "شهادة التخرج", graduation: "شهادة التخرج",
+  experience: "شهادة خبرة", cv: "السيرة الذاتية", national_address: "العنوان الوطني", contract: "العقد", social_insurance: "شهادة التأمينات",
+  profile_edit: "مرفق تعديل بيانات", iban_certificate: "شهادة الآيبان", letter: "نموذج", signed_document: "مستند موقّع", photo: "صورة شخصية", other: "مستند آخر" };

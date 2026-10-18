@@ -1615,6 +1615,10 @@ def _me_requests_out(db: Session, rows: list[dict[str, Any]]) -> list[dict[str, 
         p = r.get("payload") or {}
         o["time_to"] = p.get("time2")
         o["hours"] = p.get("hours") or p.get("dur")
+        # their request rows read the payload too (amount, IBAN, changes, on-behalf, escalation, return note)
+        o["payload"] = {k: v for k, v in p.items() if k != "letter_html"}
+        o["request_type"] = r.get("request_type")
+        o["attachments"] = [{**a, "id": str(a.get("id"))} for a in _rows(db, "SELECT id,document_type,file_name FROM public.ariba_documents WHERE request_id=:r ORDER BY created_at", r=r["id"])] if r.get("id") else []
         if r.get("request_type") in HOURLY_TYPES:  # shown as «date time (hours)», not as a leave period
             o["from_date"] = o["to_date"] = o["days"] = None
         out.append(o)

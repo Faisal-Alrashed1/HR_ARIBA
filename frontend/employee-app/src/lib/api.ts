@@ -34,10 +34,17 @@ export class ApiError extends Error {
   }
 }
 
+let onRefresh: ((refreshToken: string) => void) | null = null;
+/** Called with every new refresh token (the biometric copy follows it). */
+export const setRefreshListener = (f: ((refreshToken: string) => void) | null) => { onRefresh = f; };
+
 export async function saveSession(s: Session) {
   await store.set(ACCESS, s.access_token);
   await store.set(REFRESH, s.refresh_token);
+  onRefresh?.(s.refresh_token);
 }
+
+export const getRefreshToken = () => store.get(REFRESH);
 
 export async function clearSession() {
   await store.del(ACCESS);
@@ -97,13 +104,15 @@ export const auth = {
     api<Session>("/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }),
   changePassword: (old_password: string, new_password: string) =>
     api<Session>("/auth/change-password", { method: "POST", body: JSON.stringify({ old_password, new_password }) }),
-  logout: async () => {
+  logout: async (keepServerSession = false) => {
     try {
-      await api<void>("/auth/logout", { method: "POST" });
+      // with biometric sign-in on, the session stays valid on the server (its token is kept behind Face ID / fingerprint)
+      if (!keepServerSession) await api<void>("/auth/logout", { method: "POST" });
     } finally {
       await clearSession();
     }
   },
+  refreshWith: (refresh_token: string) => api<Session>("/auth/refresh", { method: "POST", body: JSON.stringify({ refresh_token }) }),
   me: () => api<{ user: User }>("/me"),
 };
 
@@ -208,7 +217,9 @@ export const attendance = {
 
 export type RequestType =
   | "annual" | "sick" | "emergency" | "death" | "marriage" | "maternity" | "paternity" | "umrah" | "hajj" | "remote"
-  | "permission" | "maternity_permission" | "early_leave" | "advance" | "mission" | "forgot_punch" | "overtime";
+  | "permission" | "maternity_permission" | "early_leave" | "advance" | "mission" | "forgot_punch" | "overtime"
+  // their new request types (sql/10)
+  | "unpaid" | "salary_advance" | "iban_change" | "profile_edit" | "document";
 
 export type MyRequest = {
   id: string;
@@ -228,8 +239,10 @@ export type MyRequest = {
   punch_kind: "in" | "out" | "both" | null;
   notes: string | null;
   rejection_reason: string | null;
-  /** Labour-law reminder on a pending leave (sick tiers, statutory days of special leave, hajj). */
   created_at: string;
+  /** Their request payload (amount, IBAN, changes, on-behalf name, escalation, HR's return note). */
+  payload?: Record<string, any>;
+  attachments?: { id: string; document_type: string; file_name: string }[];
 };
 
 export type NewRequest = Partial<Omit<MyRequest, "id" | "employee_id" | "employee_name" | "status" | "stage" | "days" | "rejection_reason" | "created_at">> & {

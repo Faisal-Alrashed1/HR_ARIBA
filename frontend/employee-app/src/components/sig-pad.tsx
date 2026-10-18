@@ -1,0 +1,54 @@
+// Their SigPad (a canvas the employee signs on) for React Native: strokes drawn with the finger, kept as an SVG.
+// onChange receives an SVG data URL (placed as <img> in the letter / form HTML) or "" when cleared.
+import { useRef, useState } from "react";
+import { PanResponder, View, type LayoutChangeEvent } from "react-native";
+import Svg, { Path } from "react-native-svg";
+import { Btn } from "@/components/ui";
+
+const W = 600, H = 180;
+
+export function toSvgDataUrl(paths: string[]): string {
+  if (!paths.length) return "";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`
+    + paths.map((d) => `<path d="${d}" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`).join("")
+    + "</svg>";
+  return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+}
+
+export function SigPad({ onChange }: { onChange: (dataUrl: string) => void }) {
+  const [paths, setPaths] = useState<string[]>([]);
+  const cur = useRef("");
+  const box = useRef({ w: 1, h: 1 });
+  const [live, setLive] = useState("");
+  const pt = (x: number, y: number) => `${((x * W) / box.current.w).toFixed(1)},${((y * H) / box.current.h).toFixed(1)}`;
+  const pan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (e) => { cur.current = "M" + pt(e.nativeEvent.locationX, e.nativeEvent.locationY); setLive(cur.current); },
+    onPanResponderMove: (e) => { cur.current += " L" + pt(e.nativeEvent.locationX, e.nativeEvent.locationY); setLive(cur.current); },
+    onPanResponderRelease: () => {
+      const done = cur.current;
+      cur.current = "";
+      setLive("");
+      setPaths((p) => {
+        const n = done ? [...p, done] : p;
+        onChange(toSvgDataUrl(n));
+        return n;
+      });
+    },
+  })).current;
+  const onLayout = (e: LayoutChangeEvent) => { box.current = { w: e.nativeEvent.layout.width || 1, h: e.nativeEvent.layout.height || 1 }; };
+  return (
+    <View>
+      <View onLayout={onLayout} {...pan.panHandlers}
+        style={{ height: 110, borderWidth: 1, borderStyle: "dashed", borderColor: "#888", borderRadius: 8, backgroundColor: "#fff" }}>
+        <Svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`}>
+          {[...paths, live].filter(Boolean).map((d, i) => (
+            <Path key={i} d={d} fill="none" stroke="#111" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+          ))}
+        </Svg>
+      </View>
+      <Btn kind="ghost" title="مسح التوقيع" onPress={() => { setPaths([]); onChange(""); }} style={{ marginTop: 6 }} />
+    </View>
+  );
+}

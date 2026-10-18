@@ -1,6 +1,8 @@
 // Colours of the legacy employee app (frontend/legacy/employee-portal/css/08-ariba-employee-theme-v12.css): body.ariba-light
 // (default) / body.ariba-dark. Same variable names as the prototype so screens can be compared side by side.
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { AppState } from "react-native";
+import { brandInfo } from "@/lib/port";
 import { store } from "@/lib/store";
 
 export const palettes = {
@@ -22,13 +24,39 @@ export const brand = { dark: "#014D3D", green: "#29B35E", beige: "#E4E4BC", gray
 export const fonts = { light: "AribaTwoLight", medium: "AribaTwoMedium", bold: "AribaTwoBold" } as const;
 
 const KEY = "ariba_employee_theme";
+const BRAND_KEY = "ariba_employee_brand";
 type Mode = "light" | "dark";
-const Ctx = createContext<{ mode: Mode; toggle: () => void }>({ mode: "light", toggle: () => {} });
+type Brand = { p: string; a?: string; s?: string } | null;
+const Ctx = createContext<{ mode: Mode; toggle: () => void; brand: Brand }>({ mode: "light", toggle: () => {}, brand: null });
+
+// The company colours HR sets (their employee brand.js): the ARIBA colours of the palette are swapped for the
+// company's primary (P, with shades), accent (A) and light background (S).
+const h2r = (h: string) => { let x = String(h || "").replace("#", ""); if (x.length === 3) x = x.split("").map((c) => c + c).join(""); const n = parseInt(x, 16); return Number.isFinite(n) && x.length === 6 ? [(n >> 16) & 255, (n >> 8) & 255, n & 255] : null; };
+const r2h = (r: number[]) => "#" + r.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("").toUpperCase();
+const shade = (r: number[], k: number) => r.map((v) => v * (1 - k));
+const lift = (r: number[], k: number) => r.map((v) => v + (255 - v) * k);
+function conv(b: NonNullable<Brand>): (c: string) => string {
+  const P = h2r(b.p)!, A = (b.a && h2r(b.a)) || lift(P, 0.35), S = (b.s && h2r(b.s)) || [244, 240, 230];
+  const map: Record<string, string> = { "#013D31": r2h(shade(P, 0.2)), "#075444": r2h(lift(P, 0.1)), "#176A58": r2h(lift(P, 0.2)), "#014D3D": r2h(P),
+    "#4BDC86": r2h(lift(A, 0.3)), "#1D9A4C": r2h(shade(A, 0.15)), "#1F9A4F": r2h(shade(A, 0.15)), "#29B35E": r2h(A), "#E4E4BC": r2h(S), "#F4F0E6": r2h(S) };
+  return (c) => map[c.toUpperCase()] ?? c;
+}
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<Mode>("light"); // the prototype defaults to day mode
+  const [brand, setBrand] = useState<Brand>(null);
   useEffect(() => {
     store.get(KEY).then((v) => v === "dark" && setMode("dark")).catch(() => {});
+    store.get(BRAND_KEY).then((v) => { try { const b = v ? JSON.parse(v) : null; if (b && h2r(b.p)) setBrand(b); } catch { /* ignore */ } }).catch(() => {});
+    const pull = () => brandInfo().then((r) => {
+      const v = r.brand;
+      const nb: Brand = !v || v.reset || !v.p || !h2r(v.p) ? null : { p: v.p, a: v.a || "", s: v.s || "" };
+      setBrand(nb);
+      (nb ? store.set(BRAND_KEY, JSON.stringify(nb)) : store.del(BRAND_KEY)).catch(() => {});
+    }).catch(() => {});
+    pull();
+    const sub = AppState.addEventListener("change", (st) => st === "active" && pull());
+    return () => sub.remove();
   }, []);
   const toggle = useCallback(() => {
     setMode((m) => {
@@ -37,12 +65,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       return next;
     });
   }, []);
-  return <Ctx.Provider value={{ mode, toggle }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ mode, toggle, brand }}>{children}</Ctx.Provider>;
 }
 
 export const useThemeMode = () => useContext(Ctx);
 
 export function useTheme(): Palette {
-  const { mode } = useContext(Ctx);
-  return { ...palettes[mode], dark: mode === "dark" };
+  const { mode, brand } = useContext(Ctx);
+  return useMemo(() => {
+    const base = palettes[mode];
+    if (!brand) return { ...base, dark: mode === "dark" };
+    const c = conv(brand);
+    return { ...(Object.fromEntries(Object.entries(base).map(([k, v]) => [k, c(v)])) as { [K in keyof typeof base]: string }), dark: mode === "dark" };
+  }, [mode, brand]);
 }

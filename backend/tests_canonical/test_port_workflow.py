@@ -136,3 +136,18 @@ def test_staff_queue_and_requests_lists(api):
     q = api.get("/api/v1/staff/queue", headers=login(api, "hr.test")).json()["queue"]
     assert q and {"request_type", "payload", "current_stage"} <= set(q[0]["request"]) and q[0]["employee"].get("nameAr")
     assert api.get("/api/v1/staff/requests", headers=login(api, "emp.test")).status_code == 403
+
+
+def test_team_shows_delegation_and_leaves_and_my_requests_carry_payload(api, port_engine):
+    assert api.put("/api/v1/me/delegation", json={"active": True}, headers=login(api, "emp53.test")).status_code == 200
+    perms = {"view_team": True, "view_team_data": True, "view_team_leaves": True}
+    assert api.put("/api/v1/settings/manager-perms/50", json={"perms": perms}, headers=login(api, "hr.test")).status_code == 200
+    team = api.get("/api/v1/me/team", headers=login(api, "mgr.test")).json()
+    m = next(x for x in team if x["id"] == "53")
+    assert m["delegated"] is True and "leaves" in m and "contract_end" in m
+    r = _submit(api, "emp53.test", {"type": "document", "payload": {"doc_type": "cv", "doc_label": "سيرة"},
+                                    "attachment": {"name": "cv.pdf", "mime": "application/pdf", "data": PDF}})
+    assert r.status_code == 201, r.text
+    mine = api.get("/api/v1/me/requests", headers=login(api, "emp53.test")).json()
+    doc = next(x for x in mine if x["id"] == r.json()["id"])
+    assert doc["payload"]["doc_label"] == "سيرة" and doc["attachments"][0]["file_name"] == "cv.pdf"

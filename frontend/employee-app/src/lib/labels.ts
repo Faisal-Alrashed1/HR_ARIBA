@@ -19,6 +19,11 @@ export const REQUEST_TYPES: { key: RequestType; ar: string; color: string }[] = 
   { key: "mission", ar: "مهمة خارجية", color: "#014D3D" },
   { key: "forgot_punch", ar: "نسيان بصمة", color: "#414042" },
   { key: "overtime", ar: "عمل إضافي", color: "#014D3D" },
+  { key: "unpaid", ar: "إجازة بدون راتب", color: "#9B7A32" },
+  { key: "salary_advance", ar: "طلب راتب مقدم", color: "#1F8D49" },
+  { key: "iban_change", ar: "تغيير الآيبان", color: "#014D3D" },
+  { key: "profile_edit", ar: "تعديل بيانات", color: "#6B5B73" },
+  { key: "document", ar: "رفع مستند", color: "#414042" },
 ];
 
 export const typeName = (k: string) => REQUEST_TYPES.find((t) => t.key === k)?.ar ?? k;
@@ -36,6 +41,10 @@ export function statusText(r: MyRequest): { text: string; tone: "gr" | "rd" | "a
 }
 
 export function requestDetail(r: MyRequest): string {
+  const p = r.payload ?? {};
+  if (r.type === "iban_change") return `IBAN: ${p.iban ?? ""} — ${p.bank ?? ""}`;
+  if (r.type === "profile_edit") return Object.entries(p.changes ?? {}).map(([k, v]) => `${k}: ${v}`).join(" | ");
+  if (r.type === "document") return String(p.doc_label ?? "");
   if (r.from_date) return `${r.from_date} ← ${r.to_date} | ${Number(r.days ?? 0)} يوم`;
   if (r.type === "forgot_punch")
     return `${PUNCH[r.punch_kind ?? ""] ?? ""} | ${r.on_date} ${r.time_from ?? ""}${r.time_to ? ` → ${r.time_to}` : ""}`;

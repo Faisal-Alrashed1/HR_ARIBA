@@ -317,6 +317,13 @@ def my_team(actor: dict[str, Any] = Depends(c.current_actor), db: Session = Depe
         emps = [e for i in ids for e in cdata.employees(db, employee_id=i)]
         book = cdata.leave_book(db, today_riyadh(), emps)
         books = {e.id: e for e in emps}
+    delegated = {r[0] for r in db.execute(text("SELECT employee_id FROM public.ariba_delegations WHERE manager_id=:m AND active"), {"m": me})}
+    leaves: dict[str, list[dict[str, Any]]] = {}
+    if perms["view_team_leaves"]:  # their MgrTeam: the leaves of the last 12 months
+        for lv in c._rows(db, """SELECT l.employee_id,l.leave_type,l.from_date,l.to_date,l.days,w.id AS wid,w.status FROM public.leave_requests l
+                JOIN public.workflow_requests w ON w.id=l.workflow_request_id WHERE l.employee_id = ANY(:ids) AND l.to_date >= CURRENT_DATE - 365
+                ORDER BY l.from_date DESC""", ids=ids):
+            leaves.setdefault(lv["employee_id"], []).append(lv)
     out = []
     for r in rows:
         e = c._employee_dict(r)
@@ -327,9 +334,14 @@ def my_team(actor: dict[str, Any] = Depends(c.current_actor), db: Session = Depe
             m.update({"employer": e["employer"], "join_date": e["join_date"], "nationality": e["nationality"], "mobile": d.get("mobile"), "email": d.get("email")})
         if perms["view_team_salary"]:
             m.update({"salary_total": d.get("salaryTotal"), "net_salary": d.get("netSalary")})
+        if perms["view_team_data"]:
+            m.update({"contract_end": d.get("contractEnd"), "iqama_expiry": d.get("iqamaExpiry")})
         if book is not None and e["employee_id"] in books:
             s = book.summary(books[e["employee_id"]])
             m.update({"leave_balance": s["current"], "leave_year_end": s["year_end"]})
+            m["leaves"] = [{"id": str(lv["wid"]), "type": lv["leave_type"], "from": lv["from_date"].isoformat(), "to": lv["to_date"].isoformat(),
+                            "days": lv["days"], "status": lv["status"]} for lv in leaves.get(e["employee_id"], [])]
+        m["delegated"] = e["employee_id"] in delegated
         out.append(m)
     return out
 

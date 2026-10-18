@@ -1,7 +1,9 @@
 // App shell of the legacy employee app (V118 js/core-ui/030 + 012/016/026/032): sticky header (page title, bell, key,
 // logout, day/night, manual refresh) and the floating bottom nav. Approvals only for manager / hr / ceo / admin.
-import { useState } from "react";
-import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { getRefreshToken } from "@/lib/api";
+import { biometricAvailable, biometricEnabled, enableBiometric, remembered, setNudged, wasNudged } from "@/lib/biometric";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, Tabs } from "expo-router";
 import { Icon } from "@/components/icons";
@@ -20,6 +22,7 @@ const TABS: { name: string; title: string; label: string; icon: Parameters<typeo
   { name: "salary", title: "الراتب", label: "الراتب", icon: "cash" },
   { name: "team", title: "فريقي", label: "فريقي", icon: "users" },
   { name: "profile", title: "ملفي", label: "ملفي", icon: "user" },
+  { name: "goals", title: "أهدافي وتقييمي", label: "أهدافي", icon: "star" },
   { name: "overtime", title: "عمل إضافي", label: "عمل إضافي", icon: "stopwatch" },
   { name: "documents", title: "المستندات", label: "مستندات", icon: "file" },
   { name: "approvals", title: "الموافقات", label: "الموافقات", icon: "checks" },
@@ -182,10 +185,27 @@ function BottomNav({ state, navigation }: BottomTabBarProps) {
   );
 }
 
+/** Their BioAsk: once, after signing in with «تذكرني», offer Face ID / fingerprint sign-in on this device. */
+function BioAsk() {
+  const toast = useToast();
+  useEffect(() => {
+    (async () => {
+      if (!(await remembered()) || !(await biometricAvailable()) || (await biometricEnabled()) || (await wasNudged())) return;
+      await setNudged();
+      Alert.alert("🔐 تفعيل الدخول بالبصمة؟", "بدل كتابة كلمة المرور كل مرة، تدخل بالبصمة أو Face ID على هذا الجهاز.", [
+        { text: "مش دلوقتي", style: "cancel" },
+        { text: "تفعيل", onPress: async () => { const rt = await getRefreshToken(); if (!rt) return; const r = await enableBiometric(rt); toast(r.msg, r.ok ? "ok" : "err"); } },
+      ]);
+    })();
+  }, [toast]);
+  return null;
+}
+
 export default function TabsLayout() {
   return (
     <DataProvider>
       <PunchProvider>
+        <BioAsk />
         <Tabs tabBar={(p) => <BottomNav {...(p as unknown as BottomTabBarProps)} />} screenOptions={({ route }) => ({
           header: () => <Header title={TABS.find((x) => x.name === route.name)?.title ?? ""} />,
         })}>
