@@ -929,6 +929,30 @@ _FEMALE_NAMES = ("منى", "زينب", "ريم", "بدريه", "ساره", "نو
                  "أثير", "هيا", "نورة", "فاطمة", "عائشة", "أفنان")
 
 
+def _dashboard_alerts(active: list[dict[str, Any]], today: date) -> list[dict[str, Any]]:
+    """Dashboard alerts for the current employees (iqama, passport, insurance, contract)."""
+    alerts: list[dict[str, Any]] = []
+    for row in active:
+        data = row.get("data") or {}
+        brief = {"id": row["employee_id"], "emp_no": str(data.get("empNo") or row.get("username") or row["employee_id"]),
+                 "name_ar": row.get("name_ar"), "name_en": row.get("name_en")}
+        for kind, field in (("iqama", "iqamaExpiry"), ("passport", "passportExpiry"), ("insurance", "insuranceExpiry"), ("contract", "contractEnd")):
+            raw = data.get(field)
+            if not raw:
+                continue
+            try:
+                expires = date.fromisoformat(str(raw)[:10])
+            except ValueError:
+                continue
+            days_left = (expires-today).days
+            if kind == "contract" and str(data.get("contractNature") or "") == "indefinite":
+                continue  # legacy getAlerts: no contract alert for an indefinite contract
+            if days_left <= 90:
+                alerts.append({"employee": brief, "kind": kind, "expires_on": expires, "days_left": days_left,
+                               "level": "expired" if days_left < 0 else "urgent" if days_left <= 30 else "soon"})
+    return alerts
+
+
 @router.get("/dashboard")
 def dashboard(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
     all_rows = _rows(db, f"SELECT {_EMPLOYEE_COLUMNS} FROM {_EMPLOYEE_FROM}")
@@ -955,26 +979,7 @@ def dashboard(actor: dict[str, Any] = Depends(current_actor), db: Session = Depe
     # Legacy totSal: basic + housing + transport of the current employees.
     payroll_total = sum(_num((r.get("data") or {}).get(k)) for r in active for k in ("salary", "housingAllowance", "transportAllowance")) if payroll_allowed else None
     summary_row = _row(db, "SELECT pay_year,pay_month FROM public.payroll_periods WHERE approved ORDER BY pay_year DESC,pay_month DESC LIMIT 1")
-    alerts = []
-    today = today_riyadh()
-    for row in active:
-        data = row.get("data") or {}
-        brief = {"id": row["employee_id"], "emp_no": str(data.get("empNo") or row.get("username") or row["employee_id"]),
-                 "name_ar": row.get("name_ar"), "name_en": row.get("name_en")}
-        for kind, field in (("iqama", "iqamaExpiry"), ("passport", "passportExpiry"), ("insurance", "insuranceExpiry"), ("contract", "contractEnd")):
-            raw = data.get(field)
-            if not raw:
-                continue
-            try:
-                expires = date.fromisoformat(str(raw)[:10])
-            except ValueError:
-                continue
-            days_left = (expires-today).days
-            if kind == "contract" and str(data.get("contractNature") or "") == "indefinite":
-                continue  # legacy getAlerts: no contract alert for an indefinite contract
-            if days_left <= 90:
-                alerts.append({"employee": brief, "kind": kind, "expires_on": expires, "days_left": days_left,
-                               "level": "expired" if days_left < 0 else "urgent" if days_left <= 30 else "soon"})
+    alerts = _dashboard_alerts(active, today_riyadh())
     workplaces = group_count(active, "employer")
     for item in workplaces:
         if payroll_allowed:

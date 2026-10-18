@@ -1,0 +1,10 @@
+{
+  "name": "ariba-react-parity",
+  "private": true,
+  "type": "module",
+  "description": "Runs the HR department's React formulas (reference/, copied read-only) and ours (site TS + backend Python) on the same seeded cases and reports every difference. No npm install needed: TypeScript comes from frontend/hr-web/node_modules.",
+  "scripts": {
+    "test": "TZ=Asia/Riyadh node --import ./freeze.mjs run.mjs",
+    "report": "TZ=Asia/Riyadh node --import ./freeze.mjs run.mjs --write"
+  }
+}

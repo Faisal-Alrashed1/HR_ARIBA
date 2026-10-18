@@ -1,0 +1,8781 @@
+{
+ "stamp": {
+  "now": "2026-10-18",
+  "at": "2026-10-18T07:00:00.000Z"
+ },
+ "total": 81615,
+ "diff": 29391,
+ "unexplained": 1,
+ "suites": [
+  {
+   "id": "payx",
+   "title": "محرك المسيّر PAYX (A..AW)",
+   "rows": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    29,
+    30,
+    31
+   ],
+   "cases": 20006,
+   "diffCases": 6668,
+   "fields": {
+    "AQ": 4690,
+    "AR": 2939,
+    "AO": 2055,
+    "AU": 1963,
+    "AV": 4070,
+    "AW": 4070,
+    "AK": 1085,
+    "AM": 2346,
+    "N": 1451,
+    "P": 1451,
+    "AC": 1451,
+    "AG": 560,
+    "AH": 364,
+    "AI": 378,
+    "AJ": 596
+   },
+   "causes": {
+    "G تأمينات على السكن الفعلي": 3995,
+    "D م.87": 488,
+    "J رصيد ما بعد 5 سنوات + G تأمينات على السكن الفعلي": 281,
+    "J رصيد ما بعد 5 سنوات": 960,
+    "noEos + J رصيد ما بعد 5 سنوات": 50,
+    "noEos + G تأمينات على السكن الفعلي": 127,
+    "noEos": 357,
+    "D م.87 + G تأمينات على السكن الفعلي": 221,
+    "D م.87 + J رصيد ما بعد 5 سنوات": 92,
+    "noEos + J رصيد ما بعد 5 سنوات + G تأمينات على السكن الفعلي": 21,
+    "D م.87 + noEos + J رصيد ما بعد 5 سنوات + G تأمينات على السكن الفعلي": 5,
+    "D م.87 + noEos": 23,
+    "D م.87 + J رصيد ما بعد 5 سنوات + G تأمينات على السكن الفعلي": 34,
+    "D م.87 + noEos + J رصيد ما بعد 5 سنوات": 7,
+    "D م.87 + noEos + G تأمينات على السكن الفعلي": 6,
+    "A استقالة 10 سنوات بالضبط + J رصيد ما بعد 5 سنوات": 1
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "1": 20006,
+    "2": 20006,
+    "3": 20006,
+    "4": 20006,
+    "5": 20006,
+    "6": 20006,
+    "7": 20006,
+    "8": 20006,
+    "10": 20006,
+    "11": 20006,
+    "12": 20006,
+    "13": 20006,
+    "14": 20006,
+    "15": 20006,
+    "16": 20006,
+    "17": 20006,
+    "18": 20006,
+    "19": 20006,
+    "20": 20006,
+    "21": 20006,
+    "22": 20006,
+    "23": 20006,
+    "24": 20006,
+    "25": 20006,
+    "26": 20006,
+    "27": 20006,
+    "29": 20006,
+    "30": 20006
+   },
+   "rowDiffs": {
+    "12": 1451,
+    "14": 1451,
+    "15": 1451,
+    "16": 560,
+    "17": 364,
+    "18": 378,
+    "19": 596,
+    "20": 1085,
+    "21": 1085,
+    "22": 1085,
+    "23": 2346,
+    "25": 4690,
+    "26": 2055,
+    "27": 2939,
+    "29": 1963,
+    "30": 4070
+   },
+   "samples": [
+    {
+     "input": {
+      "basic": 27500,
+      "houRate": 0.3,
+      "traRate": 0.05,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 30,
+      "work": 30,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "لا يطابق",
+      "saudi": false,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1998-02-09",
+      "join": "2026-08-01",
+      "lastDay": null,
+      "contractMonths": null,
+      "reason": "retire",
+      "leaveDays": 21,
+      "used": null,
+      "usedAuto": 32,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2025-11-30",
+      "rates": {
+       "matchEmp": 0.1025,
+       "matchEmp55": 0.1,
+       "matchEr": 0.1225,
+       "matchEr55": 0.12,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AQ": {
+       "theirs": 34375,
+       "ours": 35750
+      },
+      "AR": {
+       "theirs": 687.5,
+       "ours": 715
+      }
+     },
+     "cause": "G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 28050,
+      "houRate": 0.2,
+      "traRate": 0.15,
+      "prj": 1800,
+      "oth": 0,
+      "allIn": null,
+      "days": 30,
+      "work": 30,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "لا يطابق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1990-01-01",
+      "join": "2016-01-05",
+      "lastDay": null,
+      "contractMonths": 36,
+      "reason": "",
+      "leaveDays": 30,
+      "used": null,
+      "usedAuto": 128,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2026-11-30",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AQ": {
+       "theirs": 35062.5,
+       "ours": 33660
+      },
+      "AO": {
+       "theirs": 3418.59375,
+       "ours": 3281.85
+      },
+      "AR": {
+       "theirs": 4119.84375,
+       "ours": 3955.0499999999997
+      },
+      "AU": {
+       "theirs": 3418.59375,
+       "ours": 3281.85
+      },
+      "AV": {
+       "theirs": 36248.90625,
+       "ours": 36385.65
+      },
+      "AW": {
+       "theirs": 36248.90625,
+       "ours": 36385.65
+      }
+     },
+     "cause": "G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 39000,
+      "houRate": 0.25,
+      "traRate": 0.1,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 30,
+      "work": 30,
+      "insDays": 20,
+      "otHours": 29,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "غير خاضع",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1963-05-03",
+      "join": "2016-07-20",
+      "lastDay": "2019-12-19",
+      "contractMonths": null,
+      "reason": "art87",
+      "leaveDays": 21,
+      "used": null,
+      "usedAuto": 51,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2027-09-30",
+      "rates": {
+       "matchEmp": 0.1125,
+       "matchEmp55": 0.11,
+       "matchEr": 0.1325,
+       "matchEr55": 0.13,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AK": {
+       "theirs": 0,
+       "ours": 89943.75
+      },
+      "AM": {
+       "theirs": 97784.375,
+       "ours": 187728.125
+      },
+      "AV": {
+       "theirs": 97784.375,
+       "ours": 187728.125
+      },
+      "AW": {
+       "theirs": 97784.375,
+       "ours": 187728.125
+      }
+     },
+     "cause": "D م.87"
+    },
+    {
+     "input": {
+      "basic": 37200,
+      "houRate": 0.25,
+      "traRate": 0.1,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 29,
+      "work": 29,
+      "otHours": 0,
+      "otAmount": 850,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "غير خاضع",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1994-10-27",
+      "join": "2015-02-20",
+      "lastDay": "2023-01-05",
+      "contractMonths": null,
+      "reason": "art87",
+      "leaveDays": 21,
+      "used": null,
+      "usedAuto": 50,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2026-02-28",
+      "rates": {
+       "matchEmp": 0.1025,
+       "matchEmp55": 0.1,
+       "matchEr": 0.1225,
+       "matchEr55": 0.12,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AK": {
+       "theirs": 0,
+       "ours": 270179.01369863015
+      },
+      "AM": {
+       "theirs": 287807.07999999996,
+       "ours": 557986.0936986301
+      },
+      "AV": {
+       "theirs": 287807.07999999996,
+       "ours": 557986.0936986301
+      },
+      "AW": {
+       "theirs": 287807.07999999996,
+       "ours": 557986.0936986301
+      }
+     },
+     "cause": "D م.87"
+    },
+    {
+     "input": {
+      "basic": 35150,
+      "houRate": 0.3,
+      "traRate": 0.1,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 31,
+      "work": 31,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 3.755,
+      "insStatus": "لا يطبق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1960-01-17",
+      "join": "2017-12-02",
+      "lastDay": "2026-06-26",
+      "contractMonths": null,
+      "reason": "art81",
+      "leaveDays": 25,
+      "used": 3,
+      "usedAuto": 160,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2026-07-31",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 212.08,
+       "ours": 232.08
+      },
+      "P": {
+       "theirs": 209.08,
+       "ours": 229.08
+      },
+      "AC": {
+       "theirs": 342960.8933333333,
+       "ours": 375767.56
+      },
+      "AM": {
+       "theirs": 690801.4412785388,
+       "ours": 723608.1079452054
+      },
+      "AQ": {
+       "theirs": 43937.5,
+       "ours": 45000
+      },
+      "AV": {
+       "theirs": 690801.4412785388,
+       "ours": 723608.1079452054
+      },
+      "AW": {
+       "theirs": 2593959.412000913,
+       "ours": 2717148.4453342464
+      }
+     },
+     "cause": "J رصيد ما بعد 5 سنوات + G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 49600,
+      "houRate": 0.25,
+      "traRate": 0,
+      "prj": 6450,
+      "oth": 100,
+      "allIn": null,
+      "days": 29,
+      "work": 29,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "يطابق",
+      "saudi": false,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1982-03-05",
+      "join": "2014-12-29",
+      "lastDay": "2022-09-24",
+      "contractMonths": 36,
+      "reason": "art80",
+      "leaveDays": 30,
+      "used": null,
+      "usedAuto": 193,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2026-10-31",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 187.25,
+       "ours": 232.25
+      },
+      "P": {
+       "theirs": -5.75,
+       "ours": 39.25
+      },
+      "AC": {
+       "theirs": -13138.75,
+       "ours": 89686.25
+      },
+      "AM": {
+       "theirs": 55411.25,
+       "ours": 158236.25
+      },
+      "AV": {
+       "theirs": 55411.25,
+       "ours": 158236.25
+      },
+      "AW": {
+       "theirs": 55411.25,
+       "ours": 158236.25
+      }
+     },
+     "cause": "J رصيد ما بعد 5 سنوات"
+    },
+    {
+     "input": {
+      "basic": 57200,
+      "houRate": 0.25,
+      "traRate": 0.05,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 30,
+      "work": 30,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "يطابق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1986-09-22",
+      "join": "2001-10-29",
+      "lastDay": "2026-04-23",
+      "contractMonths": null,
+      "reason": "retire",
+      "leaveDays": 30,
+      "used": null,
+      "usedAuto": 4,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": true,
+      "asOf": "2027-04-30",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 689.67,
+       "ours": 734.67
+      },
+      "P": {
+       "theirs": 685.67,
+       "ours": 730.67
+      },
+      "AC": {
+       "theirs": 1699547.373333333,
+       "ours": 1811087.373333333
+      },
+      "AG": {
+       "theirs": 0,
+       "ours": 1598740
+      },
+      "AH": {
+       "theirs": 0,
+       "ours": 30983.333333333336
+      },
+      "AI": {
+       "theirs": 0,
+       "ours": 5296.876712328767
+      },
+      "AJ": {
+       "theirs": 0,
+       "ours": 1635020.210045662
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 1635020.210045662
+      },
+      "AM": {
+       "theirs": 1773907.373333333,
+       "ours": 3520467.583378995
+      },
+      "AV": {
+       "theirs": 1769069.873333333,
+       "ours": 3515630.083378995
+      },
+      "AW": {
+       "theirs": 1769069.873333333,
+       "ours": 3515630.083378995
+      }
+     },
+     "cause": "noEos + J رصيد ما بعد 5 سنوات"
+    },
+    {
+     "input": {
+      "basic": 13600,
+      "houRate": 0,
+      "traRate": 0.05,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 31,
+      "work": 31,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "غير خاضع",
+      "saudi": false,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1964-02-12",
+      "join": "2010-03-08",
+      "lastDay": "2021-04-21",
+      "contractMonths": 24,
+      "reason": "art80",
+      "leaveDays": 30,
+      "used": null,
+      "usedAuto": 108,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2025-01-31",
+      "rates": {
+       "matchEmp": 0.0975,
+       "matchEmp55": 0.095,
+       "matchEr": 0.1175,
+       "matchEr55": 0.115,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 288.67,
+       "ours": 333.67
+      },
+      "P": {
+       "theirs": 180.67,
+       "ours": 225.67
+      },
+      "AC": {
+       "theirs": 85998.92,
+       "ours": 107418.92
+      },
+      "AM": {
+       "theirs": 100278.92,
+       "ours": 121698.92
+      },
+      "AQ": {
+       "theirs": 17000,
+       "ours": 13600
+      },
+      "AV": {
+       "theirs": 100278.92,
+       "ours": 121698.92
+      },
+      "AW": {
+       "theirs": 100278.92,
+       "ours": 121698.92
+      }
+     },
+     "cause": "J رصيد ما بعد 5 سنوات + G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 36900,
+      "houRate": 0.3,
+      "traRate": 0.05,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 30,
+      "work": 1,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "يطابق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1969-07-08",
+      "join": "2021-12-22",
+      "lastDay": null,
+      "contractMonths": 36,
+      "reason": "agree",
+      "leaveDays": 21,
+      "used": null,
+      "usedAuto": 152,
+      "noIns": false,
+      "leaveManual": 2250,
+      "noInsDeduct": false,
+      "noEos": true,
+      "asOf": "2025-01-31",
+      "rates": {
+       "matchEmp": 0.0975,
+       "matchEmp55": 0.095,
+       "matchEr": 0.1175,
+       "matchEr55": 0.115,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AG": {
+       "theirs": 0,
+       "ours": 74722.5
+      },
+      "AJ": {
+       "theirs": 0,
+       "ours": 74722.5
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 74722.5
+      },
+      "AM": {
+       "theirs": -146124,
+       "ours": -71401.5
+      },
+      "AQ": {
+       "theirs": 1537.5,
+       "ours": 1599
+      },
+      "AV": {
+       "theirs": -146266.5,
+       "ours": -71544
+      },
+      "AW": {
+       "theirs": -146266.5,
+       "ours": -71544
+      }
+     },
+     "cause": "noEos + G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 55850,
+      "houRate": 0.25,
+      "traRate": 0.1,
+      "prj": 1300,
+      "oth": 0,
+      "allIn": null,
+      "days": 28,
+      "work": 28,
+      "otHours": 0,
+      "otAmount": 1800,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "لا يطبق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1991-03-17",
+      "join": "2009-01-22",
+      "lastDay": "2015-09-26",
+      "contractMonths": 12,
+      "reason": "art81",
+      "leaveDays": 21,
+      "used": null,
+      "usedAuto": 90,
+      "noIns": false,
+      "leaveManual": 3450,
+      "noInsDeduct": false,
+      "noEos": true,
+      "asOf": "2025-03-31",
+      "rates": {
+       "matchEmp": 0.0975,
+       "matchEmp55": 0.095,
+       "matchEr": 0.1175,
+       "matchEr55": 0.115,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AG": {
+       "theirs": 0,
+       "ours": 268441.25
+      },
+      "AH": {
+       "theirs": 0,
+       "ours": 51131.666666666664
+      },
+      "AI": {
+       "theirs": 0,
+       "ours": 1050.6506849315067
+      },
+      "AJ": {
+       "theirs": 0,
+       "ours": 320623.5673515982
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 320623.5673515982
+      },
+      "AM": {
+       "theirs": 245749.18166666667,
+       "ours": 566372.7490182648
+      },
+      "AV": {
+       "theirs": 245749.18166666667,
+       "ours": 566372.7490182648
+      },
+      "AW": {
+       "theirs": 245749.18166666667,
+       "ours": 566372.7490182648
+      }
+     },
+     "cause": "noEos"
+    },
+    {
+     "input": {
+      "basic": 48650,
+      "houRate": 0.4,
+      "traRate": 0.1,
+      "prj": 5950,
+      "oth": 0,
+      "allIn": null,
+      "days": 29,
+      "work": 17,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 1750,
+      "fx": 1,
+      "insStatus": "يطابق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1970-12-06",
+      "join": "2020-11-19",
+      "lastDay": "2026-04-06",
+      "contractMonths": 24,
+      "reason": "abandon",
+      "leaveDays": 25,
+      "used": null,
+      "usedAuto": 158,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2026-04-30",
+      "rates": {
+       "matchEmp": 0.1025,
+       "matchEmp55": 0.1,
+       "matchEr": 0.1225,
+       "matchEr55": 0.12,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 116.58,
+       "ours": 136.58
+      },
+      "P": {
+       "theirs": -41.42,
+       "ours": -21.42
+      },
+      "AC": {
+       "theirs": -108969.11666666668,
+       "ours": -56352.450000000004
+      },
+      "AM": {
+       "theirs": -62702.73735632186,
+       "ours": -10086.070689655178
+      },
+      "AV": {
+       "theirs": -67090.66839080461,
+       "ours": -14474.001724137937
+      },
+      "AW": {
+       "theirs": -67090.66839080461,
+       "ours": -14474.001724137937
+      }
+     },
+     "cause": "J رصيد ما بعد 5 سنوات"
+    },
+    {
+     "input": {
+      "basic": 21250,
+      "houRate": 0.2,
+      "traRate": 0.05,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 29,
+      "work": 29,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "يطابق",
+      "saudi": false,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1980-05-27",
+      "join": "2003-02-14",
+      "lastDay": null,
+      "contractMonths": 12,
+      "reason": "",
+      "leaveDays": 21,
+      "used": null,
+      "usedAuto": 172,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": true,
+      "asOf": "2027-09-30",
+      "rates": {
+       "matchEmp": 0.1125,
+       "matchEmp55": 0.11,
+       "matchEr": 0.1325,
+       "matchEr55": 0.13,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AG": {
+       "theirs": 0,
+       "ours": 13281.25
+      },
+      "AJ": {
+       "theirs": 0,
+       "ours": 13281.25
+      },
+      "AQ": {
+       "theirs": 26562.5,
+       "ours": 25500
+      },
+      "AR": {
+       "theirs": 531.25,
+       "ours": 510
+      }
+     },
+     "cause": "noEos + G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 17900,
+      "houRate": 0,
+      "traRate": 0,
+      "prj": 7950,
+      "oth": 500,
+      "allIn": null,
+      "days": 31,
+      "work": 31,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "يطابق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1967-09-09",
+      "join": "2003-06-16",
+      "lastDay": null,
+      "contractMonths": 24,
+      "reason": "art87",
+      "leaveDays": 25,
+      "used": null,
+      "usedAuto": 20,
+      "noIns": false,
+      "leaveManual": 1150,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2026-10-31",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AK": {
+       "theirs": 0,
+       "ours": 26350
+      },
+      "AM": {
+       "theirs": 52700,
+       "ours": 79050
+      },
+      "AQ": {
+       "theirs": 22375,
+       "ours": 17900
+      },
+      "AO": {
+       "theirs": 2349.375,
+       "ours": 1879.5
+      },
+      "AR": {
+       "theirs": 2796.875,
+       "ours": 2237.5
+      },
+      "AU": {
+       "theirs": 2349.375,
+       "ours": 1879.5
+      },
+      "AV": {
+       "theirs": 50350.625,
+       "ours": 77170.5
+      },
+      "AW": {
+       "theirs": 50350.625,
+       "ours": 77170.5
+      }
+     },
+     "cause": "D م.87 + G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 37400,
+      "houRate": 0.25,
+      "traRate": 0.1,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 31,
+      "work": 31,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 3.755,
+      "insStatus": "غير خاضع",
+      "saudi": false,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1975-09-08",
+      "join": "2009-06-21",
+      "lastDay": null,
+      "contractMonths": 12,
+      "reason": "",
+      "leaveDays": 21,
+      "used": 71,
+      "usedAuto": 169,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": true,
+      "noEos": true,
+      "asOf": "2026-07-31",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AG": {
+       "theirs": 0,
+       "ours": 25245
+      },
+      "AJ": {
+       "theirs": 0,
+       "ours": 25245
+      }
+     },
+     "cause": "noEos"
+    },
+    {
+     "input": {
+      "basic": 42650,
+      "houRate": 0.25,
+      "traRate": 0.1,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 30,
+      "work": 30,
+      "otHours": 26,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "يطابق",
+      "saudi": true,
+      "trainee": true,
+      "nat": "",
+      "employer": "",
+      "dob": "1968-01-21",
+      "join": "2019-02-22",
+      "lastDay": "2026-01-02",
+      "contractMonths": null,
+      "reason": "art87",
+      "leaveDays": 25,
+      "used": null,
+      "usedAuto": 59,
+      "noIns": false,
+      "leaveManual": 1000,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2026-10-31",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 161,
+       "ours": 181
+      },
+      "P": {
+       "theirs": 102,
+       "ours": 122
+      },
+      "AC": {
+       "theirs": 195763.5,
+       "ours": 234148.5
+      },
+      "AM": {
+       "theirs": 246961.27083333334,
+       "ours": 285346.2708333333
+      },
+      "AV": {
+       "theirs": 246961.27083333334,
+       "ours": 285346.2708333333
+      },
+      "AW": {
+       "theirs": 246961.27083333334,
+       "ours": 285346.2708333333
+      }
+     },
+     "cause": "D م.87 + J رصيد ما بعد 5 سنوات"
+    },
+    {
+     "input": {
+      "basic": 36300,
+      "houRate": 0,
+      "traRate": 0.15,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 29,
+      "work": 29,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "غير خاضع",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1984-08-03",
+      "join": "2012-01-09",
+      "lastDay": "2025-08-26",
+      "contractMonths": null,
+      "reason": "art87",
+      "leaveDays": 21,
+      "used": null,
+      "usedAuto": 6,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2026-06-30",
+      "rates": {
+       "matchEmp": 0.1025,
+       "matchEmp55": 0.1,
+       "matchEr": 0.1225,
+       "matchEr55": 0.12,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AK": {
+       "theirs": 0,
+       "ours": 464732.40753424657
+      },
+      "AM": {
+       "theirs": 539902,
+       "ours": 1004634.4075342466
+      },
+      "AQ": {
+       "theirs": 45000,
+       "ours": 36300
+      },
+      "AV": {
+       "theirs": 539902,
+       "ours": 1004634.4075342466
+      },
+      "AW": {
+       "theirs": 539902,
+       "ours": 1004634.4075342466
+      }
+     },
+     "cause": "D م.87 + G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 30100,
+      "houRate": 0.3,
+      "traRate": 0,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 30,
+      "work": 30,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "لا يطابق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1990-03-30",
+      "join": "2016-07-21",
+      "lastDay": "2027-05-30",
+      "contractMonths": null,
+      "reason": "art81",
+      "leaveDays": 30,
+      "used": null,
+      "usedAuto": 0,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": true,
+      "asOf": "2026-08-31",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 280.83,
+       "ours": 325.83
+      },
+      "P": {
+       "theirs": 280.83,
+       "ours": 325.83
+      },
+      "AC": {
+       "theirs": 366295.92999999993,
+       "ours": 424990.92999999993
+      },
+      "AG": {
+       "theirs": 0,
+       "ours": 293475
+      },
+      "AH": {
+       "theirs": 0,
+       "ours": 32608.333333333336
+      },
+      "AI": {
+       "theirs": 0,
+       "ours": 1072.0547945205478
+      },
+      "AJ": {
+       "theirs": 0,
+       "ours": 327155.38812785386
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 327155.38812785386
+      },
+      "AM": {
+       "theirs": 405425.92999999993,
+       "ours": 791276.3181278538
+      },
+      "AQ": {
+       "theirs": 37625,
+       "ours": 39130
+      },
+      "AO": {
+       "theirs": 3668.4375,
+       "ours": 3815.175
+      },
+      "AR": {
+       "theirs": 4420.9375,
+       "ours": 4597.775
+      },
+      "AU": {
+       "theirs": 3668.4375,
+       "ours": 3815.175
+      },
+      "AV": {
+       "theirs": 401757.49249999993,
+       "ours": 787461.1431278537
+      },
+      "AW": {
+       "theirs": 401757.49249999993,
+       "ours": 787461.1431278537
+      }
+     },
+     "cause": "noEos + J رصيد ما بعد 5 سنوات + G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 27850,
+      "houRate": 0.25,
+      "traRate": 0.1,
+      "prj": 2000,
+      "oth": 0,
+      "allIn": null,
+      "days": 28,
+      "work": 28,
+      "otHours": 19,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 3.755,
+      "insStatus": "يطابق",
+      "saudi": false,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1981-06-17",
+      "join": "2012-02-22",
+      "lastDay": "2024-08-28",
+      "contractMonths": null,
+      "reason": "art87",
+      "leaveDays": 25,
+      "used": null,
+      "usedAuto": 152,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2027-04-30",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 330.58,
+       "ours": 350.58
+      },
+      "P": {
+       "theirs": 178.58,
+       "ours": 198.58
+      },
+      "AC": {
+       "theirs": 235710.71833333335,
+       "ours": 262109.0516666667
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 396734.40410958906
+      },
+      "AM": {
+       "theirs": 279848.07324404764,
+       "ours": 702980.81068697
+      },
+      "AV": {
+       "theirs": 279848.07324404764,
+       "ours": 702980.81068697
+      },
+      "AW": {
+       "theirs": 1050829.515031399,
+       "ours": 2639692.9441295722
+      }
+     },
+     "cause": "D م.87 + J رصيد ما بعد 5 سنوات"
+    },
+    {
+     "input": {
+      "basic": 20150,
+      "houRate": 0.3,
+      "traRate": 0.1,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 30,
+      "work": 30,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "لا يطابق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "2001-09-01",
+      "join": "2011-02-04",
+      "lastDay": "2016-04-25",
+      "contractMonths": 24,
+      "reason": "art87",
+      "leaveDays": 30,
+      "used": null,
+      "usedAuto": 92,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": true,
+      "asOf": "2027-11-30",
+      "rates": {
+       "matchEmp": 0.1125,
+       "matchEmp55": 0.11,
+       "matchEr": 0.1325,
+       "matchEr55": 0.13,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 111.83,
+       "ours": 156.83
+      },
+      "P": {
+       "theirs": 19.83,
+       "ours": 64.83
+      },
+      "AC": {
+       "theirs": 18646.809999999998,
+       "ours": 60961.81
+      },
+      "AG": {
+       "theirs": 0,
+       "ours": 70525
+      },
+      "AH": {
+       "theirs": 0,
+       "ours": 4701.666666666666
+      },
+      "AI": {
+       "theirs": 0,
+       "ours": 1700.3287671232877
+      },
+      "AJ": {
+       "theirs": 0,
+       "ours": 76926.99543378995
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 76926.99543378995
+      },
+      "AM": {
+       "theirs": 46856.81,
+       "ours": 166098.80543378997
+      },
+      "AQ": {
+       "theirs": 25187.5,
+       "ours": 26195
+      },
+      "AO": {
+       "theirs": 2455.78125,
+       "ours": 2554.0125000000003
+      },
+      "AR": {
+       "theirs": 2959.53125,
+       "ours": 3077.9125
+      },
+      "AU": {
+       "theirs": 2455.78125,
+       "ours": 2554.0125000000003
+      },
+      "AV": {
+       "theirs": 44401.02875,
+       "ours": 163544.79293378995
+      },
+      "AW": {
+       "theirs": 44401.02875,
+       "ours": 163544.79293378995
+      }
+     },
+     "cause": "D م.87 + noEos + J رصيد ما بعد 5 سنوات + G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 58050,
+      "houRate": 0.25,
+      "traRate": 0.1,
+      "prj": 2200,
+      "oth": 0,
+      "allIn": null,
+      "days": 28,
+      "work": 0,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "لا يطبق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1968-05-22",
+      "join": "2007-04-01",
+      "lastDay": "2011-08-17",
+      "contractMonths": null,
+      "reason": "art87",
+      "leaveDays": 25,
+      "used": null,
+      "usedAuto": 60,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": true,
+      "asOf": "2025-11-30",
+      "rates": {
+       "matchEmp": 0.1025,
+       "matchEmp55": 0.1,
+       "matchEr": 0.1225,
+       "matchEr55": 0.12,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AG": {
+       "theirs": 0,
+       "ours": 161135
+      },
+      "AH": {
+       "theirs": 0,
+       "ours": 13427.916666666666
+      },
+      "AI": {
+       "theirs": 0,
+       "ours": 1902.2881944444443
+      },
+      "AJ": {
+       "theirs": 0,
+       "ours": 176465.2048611111
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 176465.2048611111
+      },
+      "AM": {
+       "theirs": 132963.23083333333,
+       "ours": 309428.43569444446
+      },
+      "AV": {
+       "theirs": 132963.23083333333,
+       "ours": 309428.43569444446
+      },
+      "AW": {
+       "theirs": 132963.23083333333,
+       "ours": 309428.43569444446
+      }
+     },
+     "cause": "D م.87 + noEos"
+    },
+    {
+     "input": {
+      "basic": 24550,
+      "houRate": 0,
+      "traRate": 0.1,
+      "prj": 0,
+      "oth": 1750,
+      "allIn": null,
+      "days": 28,
+      "work": 28,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 3.755,
+      "insStatus": "لا يطابق",
+      "saudi": false,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1965-05-11",
+      "join": "2015-10-03",
+      "lastDay": "2023-04-11",
+      "contractMonths": null,
+      "reason": "art87",
+      "leaveDays": 30,
+      "used": null,
+      "usedAuto": 17,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2025-06-30",
+      "rates": {
+       "matchEmp": 0.0975,
+       "matchEmp55": 0.095,
+       "matchEr": 0.1175,
+       "matchEr55": 0.115,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 180.75,
+       "ours": 225.75
+      },
+      "P": {
+       "theirs": 163.75,
+       "ours": 208.75
+      },
+      "AC": {
+       "theirs": 156954.375,
+       "ours": 200086.875
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 144484.02739726027
+      },
+      "AM": {
+       "theirs": 185709.375,
+       "ours": 373325.9023972603
+      },
+      "AQ": {
+       "theirs": 30687.5,
+       "ours": 24550
+      },
+      "AR": {
+       "theirs": 613.75,
+       "ours": 491
+      },
+      "AV": {
+       "theirs": 185709.375,
+       "ours": 373325.9023972603
+      },
+      "AW": {
+       "theirs": 697338.703125,
+       "ours": 1401838.7635017124
+      }
+     },
+     "cause": "D م.87 + J رصيد ما بعد 5 سنوات + G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 15350,
+      "houRate": 0,
+      "traRate": 0.05,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 31,
+      "work": 31,
+      "otHours": 0,
+      "otAmount": 900,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "لا يطبق",
+      "saudi": false,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1976-06-27",
+      "join": "2011-05-22",
+      "lastDay": "2025-05-02",
+      "contractMonths": 24,
+      "reason": "art87",
+      "leaveDays": 30,
+      "used": null,
+      "usedAuto": 151,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": false,
+      "asOf": "2025-05-31",
+      "rates": {
+       "matchEmp": 0.0975,
+       "matchEmp55": 0.095,
+       "matchEr": 0.1175,
+       "matchEr55": 0.115,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 373.42,
+       "ours": 418.42
+      },
+      "P": {
+       "theirs": 222.42,
+       "ours": 267.42
+      },
+      "AC": {
+       "theirs": 119495.14499999999,
+       "ours": 143671.39500000002
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 184493.85787671234
+      },
+      "AM": {
+       "theirs": 136512.645,
+       "ours": 345182.75287671236
+      },
+      "AQ": {
+       "theirs": 19187.5,
+       "ours": 15350
+      },
+      "AV": {
+       "theirs": 136512.645,
+       "ours": 345182.75287671236
+      },
+      "AW": {
+       "theirs": 136512.645,
+       "ours": 345182.75287671236
+      }
+     },
+     "cause": "D م.87 + J رصيد ما بعد 5 سنوات + G تأمينات على السكن الفعلي"
+    },
+    {
+     "input": {
+      "basic": 56700,
+      "houRate": 0.25,
+      "traRate": 0.1,
+      "prj": 0,
+      "oth": 0,
+      "allIn": null,
+      "days": 31,
+      "work": 27,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 0,
+      "fx": 1,
+      "insStatus": "لا يطبق",
+      "saudi": true,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1989-10-23",
+      "join": "2002-03-11",
+      "lastDay": "2022-09-17",
+      "contractMonths": 24,
+      "reason": "arb77",
+      "leaveDays": 25,
+      "used": null,
+      "usedAuto": 23,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": true,
+      "asOf": "2026-11-30",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "N": {
+       "theirs": 570.58,
+       "ours": 590.58
+      },
+      "P": {
+       "theirs": 547.58,
+       "ours": 567.58
+      },
+      "AC": {
+       "theirs": 1397150.37,
+       "ours": 1448180.37
+      },
+      "AG": {
+       "theirs": 0,
+       "ours": 1339537.5
+      },
+      "AH": {
+       "theirs": 0,
+       "ours": 38272.5
+      },
+      "AI": {
+       "theirs": 0,
+       "ours": 1467.986301369863
+      },
+      "AJ": {
+       "theirs": 0,
+       "ours": 1379277.98630137
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 1379277.98630137
+      },
+      "AM": {
+       "theirs": 1463818.5958064517,
+       "ours": 2894126.5821078215
+      },
+      "AV": {
+       "theirs": 1463818.5958064517,
+       "ours": 2894126.5821078215
+      },
+      "AW": {
+       "theirs": 1463818.5958064517,
+       "ours": 2894126.5821078215
+      }
+     },
+     "cause": "noEos + J رصيد ما بعد 5 سنوات"
+    },
+    {
+     "input": {
+      "basic": 30850,
+      "houRate": 0.25,
+      "traRate": 0.1,
+      "prj": 0,
+      "oth": 2950,
+      "allIn": null,
+      "days": 28,
+      "work": 14,
+      "insDays": 20,
+      "otHours": 0,
+      "otAmount": 0,
+      "advances": 0,
+      "otherDed": 200,
+      "fx": 1,
+      "insStatus": "لا يطابق",
+      "saudi": false,
+      "trainee": false,
+      "nat": "",
+      "employer": "",
+      "dob": "1983-11-10",
+      "join": "2025-04-03",
+      "lastDay": "2025-11-11",
+      "contractMonths": null,
+      "reason": "art87",
+      "leaveDays": 25,
+      "used": null,
+      "usedAuto": 129,
+      "noIns": false,
+      "leaveManual": 0,
+      "noInsDeduct": false,
+      "noEos": true,
+      "asOf": "2026-09-30",
+      "rates": {
+       "matchEmp": 0.1075,
+       "matchEmp55": 0.105,
+       "matchEr": 0.1275,
+       "matchEr55": 0.125,
+       "noMatchEmp": 0.0975,
+       "noMatchEmp55": 0.09,
+       "noMatchEr": 0.1175,
+       "noMatchEr55": 0.11,
+       "nonSaudiEr": 0.02,
+       "cap": 45000,
+       "ageThr": 55
+      }
+     },
+     "bad": {
+      "AH": {
+       "theirs": 0,
+       "ours": 13007.604166666668
+      },
+      "AI": {
+       "theirs": 0,
+       "ours": 557.46875
+      },
+      "AJ": {
+       "theirs": 0,
+       "ours": 13565.072916666668
+      },
+      "AK": {
+       "theirs": 0,
+       "ours": 13565.072916666668
+      },
+      "AM": {
+       "theirs": -146859.5675,
+       "ours": -133294.49458333335
+      },
+      "AV": {
+       "theirs": -147059.5675,
+       "ours": -133494.49458333335
+      },
+      "AW": {
+       "theirs": -147059.5675,
+       "ours": -133494.49458333335
+      }
+     },
+     "cause": "D م.87 + noEos"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "id": "rows",
+   "title": "صفوف المسيّر (من يدخل، الافتراضيات، noEos، الإضافي القديم، المجاميع)",
+   "rows": [
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    41,
+    42
+   ],
+   "cases": 5238,
+   "diffCases": 3067,
+   "fields": {
+    "otAmount": 419,
+    "costY": 1523,
+    "eos": 1524,
+    "totalDue": 623,
+    "net": 947,
+    "netSAR": 947,
+    "member": 339,
+    "insEr": 934,
+    "insBase": 840,
+    "overtime": 197,
+    "insEmp": 504,
+    "totalDeduct": 504,
+    "insStatus": 238,
+    "costM": 5,
+    "costD": 5,
+    "eosAmt": 8,
+    "N": 4,
+    "P": 4,
+    "leaveComp": 8
+   },
+   "causes": {
+    "noEos + ترحيل الإضافي القديم": 34,
+    "noEos": 1394,
+    "ترحيل الإضافي القديم + G": 190,
+    "noEos + ترحيل الإضافي القديم + G": 95,
+    "consultant_external": 187,
+    "G": 465,
+    "يتبع فروق الصفوف": 239,
+    "ترحيل الإضافي القديم": 71,
+    "اسم البوصيري مكتوب في الكود": 152,
+    "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + G": 109,
+    "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا)": 68,
+    "insSystem exempt لا يُعفى في صفحة المسيّر عندنا (خطأ عندنا)": 9,
+    "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + ترحيل الإضافي القديم + G": 22,
+    "noEos + G": 1,
+    "insSystem exempt لا يُعفى في صفحة المسيّر عندنا (خطأ عندنا) + G": 23,
+    "insSystem exempt لا يُعفى في صفحة المسيّر عندنا (خطأ عندنا) + ترحيل الإضافي القديم + G": 2,
+    "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + ترحيل الإضافي القديم": 4,
+    "غير مفسَّر": 1,
+    "insSystem exempt لا يُعفى في صفحة المسيّر عندنا (خطأ عندنا) + ترحيل الإضافي القديم": 1
+   },
+   "unexplained": 1,
+   "rowCases": {
+    "32": 6000,
+    "33": 4659,
+    "34": 4659,
+    "36": 4659,
+    "37": 4659,
+    "41": 4659,
+    "42": 240
+   },
+   "rowDiffs": {
+    "32": 339,
+    "34": 238,
+    "37": 1524,
+    "41": 419,
+    "42": 239
+   },
+   "samples": [
+    {
+     "input": {
+      "id": "100",
+      "insSystem": "expat",
+      "employer": "أريبا للاستشارات",
+      "jobTitle": "مطور برمجيات",
+      "wpsType": "tamheer",
+      "empType": "active",
+      "prev": {
+       "overtime": 1400
+      }
+     },
+     "bad": {
+      "otAmount": {
+       "theirs": 1400,
+       "ours": 0
+      },
+      "costY": {
+       "theirs": 0,
+       "ours": 32197.5
+      },
+      "eos": {
+       "theirs": 0,
+       "ours": 32197.5
+      },
+      "totalDue": {
+       "theirs": 65795,
+       "ours": 64395
+      },
+      "net": {
+       "theirs": 65795,
+       "ours": 64395
+      },
+      "netSAR": {
+       "theirs": 65795,
+       "ours": 64395
+      }
+     },
+     "cause": "noEos + ترحيل الإضافي القديم"
+    },
+    {
+     "input": {
+      "id": "108",
+      "insSystem": "old",
+      "employer": "أريبا للاستشارات",
+      "jobTitle": "متدرب",
+      "wpsType": "wps",
+      "empType": "active"
+     },
+     "bad": {
+      "costY": {
+       "theirs": 0,
+       "ours": 20857.5
+      },
+      "eos": {
+       "theirs": 0,
+       "ours": 20857.5
+      }
+     },
+     "cause": "noEos"
+    },
+    {
+     "input": {
+      "id": "109",
+      "insSystem": "expat",
+      "employer": "مشروع الرياض",
+      "jobTitle": "استشاري أول",
+      "wpsType": "trainee",
+      "empType": "active"
+     },
+     "bad": {
+      "costY": {
+       "theirs": 0,
+       "ours": 34360
+      },
+      "eos": {
+       "theirs": 0,
+       "ours": 34360
+      }
+     },
+     "cause": "noEos"
+    },
+    {
+     "input": {
+      "id": "118",
+      "insSystem": "old",
+      "employer": "تدريب",
+      "jobTitle": "متدرب",
+      "wpsType": "wps",
+      "empType": "active",
+      "prev": {
+       "overtime": 650
+      }
+     },
+     "bad": {
+      "otAmount": {
+       "theirs": 650,
+       "ours": 0
+      },
+      "totalDue": {
+       "theirs": 25500,
+       "ours": 24850
+      },
+      "net": {
+       "theirs": 25500,
+       "ours": 24850
+      },
+      "netSAR": {
+       "theirs": 25500,
+       "ours": 24850
+      }
+     },
+     "cause": "ترحيل الإضافي القديم + G"
+    },
+    {
+     "input": {
+      "id": "119",
+      "insSystem": "expat",
+      "employer": "أريبا للاستشارات",
+      "jobTitle": "محاسب",
+      "wpsType": "no_wps",
+      "empType": "active",
+      "prev": {
+       "overtime": 1100
+      }
+     },
+     "bad": {
+      "otAmount": {
+       "theirs": 1100,
+       "ours": 0
+      },
+      "costY": {
+       "theirs": 0,
+       "ours": 85650
+      },
+      "eos": {
+       "theirs": 0,
+       "ours": 85650
+      },
+      "totalDue": {
+       "theirs": 32412.903225806447,
+       "ours": 31312.903225806447
+      },
+      "net": {
+       "theirs": 32412.903225806447,
+       "ours": 31312.903225806447
+      },
+      "netSAR": {
+       "theirs": 32412.903225806447,
+       "ours": 31312.903225806447
+      }
+     },
+     "cause": "noEos + ترحيل الإضافي القديم + G"
+    },
+    {
+     "input": {
+      "e": {
+       "nameAr": "عبدالله العتيبي",
+       "empType": "consultant_external"
+      }
+     },
+     "bad": {
+      "member": {
+       "theirs": false,
+       "ours": true
+      }
+     },
+     "cause": "consultant_external"
+    },
+    {
+     "input": {
+      "id": "123",
+      "insSystem": "expat",
+      "employer": "وزارة الطاقة",
+      "jobTitle": "سكرتير",
+      "wpsType": "wps",
+      "empType": "training"
+     },
+     "bad": {
+      "insEr": {
+       "theirs": 271.25,
+       "ours": 271.26
+      },
+      "insBase": {
+       "theirs": 13562.5,
+       "ours": 13563
+      }
+     },
+     "cause": "G"
+    },
+    {
+     "input": {
+      "month": "2025-01"
+     },
+     "bad": {
+      "overtime": {
+       "theirs": 3800,
+       "ours": 650
+      },
+      "totalDue": {
+       "theirs": 683130.9032258064,
+       "ours": 679980.9032258064
+      },
+      "insBase": {
+       "theirs": 103562.5,
+       "ours": 103563
+      },
+      "insEr": {
+       "theirs": 2071.25,
+       "ours": 2071.26
+      },
+      "net": {
+       "theirs": 683130.9032258064,
+       "ours": 679980.9032258064
+      },
+      "netSAR": {
+       "theirs": 955793.2532258064,
+       "ours": 952643.2532258064
+      }
+     },
+     "cause": "يتبع فروق الصفوف"
+    },
+    {
+     "input": {
+      "e": {
+       "nameAr": "فاطمة العتيبي",
+       "empType": "consultant_external"
+      }
+     },
+     "bad": {
+      "member": {
+       "theirs": false,
+       "ours": true
+      }
+     },
+     "cause": "consultant_external"
+    },
+    {
+     "input": {
+      "id": "111",
+      "insSystem": "expat",
+      "employer": "وزارة الطاقة",
+      "jobTitle": "مطور برمجيات",
+      "wpsType": "wps",
+      "empType": "consultant",
+      "prev": {
+       "overtime": 1900
+      }
+     },
+     "bad": {
+      "otAmount": {
+       "theirs": 1900,
+       "ours": 0
+      },
+      "totalDue": {
+       "theirs": 45475,
+       "ours": 43575
+      },
+      "net": {
+       "theirs": 45475,
+       "ours": 43575
+      },
+      "netSAR": {
+       "theirs": 45475,
+       "ours": 43575
+      }
+     },
+     "cause": "ترحيل الإضافي القديم"
+    },
+    {
+     "input": {
+      "id": "113",
+      "insSystem": "old",
+      "employer": "مشروع الرياض",
+      "jobTitle": "محاسب",
+      "wpsType": "wps",
+      "empType": "active"
+     },
+     "bad": {
+      "insEmp": {
+       "theirs": 3504.375,
+       "ours": 3504.42
+      },
+      "insEr": {
+       "theirs": 4283.125,
+       "ours": 4283.18
+      },
+      "insBase": {
+       "theirs": 38937.5,
+       "ours": 38938
+      },
+      "totalDeduct": {
+       "theirs": 3504.375,
+       "ours": 3504.42
+      },
+      "net": {
+       "theirs": 38548.625,
+       "ours": 38548.58
+      },
+      "netSAR": {
+       "theirs": 38548.625,
+       "ours": 38548.58
+      }
+     },
+     "cause": "G"
+    },
+    {
+     "input": {
+      "month": "2026-05"
+     },
+     "bad": {
+      "overtime": {
+       "theirs": 3800,
+       "ours": 1900
+      },
+      "totalDue": {
+       "theirs": 482340,
+       "ours": 480440
+      },
+      "insEmp": {
+       "theirs": 3504.375,
+       "ours": 3504.42
+      },
+      "insBase": {
+       "theirs": 133312.5,
+       "ours": 133314
+      },
+      "insEr": {
+       "theirs": 6170.625,
+       "ours": 6170.700000000001
+      },
+      "totalDeduct": {
+       "theirs": 3504.375,
+       "ours": 3504.42
+      },
+      "net": {
+       "theirs": 478835.625,
+       "ours": 476935.58
+      },
+      "netSAR": {
+       "theirs": 780538.4299999999,
+       "ours": 778638.385
+      }
+     },
+     "cause": "يتبع فروق الصفوف"
+    },
+    {
+     "input": {
+      "id": "101",
+      "insSystem": "expat",
+      "employer": "مشروع الرياض",
+      "jobTitle": "سكرتير",
+      "wpsType": "wps",
+      "empType": "active",
+      "prev": {
+       "overtime": 550
+      }
+     },
+     "bad": {
+      "otAmount": {
+       "theirs": 550,
+       "ours": 0
+      },
+      "totalDue": {
+       "theirs": 20738,
+       "ours": 20188
+      },
+      "insEr": {
+       "theirs": 256.25,
+       "ours": 256.26
+      },
+      "insBase": {
+       "theirs": 12812.5,
+       "ours": 12813
+      },
+      "net": {
+       "theirs": 20738,
+       "ours": 20188
+      },
+      "netSAR": {
+       "theirs": 20738,
+       "ours": 20188
+      }
+     },
+     "cause": "ترحيل الإضافي القديم + G"
+    },
+    {
+     "input": {
+      "e": {
+       "nameAr": "البوصيري سارة القحطاني",
+       "empType": "training"
+      }
+     },
+     "bad": {
+      "member": {
+       "theirs": true,
+       "ours": false
+      }
+     },
+     "cause": "اسم البوصيري مكتوب في الكود"
+    },
+    {
+     "input": {
+      "id": "123",
+      "insSystem": "new",
+      "employer": "وزارة الطاقة",
+      "jobTitle": "سكرتير",
+      "wpsType": "wps",
+      "empType": "active"
+     },
+     "bad": {
+      "insStatus": {
+       "theirs": "يطابق",
+       "ours": "لا يطابق"
+      },
+      "insEmp": {
+       "theirs": 4500,
+       "ours": 4050
+      },
+      "insEr": {
+       "theirs": 5400,
+       "ours": 4950
+      },
+      "totalDeduct": {
+       "theirs": 4500,
+       "ours": 4050
+      },
+      "net": {
+       "theirs": 68260,
+       "ours": 68710
+      },
+      "netSAR": {
+       "theirs": 68260,
+       "ours": 68710
+      }
+     },
+     "cause": "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + G"
+    },
+    {
+     "input": {
+      "id": "124",
+      "insSystem": "new",
+      "employer": "هيئة السياحة",
+      "jobTitle": "محاسب",
+      "wpsType": "wps",
+      "empType": "active"
+     },
+     "bad": {
+      "insStatus": {
+       "theirs": "يطابق",
+       "ours": "لا يطابق"
+      },
+      "insEmp": {
+       "theirs": 1204.375,
+       "ours": 1099.8
+      },
+      "insEr": {
+       "theirs": 1439.375,
+       "ours": 1325.3999999999999
+      },
+      "insBase": {
+       "theirs": 11750,
+       "ours": 11280
+      },
+      "totalDeduct": {
+       "theirs": 1204.375,
+       "ours": 1099.8
+      },
+      "net": {
+       "theirs": 12065.625,
+       "ours": 12170.2
+      },
+      "netSAR": {
+       "theirs": 12065.625,
+       "ours": 12170.2
+      }
+     },
+     "cause": "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + G"
+    },
+    {
+     "input": {
+      "id": "102",
+      "insSystem": "new",
+      "employer": "وزارة الطاقة",
+      "jobTitle": "مدير مشروع",
+      "wpsType": "wps",
+      "empType": "active"
+     },
+     "bad": {
+      "insStatus": {
+       "theirs": "يطابق",
+       "ours": "لا يطابق"
+      },
+      "insEmp": {
+       "theirs": 2447.1875,
+       "ours": 2327.8125
+      },
+      "insEr": {
+       "theirs": 2924.6875,
+       "ours": 2805.3125
+      },
+      "totalDeduct": {
+       "theirs": 2447.1875,
+       "ours": 2327.8125
+      },
+      "net": {
+       "theirs": 23337.8125,
+       "ours": 23457.1875
+      },
+      "netSAR": {
+       "theirs": 23337.8125,
+       "ours": 23457.1875
+      }
+     },
+     "cause": "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا)"
+    },
+    {
+     "input": {
+      "e": {
+       "nameAr": "البوصيري أحمد الشهري",
+       "empType": "مهمة محددة"
+      }
+     },
+     "bad": {
+      "member": {
+       "theirs": true,
+       "ours": false
+      }
+     },
+     "cause": "اسم البوصيري مكتوب في الكود"
+    },
+    {
+     "input": {
+      "id": "124",
+      "insSystem": "expat",
+      "employer": "تدريب",
+      "jobTitle": "سكرتير",
+      "wpsType": "wps",
+      "empType": "active",
+      "prev": {
+       "overtime": 400
+      }
+     },
+     "bad": {
+      "otAmount": {
+       "theirs": 400,
+       "ours": 0
+      },
+      "totalDue": {
+       "theirs": 54600,
+       "ours": 54200
+      },
+      "net": {
+       "theirs": 54600,
+       "ours": 54200
+      },
+      "netSAR": {
+       "theirs": 205023,
+       "ours": 203521
+      }
+     },
+     "cause": "ترحيل الإضافي القديم"
+    },
+    {
+     "input": {
+      "id": "101",
+      "insSystem": "new",
+      "employer": "مشروع الرياض",
+      "jobTitle": "متدرب",
+      "wpsType": "wps",
+      "empType": "active",
+      "prev": {
+       "overtime": 350
+      }
+     },
+     "bad": {
+      "otAmount": {
+       "theirs": 350,
+       "ours": 0
+      },
+      "costY": {
+       "theirs": 0,
+       "ours": 15087
+      },
+      "eos": {
+       "theirs": 0,
+       "ours": 15087
+      },
+      "totalDue": {
+       "theirs": 10408,
+       "ours": 10058
+      },
+      "net": {
+       "theirs": 10408,
+       "ours": 10058
+      },
+      "netSAR": {
+       "theirs": 10408,
+       "ours": 10058
+      }
+     },
+     "cause": "noEos + ترحيل الإضافي القديم + G"
+    },
+    {
+     "input": {
+      "id": "123",
+      "insSystem": "exempt",
+      "employer": "هيئة السياحة",
+      "jobTitle": "مدير مشروع",
+      "wpsType": "wps",
+      "empType": "active"
+     },
+     "bad": {
+      "insStatus": {
+       "theirs": "غير خاضع",
+       "ours": "لا يطابق"
+      },
+      "insEmp": {
+       "theirs": 0,
+       "ours": 4387.5
+      },
+      "insEr": {
+       "theirs": 0,
+       "ours": 5287.5
+      },
+      "insBase": {
+       "theirs": 0,
+       "ours": 45000
+      },
+      "totalDeduct": {
+       "theirs": 0,
+       "ours": 4387.5
+      },
+      "net": {
+       "theirs": 74075,
+       "ours": 69687.5
+      },
+      "netSAR": {
+       "theirs": 74075,
+       "ours": 69687.5
+      }
+     },
+     "cause": "insSystem exempt لا يُعفى في صفحة المسيّر عندنا (خطأ عندنا)"
+    },
+    {
+     "input": {
+      "id": "119",
+      "insSystem": "expat",
+      "employer": "وزارة الطاقة",
+      "jobTitle": "مهندس مدني",
+      "wpsType": "wps",
+      "empType": "training",
+      "prev": {
+       "overtime": 200
+      }
+     },
+     "bad": {
+      "otAmount": {
+       "theirs": 200,
+       "ours": 0
+      },
+      "costY": {
+       "theirs": 0,
+       "ours": 77152.5
+      },
+      "eos": {
+       "theirs": 0,
+       "ours": 77152.5
+      },
+      "totalDue": {
+       "theirs": 51635,
+       "ours": 51435
+      },
+      "net": {
+       "theirs": 51635,
+       "ours": 51435
+      },
+      "netSAR": {
+       "theirs": 193889.425,
+       "ours": 193138.425
+      }
+     },
+     "cause": "noEos + ترحيل الإضافي القديم"
+    },
+    {
+     "input": {
+      "id": "111",
+      "insSystem": "new",
+      "employer": "مشروع الرياض",
+      "jobTitle": "مدير مشروع",
+      "wpsType": "wps",
+      "empType": "active",
+      "prev": {
+       "overtime": 1800
+      }
+     },
+     "bad": {
+      "insStatus": {
+       "theirs": "يطابق",
+       "ours": "لا يطابق"
+      },
+      "otAmount": {
+       "theirs": 1800,
+       "ours": 0
+      },
+      "totalDue": {
+       "theirs": 11453,
+       "ours": 9653
+      },
+      "insEmp": {
+       "theirs": 871.40625,
+       "ours": 871.455
+      },
+      "insEr": {
+       "theirs": 1050.15625,
+       "ours": 1050.215
+      },
+      "insBase": {
+       "theirs": 8937.5,
+       "ours": 8938
+      },
+      "totalDeduct": {
+       "theirs": 871.40625,
+       "ours": 871.455
+      },
+      "net": {
+       "theirs": 10581.59375,
+       "ours": 8781.545
+      },
+      "netSAR": {
+       "theirs": 10581.59375,
+       "ours": 8781.545
+      }
+     },
+     "cause": "insSystem new يقرأ gosi_system===\"matching\" عندنا (خطأ عندنا) + ترحيل الإضافي القديم + G"
+    },
+    {
+     "input": {
+      "id": "117",
+      "insSystem": "old",
+      "employer": "مشروع الرياض",
+      "jobTitle": "متدرب",
+      "wpsType": "wps",
+      "empType": "training"
+     },
+     "bad": {
+      "costM": {
+       "theirs": 0,
+       "ours": 26468.75
+      },
+      "costD": {
+       "theirs": 0,
+       "ours": 1844.7916666666665
+      },
+      "eos": {
+       "theirs": 0,
+       "ours": 28313.541666666668
+      },
+      "eosAmt": {
+       "theirs": 0,
+       "ours": 28313.541666666668
+      },
+      "totalDue": {
+       "theirs": 65948.01612903226,
+       "ours": 94261.55779569893
+      },
+      "net": {
+       "theirs": 65948.01612903226,
+       "ours": 94261.55779569893
+      },
+      "netSAR": {
+       "theirs": 65948.01612903226,
+       "ours": 94261.55779569893
+      }
+     },
+     "cause": "noEos + G"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "id": "eos",
+   "title": "صفحة نهاية الخدمة حسب المادة + المدة",
+   "rows": [
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    75,
+    76
+   ],
+   "cases": 4787,
+   "diffCases": 365,
+   "fields": {
+    "v": 365
+   },
+   "causes": {
+    "A الاستقالة 5 سنوات بالضبط": 6,
+    "D م.87": 300,
+    "C م.77 للعقد المحدد": 59
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "67": 303,
+    "68": 909,
+    "69": 606,
+    "70": 303,
+    "71": 303,
+    "72": 60,
+    "73": 303,
+    "76": 2000
+   },
+   "rowDiffs": {
+    "69": 6,
+    "70": 300,
+    "72": 59
+   },
+   "samples": [
+    {
+     "input": {
+      "law": "m85",
+      "yrs": 5,
+      "sal": 5000,
+      "hou": 1250
+     },
+     "bad": {
+      "v": {
+       "theirs": 10416.67,
+       "ours": 5208.33
+      }
+     },
+     "cause": "A الاستقالة 5 سنوات بالضبط"
+    },
+    {
+     "input": {
+      "law": "m85",
+      "yrs": 5,
+      "sal": 12000,
+      "hou": 3000
+     },
+     "bad": {
+      "v": {
+       "theirs": 25000,
+       "ours": 12500
+      }
+     },
+     "cause": "A الاستقالة 5 سنوات بالضبط"
+    },
+    {
+     "input": {
+      "law": "m87",
+      "yrs": 0.25,
+      "sal": 5000,
+      "hou": 1250
+     },
+     "bad": {
+      "v": {
+       "theirs": 0,
+       "ours": 781.25
+      }
+     },
+     "cause": "D م.87"
+    },
+    {
+     "input": {
+      "law": "m87",
+      "yrs": 0.25,
+      "sal": 12000,
+      "hou": 3000
+     },
+     "bad": {
+      "v": {
+       "theirs": 0,
+       "ours": 1875
+      }
+     },
+     "cause": "D م.87"
+    },
+    {
+     "input": {
+      "law": "m77",
+      "yrs": 1,
+      "left": 3
+     },
+     "bad": {
+      "v": {
+       "theirs": 31250,
+       "ours": 43750
+      }
+     },
+     "cause": "C م.77 للعقد المحدد"
+    },
+    {
+     "input": {
+      "law": "m77",
+      "yrs": 2,
+      "left": 3
+     },
+     "bad": {
+      "v": {
+       "theirs": 37500,
+       "ours": 50000
+      }
+     },
+     "cause": "C م.77 للعقد المحدد"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "id": "settle",
+   "title": "المخالصة sRun",
+   "rows": [
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91
+   ],
+   "cases": 19868,
+   "diffCases": 3445,
+   "fields": {
+    "ef": 2532,
+    "total": 2762,
+    "ldue": 998,
+    "lrem": 631,
+    "lcomp": 631,
+    "lexc": 425,
+    "lded": 425
+   },
+   "causes": {
+    "D م.87": 1832,
+    "الكسور (Math.trunc)": 913,
+    "C م.77 المحدد": 557,
+    "C م.77 المحدد + الكسور (Math.trunc)": 40,
+    "D م.87 + الكسور (Math.trunc)": 103
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "78": 19868,
+    "79": 19868,
+    "80": 7960,
+    "81": 4012,
+    "82": 1935,
+    "83": 1975,
+    "84": 3986,
+    "85": 18812,
+    "86": 18812,
+    "87": 19868,
+    "88": 18812,
+    "89": 19868,
+    "90": 18812,
+    "91": 2112
+   },
+   "rowDiffs": {
+    "82": 1935,
+    "83": 597,
+    "90": 1971,
+    "91": 1056
+   },
+   "samples": [
+    {
+     "input": {
+      "start": "2012-01-16",
+      "end": "2016-07-26",
+      "sal": 56150,
+      "reason": "m87",
+      "leaveD": 30,
+      "taken": 24,
+      "wd": 0,
+      "ad": 0,
+      "extras": [],
+      "deds": [],
+      "fixedLeft": null
+     },
+     "bad": {
+      "ef": {
+       "theirs": 0,
+       "ours": 127195.35
+      },
+      "total": {
+       "theirs": 265626.93,
+       "ours": 392822.28
+      }
+     },
+     "cause": "D م.87"
+    },
+    {
+     "input": {
+      "start": "2005-08-17",
+      "end": "2016-05-09",
+      "sal": 11250,
+      "reason": "m85",
+      "leaveD": 30.5,
+      "taken": 91.5,
+      "wd": 29,
+      "ad": 0,
+      "extras": [],
+      "deds": [],
+      "fixedLeft": null
+     },
+     "bad": {
+      "ldue": {
+       "theirs": 327.28,
+       "ours": 321.92
+      },
+      "lrem": {
+       "theirs": 235.78,
+       "ours": 230.92
+      },
+      "lcomp": {
+       "theirs": 88417.5,
+       "ours": 86595
+      },
+      "total": {
+       "theirs": 192261.25,
+       "ours": 190438.75
+      }
+     },
+     "cause": "الكسور (Math.trunc)"
+    },
+    {
+     "input": {
+      "start": "2020-10-29",
+      "end": "2025-12-24",
+      "sal": 47500,
+      "reason": "m87",
+      "leaveD": 21,
+      "taken": 90,
+      "wd": 0,
+      "ad": 28,
+      "extras": [],
+      "deds": [
+       {
+        "v": 7,
+        "t": "amount"
+       }
+      ],
+      "fixedLeft": null
+     },
+     "bad": {
+      "ef": {
+       "theirs": 0,
+       "ours": 126138.89
+      },
+      "total": {
+       "theirs": 76420.5,
+       "ours": 202559.39
+      }
+     },
+     "cause": "D م.87"
+    },
+    {
+     "input": {
+      "start": "2021-10-28",
+      "end": "2021-10-28",
+      "sal": 47700,
+      "reason": "m53",
+      "leaveD": 30.5,
+      "taken": 96.5,
+      "wd": 0,
+      "ad": 5,
+      "extras": [
+       {
+        "v": 3200
+       }
+      ],
+      "deds": [],
+      "fixedLeft": null
+     },
+     "bad": {
+      "lexc": {
+       "theirs": 96.42,
+       "ours": 95.92
+      },
+      "lded": {
+       "theirs": 153307.8,
+       "ours": 152512.8
+      }
+     },
+     "cause": "الكسور (Math.trunc)"
+    },
+    {
+     "input": {
+      "start": "2005-12-07",
+      "end": "2006-06-12",
+      "sal": 50650,
+      "reason": "m77",
+      "leaveD": 25,
+      "taken": 72,
+      "wd": 0,
+      "ad": 0,
+      "extras": [],
+      "deds": [
+       {
+        "v": 5,
+        "t": "days"
+       }
+      ],
+      "fixedLeft": 30
+     },
+     "bad": {
+      "ef": {
+       "theirs": 114384.58,
+       "ours": 1532584.58
+      },
+      "total": {
+       "theirs": 56846.18,
+       "ours": 1475046.18
+      }
+     },
+     "cause": "C م.77 المحدد"
+    },
+    {
+     "input": {
+      "start": "2005-08-05",
+      "end": "2026-03-22",
+      "sal": 38050,
+      "reason": "m77",
+      "leaveD": 25,
+      "taken": 69,
+      "wd": 30,
+      "ad": 0,
+      "extras": [
+       {
+        "v": 200
+       }
+      ],
+      "deds": [],
+      "fixedLeft": 29
+     },
+     "bad": {
+      "ef": {
+       "theirs": 1082522.33,
+       "ours": 1793423.33
+      },
+      "total": {
+       "theirs": 1687501.71,
+       "ours": 2398402.71
+      }
+     },
+     "cause": "C م.77 المحدد"
+    },
+    {
+     "input": {
+      "start": "2016-12-03",
+      "end": "2020-01-11",
+      "sal": 46250,
+      "reason": "m77",
+      "leaveD": 21.5,
+      "taken": 23.5,
+      "wd": 31,
+      "ad": 17,
+      "extras": [],
+      "deds": [
+       {
+        "v": 9,
+        "t": "days"
+       }
+      ],
+      "fixedLeft": 7
+     },
+     "bad": {
+      "ef": {
+       "theirs": 164380.21,
+       "ours": 395630.21
+      },
+      "ldue": {
+       "theirs": 66.83,
+       "ours": 65.28
+      },
+      "lrem": {
+       "theirs": 43.33,
+       "ours": 42.28
+      },
+      "lcomp": {
+       "theirs": 66800.42,
+       "ours": 65181.67
+      },
+      "total": {
+       "theirs": 243116.11,
+       "ours": 472747.36
+      }
+     },
+     "cause": "C م.77 المحدد + الكسور (Math.trunc)"
+    },
+    {
+     "input": {
+      "start": "2006-06-28",
+      "end": "2024-10-02",
+      "sal": 47450,
+      "reason": "m77",
+      "leaveD": 21.5,
+      "taken": 24.5,
+      "wd": 0,
+      "ad": 0,
+      "extras": [],
+      "deds": [
+       {
+        "v": 6,
+        "t": "days"
+       }
+      ],
+      "fixedLeft": 19
+     },
+     "bad": {
+      "ef": {
+       "theirs": 1181307.53,
+       "ours": 1649546.53
+      },
+      "ldue": {
+       "theirs": 392.67,
+       "ours": 383.54
+      },
+      "lrem": {
+       "theirs": 368.17,
+       "ours": 359.54
+      },
+      "lcomp": {
+       "theirs": 582322.22,
+       "ours": 568672.43
+      },
+      "total": {
+       "theirs": 1801589.75,
+       "ours": 2256178.96
+      }
+     },
+     "cause": "C م.77 المحدد + الكسور (Math.trunc)"
+    },
+    {
+     "input": {
+      "start": "2013-10-12",
+      "end": "2021-03-24",
+      "sal": 13650,
+      "reason": "m87",
+      "leaveD": 30.5,
+      "taken": 137.5,
+      "wd": 0,
+      "ad": 0,
+      "extras": [
+       {
+        "v": 750
+       }
+      ],
+      "deds": [],
+      "fixedLeft": null
+     },
+     "bad": {
+      "ef": {
+       "theirs": 0,
+       "ours": 67605.42
+      },
+      "ldue": {
+       "theirs": 227.31,
+       "ours": 223.58
+      },
+      "lrem": {
+       "theirs": 89.81,
+       "ours": 86.58
+      },
+      "lcomp": {
+       "theirs": 40863.55,
+       "ours": 39393.9
+      },
+      "total": {
+       "theirs": 55263.55,
+       "ours": 121399.32
+      }
+     },
+     "cause": "D م.87 + الكسور (Math.trunc)"
+    },
+    {
+     "input": {
+      "start": "2008-01-23",
+      "end": "2017-08-11",
+      "sal": 48250,
+      "reason": "m87",
+      "leaveD": 30.5,
+      "taken": 114.5,
+      "wd": 28,
+      "ad": 29,
+      "extras": [],
+      "deds": [
+       {
+        "v": 10,
+        "t": "days"
+       }
+      ],
+      "fixedLeft": null
+     },
+     "bad": {
+      "ef": {
+       "theirs": 0,
+       "ours": 340430.56
+      },
+      "ldue": {
+       "theirs": 291.44,
+       "ours": 286.67
+      },
+      "lrem": {
+       "theirs": 176.94,
+       "ours": 172.67
+      },
+      "lcomp": {
+       "theirs": 284578.5,
+       "ours": 277710.92
+      },
+      "total": {
+       "theirs": 317319.57,
+       "ours": 650882.55
+      }
+     },
+     "cause": "D م.87 + الكسور (Math.trunc)"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "id": "rates",
+   "title": "جدول نسب التأمينات حسب الشهر (2024–2030)",
+   "rows": [
+    45,
+    46,
+    47,
+    48
+   ],
+   "cases": 84,
+   "diffCases": 72,
+   "fields": {
+    "matchEmp": 60,
+    "matchEmp55": 60,
+    "matchEr": 60,
+    "matchEr55": 60,
+    "noMatchEmp": 66,
+    "noMatchEmp55": 66,
+    "noMatchEr": 66,
+    "noMatchEr55": 66,
+    "nonSaudiEr": 24
+   },
+   "causes": {
+    "لا فترة قبل 2026 عندنا (صفر)": 24,
+    "الجدول التلقائي عندهم": 48
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "45": 60,
+    "46": 24,
+    "47": 60,
+    "48": 84
+   },
+   "rowDiffs": {
+    "45": 48,
+    "46": 24
+   },
+   "samples": [
+    {
+     "input": {
+      "date": "2024-01-15"
+     },
+     "bad": {
+      "matchEmp": {
+       "theirs": 9.75,
+       "ours": 0
+      },
+      "matchEmp55": {
+       "theirs": 9.5,
+       "ours": 0
+      },
+      "matchEr": {
+       "theirs": 11.75,
+       "ours": 0
+      },
+      "matchEr55": {
+       "theirs": 11.5,
+       "ours": 0
+      },
+      "noMatchEmp": {
+       "theirs": 9.75,
+       "ours": 0
+      },
+      "noMatchEmp55": {
+       "theirs": 9,
+       "ours": 0
+      },
+      "noMatchEr": {
+       "theirs": 11.75,
+       "ours": 0
+      },
+      "noMatchEr55": {
+       "theirs": 11,
+       "ours": 0
+      },
+      "nonSaudiEr": {
+       "theirs": 2,
+       "ours": 0
+      }
+     },
+     "cause": "لا فترة قبل 2026 عندنا (صفر)"
+    },
+    {
+     "input": {
+      "date": "2024-02-15"
+     },
+     "bad": {
+      "matchEmp": {
+       "theirs": 9.75,
+       "ours": 0
+      },
+      "matchEmp55": {
+       "theirs": 9.5,
+       "ours": 0
+      },
+      "matchEr": {
+       "theirs": 11.75,
+       "ours": 0
+      },
+      "matchEr55": {
+       "theirs": 11.5,
+       "ours": 0
+      },
+      "noMatchEmp": {
+       "theirs": 9.75,
+       "ours": 0
+      },
+      "noMatchEmp55": {
+       "theirs": 9,
+       "ours": 0
+      },
+      "noMatchEr": {
+       "theirs": 11.75,
+       "ours": 0
+      },
+      "noMatchEr55": {
+       "theirs": 11,
+       "ours": 0
+      },
+      "nonSaudiEr": {
+       "theirs": 2,
+       "ours": 0
+      }
+     },
+     "cause": "لا فترة قبل 2026 عندنا (صفر)"
+    },
+    {
+     "input": {
+      "date": "2026-01-15"
+     },
+     "bad": {
+      "matchEmp": {
+       "theirs": 10.25,
+       "ours": 10.75
+      },
+      "matchEmp55": {
+       "theirs": 10,
+       "ours": 10.5
+      },
+      "matchEr": {
+       "theirs": 12.25,
+       "ours": 12.75
+      },
+      "matchEr55": {
+       "theirs": 12,
+       "ours": 12.5
+      }
+     },
+     "cause": "الجدول التلقائي عندهم"
+    },
+    {
+     "input": {
+      "date": "2026-02-15"
+     },
+     "bad": {
+      "matchEmp": {
+       "theirs": 10.25,
+       "ours": 10.75
+      },
+      "matchEmp55": {
+       "theirs": 10,
+       "ours": 10.5
+      },
+      "matchEr": {
+       "theirs": 12.25,
+       "ours": 12.75
+      },
+      "matchEr55": {
+       "theirs": 12,
+       "ours": 12.5
+      }
+     },
+     "cause": "الجدول التلقائي عندهم"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "id": "figures",
+   "title": "أرقام الموظف المحفوظة (الإجمالي، التأمينات 31/31، الصافي)",
+   "rows": [
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    57,
+    58
+   ],
+   "cases": 3000,
+   "diffCases": 1048,
+   "fields": {
+    "gosi_employee": 468,
+    "gosi_employer": 1048,
+    "net": 468
+   },
+   "causes": {
+    "جدول النسب": 954,
+    "تقريب الهللة (Decimal عندنا، Math.round عندهم)": 2,
+    "الإعفاء بالقسم/جهة العمل (نحن نمرّرها، نموذجهم لا)": 92
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "54": 3000,
+    "57": 3000,
+    "58": 3000
+   },
+   "rowDiffs": {
+    "54": 1048,
+    "58": 468
+   },
+   "samples": [
+    {
+     "input": {
+      "on": "2025-03-15",
+      "insSystem": "old",
+      "wpsType": "wps",
+      "jobTitle": "مدير مشروع",
+      "department": "تقنية المعلومات",
+      "employer": "مشروع الرياض",
+      "empType": "active"
+     },
+     "bad": {
+      "gosi_employee": {
+       "theirs": 4050,
+       "ours": 0
+      },
+      "gosi_employer": {
+       "theirs": 4950,
+       "ours": 0
+      },
+      "net": {
+       "theirs": 53393,
+       "ours": 57443
+      }
+     },
+     "cause": "جدول النسب"
+    },
+    {
+     "input": {
+      "on": "2025-03-15",
+      "insSystem": "expat",
+      "wpsType": "wps",
+      "jobTitle": "أخصائي موارد بشرية",
+      "department": "تدريب",
+      "employer": "مشروع الرياض",
+      "empType": "training"
+     },
+     "bad": {
+      "gosi_employer": {
+       "theirs": 900,
+       "ours": 0
+      }
+     },
+     "cause": "جدول النسب"
+    },
+    {
+     "input": {
+      "on": "2026-10-18",
+      "insSystem": "old",
+      "wpsType": "wps",
+      "jobTitle": "محاسب",
+      "department": "الموارد البشرية",
+      "employer": "مشروع الرياض",
+      "empType": "training"
+     },
+     "bad": {
+      "gosi_employer": {
+       "theirs": 1167.71,
+       "ours": 1167.72
+      }
+     },
+     "cause": "تقريب الهللة (Decimal عندنا، Math.round عندهم)"
+    },
+    {
+     "input": {
+      "on": "2026-10-18",
+      "insSystem": "expat",
+      "wpsType": "wps",
+      "jobTitle": "مهندس مدني",
+      "department": "المالية",
+      "employer": "برنامج تمهير",
+      "empType": "active"
+     },
+     "bad": {
+      "gosi_employer": {
+       "theirs": 425.6,
+       "ours": 0
+      }
+     },
+     "cause": "الإعفاء بالقسم/جهة العمل (نحن نمرّرها، نموذجهم لا)"
+    },
+    {
+     "input": {
+      "on": "2026-10-18",
+      "insSystem": "old",
+      "wpsType": "wps",
+      "jobTitle": "أخصائي موارد بشرية",
+      "department": "تدريب",
+      "employer": "أريبا للاستشارات",
+      "empType": "active"
+     },
+     "bad": {
+      "gosi_employee": {
+       "theirs": 4050,
+       "ours": 0
+      },
+      "gosi_employer": {
+       "theirs": 4950,
+       "ours": 0
+      },
+      "net": {
+       "theirs": 64075,
+       "ours": 68125
+      }
+     },
+     "cause": "الإعفاء بالقسم/جهة العمل (نحن نمرّرها، نموذجهم لا)"
+    },
+    {
+     "input": {
+      "on": "2026-10-18",
+      "insSystem": "old",
+      "wpsType": "wps",
+      "jobTitle": "مطور برمجيات",
+      "department": "المالية",
+      "employer": "هيئة السياحة",
+      "empType": "training"
+     },
+     "bad": {
+      "gosi_employer": {
+       "theirs": 1702.57,
+       "ours": 1702.58
+      }
+     },
+     "cause": "تقريب الهللة (Decimal عندنا، Math.round عندهم)"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "id": "leave_calendar",
+   "title": "محرك الإجازات — طريقة تقويمية (افتراضيهم)",
+   "rows": [
+    98,
+    101,
+    102,
+    103,
+    104,
+    105,
+    107,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114
+   ],
+   "cases": 300,
+   "diffCases": 300,
+   "fields": {
+    "current": 296,
+    "acc_eos": 263,
+    "cum_accrued": 295,
+    "app_current": 296,
+    "summary_current": 295,
+    "year_end": 86,
+    "app_year_end": 79,
+    "cum_used": 144,
+    "used_through": 143,
+    "carry": 19
+   },
+   "causes": {
+    "طريقة الاستحقاق + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 24,
+    "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 48,
+    "طريقة الاستحقاق": 3,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 24,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 44,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 25,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 10,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 6,
+    "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 3,
+    "طريقة الاستحقاق + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 20,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 4,
+    "طريقة الاستحقاق + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 7,
+    "طريقة الاستحقاق + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 6,
+    "طريقة الاستحقاق + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 6,
+    "طريقة الاستحقاق + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 3,
+    "طريقة الاستحقاق + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 2,
+    "طريقة الاستحقاق + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 10,
+    "طريقة الاستحقاق + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 6,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 6,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "طريقة الاستحقاق + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 3,
+    "طريقة الاستحقاق + leaveUsed<سنة> + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "طريقة الاستحقاق + leaveUsed<سنة> + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 7,
+    "طريقة الاستحقاق + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 4,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "طريقة الاستحقاق + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 4,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 2,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 2,
+    "طريقة الاستحقاق + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "طريقة الاستحقاق + leaveUsed<سنة> + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "44": 300,
+    "98": 300,
+    "101": 300,
+    "103": 265,
+    "105": 265,
+    "107": 265,
+    "110": 300,
+    "111": 35
+   },
+   "rowDiffs": {
+    "44": 143,
+    "98": 300,
+    "101": 19,
+    "103": 144,
+    "105": 144,
+    "107": 144,
+    "110": 263
+   },
+   "samples": [
+    {
+     "input": {
+      "id": "5000",
+      "clean": true,
+      "join": "2024-01-24",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 18.742465753424657,
+       "ours": 18.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 30.68032786885246,
+       "ours": 30.588932806324113
+      },
+      "cum_accrued": {
+       "theirs": 57.42279362227711,
+       "ours": 57.12436587719026
+      },
+      "app_current": {
+       "theirs": 18.742465753424657,
+       "ours": 18.535433070866144
+      },
+      "summary_current": {
+       "theirs": 18.742465753424657,
+       "ours": 18.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5001",
+      "clean": true,
+      "join": "2026-06-27",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 9.36986301369863,
+       "ours": 9.448818897637794
+      },
+      "year_end": {
+       "theirs": 15.452054794520548,
+       "ours": 15.826771653543306
+      },
+      "cum_accrued": {
+       "theirs": 9.36986301369863,
+       "ours": 9.448818897637794
+      },
+      "app_current": {
+       "theirs": 9.36986301369863,
+       "ours": 9.448818897637794
+      },
+      "app_year_end": {
+       "theirs": 15.452054794520548,
+       "ours": 15.826771653543306
+      },
+      "summary_current": {
+       "theirs": 9.36986301369863,
+       "ours": 9.45
+      }
+     },
+     "cause": "طريقة الاستحقاق + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5002",
+      "clean": true,
+      "join": "2020-04-25",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 19.742465753424657,
+       "ours": 19.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 104.40163934426229,
+       "ours": 48
+      },
+      "cum_accrued": {
+       "theirs": 136.14410509768695,
+       "ours": 135.93773192144084
+      },
+      "app_current": {
+       "theirs": 19.742465753424657,
+       "ours": 19.535433070866144
+      },
+      "summary_current": {
+       "theirs": 19.742465753424657,
+       "ours": 19.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5003",
+      "clean": true,
+      "join": "2021-09-05",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 72.78904109589041,
+       "ours": 46
+      },
+      "cum_accrued": {
+       "theirs": 107.53150684931506,
+       "ours": 107.37264237319174
+      },
+      "app_current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "summary_current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5004",
+      "clean": true,
+      "join": "2026-12-25",
+      "terminated": false
+     },
+     "bad": {
+      "year_end": {
+       "theirs": 0.4794520547945206,
+       "ours": 0.4921259842519685
+      },
+      "app_year_end": {
+       "theirs": 0.4794520547945206,
+       "ours": 0.4921259842519685
+      }
+     },
+     "cause": "طريقة الاستحقاق"
+    },
+    {
+     "input": {
+      "id": "5035",
+      "clean": false,
+      "join": "2022-05-05",
+      "overrides": {
+       "2022": {
+        "entitlement": 30
+       },
+       "2025": {
+        "entitlement": 30,
+        "eos": 1
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 28,
+       "ours": 58
+      },
+      "cum_accrued": {
+       "theirs": 118.74246575342465,
+       "ours": 118.53543307086615
+      },
+      "cum_used": {
+       "theirs": 38,
+       "ours": 4
+      },
+      "used_through": {
+       "theirs": 38,
+       "ours": 4
+      },
+      "app_current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "summary_current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5036",
+      "clean": false,
+      "join": "2021-12-17",
+      "overrides": {
+       "2021": {
+        "entitlement": 30,
+        "eos": 16
+       },
+       "2024": {
+        "used": 6,
+        "entitlement": 30,
+        "yearEnd": 11,
+        "asOf": "2024-09-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 33.917808219178085,
+       "ours": 33.62204724409449
+      },
+      "acc_eos": {
+       "theirs": 115,
+       "ours": 31
+      },
+      "cum_accrued": {
+       "theirs": 173.91780821917808,
+       "ours": 173.6220472440945
+      },
+      "cum_used": {
+       "theirs": 21,
+       "ours": 9
+      },
+      "used_through": {
+       "theirs": 21,
+       "ours": 9
+      },
+      "app_current": {
+       "theirs": 33.917808219178085,
+       "ours": 33.62204724409449
+      },
+      "summary_current": {
+       "theirs": 33.917808219178085,
+       "ours": 33.62
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5037",
+      "clean": false,
+      "join": "2015-08-28",
+      "overrides": {
+       "2015": {
+        "used": 4,
+        "entitlement": 30,
+        "yearEnd": 19
+       },
+       "2019": {
+        "used": 3,
+        "yearEnd": 33
+       },
+       "2022": {
+        "carry": 6,
+        "eos": 7,
+        "asOf": "2022-09-01"
+       },
+       "2026": {
+        "yearEnd": 18
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 33.917808219178085,
+       "ours": 33.62204724409449
+      },
+      "year_end": {
+       "theirs": 40,
+       "ours": 18
+      },
+      "acc_eos": {
+       "theirs": 269,
+       "ours": 77
+      },
+      "cum_accrued": {
+       "theirs": 353.9178082191781,
+       "ours": 353.62204724409446
+      },
+      "app_current": {
+       "theirs": 33.917808219178085,
+       "ours": 33.62204724409449
+      },
+      "summary_current": {
+       "theirs": 33.917808219178085,
+       "ours": 33.62
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5039",
+      "clean": false,
+      "join": "2018-11-01",
+      "overrides": {
+       "2026": {
+        "used": 25,
+        "carry": 4
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 121.5095890410959,
+       "ours": 43
+      },
+      "cum_accrued": {
+       "theirs": 167.25205479452055,
+       "ours": 167.02191955735262
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5040",
+      "clean": false,
+      "join": "2022-06-15",
+      "overrides": {
+       "2023": {
+        "used": 9,
+        "eos": 5
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 29.931506849315067,
+       "ours": 29.68503937007874
+      },
+      "acc_eos": {
+       "theirs": 54.6986301369863,
+       "ours": 49
+      },
+      "cum_accrued": {
+       "theirs": 108.63013698630138,
+       "ours": 108.39160307664245
+      },
+      "cum_used": {
+       "theirs": 13,
+       "ours": 16
+      },
+      "used_through": {
+       "theirs": 13,
+       "ours": 16
+      },
+      "app_current": {
+       "theirs": 29.931506849315067,
+       "ours": 29.68503937007874
+      },
+      "summary_current": {
+       "theirs": 29.931506849315067,
+       "ours": 29.69
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5041",
+      "clean": false,
+      "join": "2017-09-24",
+      "overrides": {
+       "2018": {
+        "used": 1,
+        "entitlement": 25,
+        "carry": 4
+       },
+       "2020": {
+        "carryNext": 6
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 12.742465753424657,
+       "ours": 12.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 138,
+       "ours": 44
+      },
+      "cum_accrued": {
+       "theirs": 194.43835616438355,
+       "ours": 194.27004845548151
+      },
+      "cum_used": {
+       "theirs": 38,
+       "ours": 24
+      },
+      "used_through": {
+       "theirs": 38,
+       "ours": 24
+      },
+      "app_current": {
+       "theirs": 12.742465753424657,
+       "ours": 12.535433070866144
+      },
+      "summary_current": {
+       "theirs": 12.742465753424657,
+       "ours": 12.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5042",
+      "clean": false,
+      "join": "2016-10-28",
+      "overrides": {
+       "2019": {
+        "entitlement": 25,
+        "yearEnd": 8,
+        "carryNext": 0,
+        "asOf": "2019-11-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 133.72950819672133,
+       "ours": 48
+      },
+      "cum_accrued": {
+       "theirs": 213.47197395014598,
+       "ours": 213.18408171951478
+      },
+      "cum_used": {
+       "theirs": 41,
+       "ours": 25
+      },
+      "used_through": {
+       "theirs": 41,
+       "ours": 25
+      },
+      "app_current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "summary_current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5043",
+      "clean": false,
+      "join": "2023-07-10",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 28.742465753424657,
+       "ours": 28.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 37.06849315068493,
+       "ours": 27.096153846153847
+      },
+      "cum_accrued": {
+       "theirs": 68.81095890410958,
+       "ours": 68.63158691701999
+      },
+      "app_current": {
+       "theirs": 28.742465753424657,
+       "ours": 28.535433070866144
+      },
+      "summary_current": {
+       "theirs": 28.742465753424657,
+       "ours": 28.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5044",
+      "clean": false,
+      "join": "2018-02-22",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 23.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "year_end": {
+       "theirs": 28,
+       "ours": 31
+      },
+      "acc_eos": {
+       "theirs": 140.0082191780822,
+       "ours": 41
+      },
+      "cum_accrued": {
+       "theirs": 181.75068493150684,
+       "ours": 181.45435198978504
+      },
+      "cum_used": {
+       "theirs": 18,
+       "ours": 12
+      },
+      "used_through": {
+       "theirs": 18,
+       "ours": 12
+      },
+      "app_current": {
+       "theirs": 23.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "app_year_end": {
+       "theirs": 28,
+       "ours": 31
+      },
+      "summary_current": {
+       "theirs": 23.742465753424657,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5045",
+      "clean": false,
+      "join": "2022-07-17",
+      "overrides": {
+       "2024": {
+        "used": 14,
+        "entitlement": 21,
+        "yearEnd": 26
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 33.917808219178085,
+       "ours": 33.62204724409449
+      },
+      "acc_eos": {
+       "theirs": 70.8082191780822,
+       "ours": 46
+      },
+      "cum_accrued": {
+       "theirs": 118.72602739726028,
+       "ours": 118.52166114370839
+      },
+      "app_current": {
+       "theirs": 33.917808219178085,
+       "ours": 33.62204724409449
+      },
+      "summary_current": {
+       "theirs": 33.917808219178085,
+       "ours": 33.62
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5046",
+      "clean": false,
+      "join": "2021-10-15",
+      "overrides": {
+       "2021": {
+        "carry": 7
+       },
+       "2022": {
+        "used": 17,
+        "entitlement": 30,
+        "asOf": "2022-02-01"
+       },
+       "2023": {
+        "used": 17,
+        "yearEnd": 13,
+        "carryNext": 12,
+        "asOf": "2023-07-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 7.9178082191780845,
+       "ours": 23.62204724409449
+      },
+      "year_end": {
+       "theirs": 14,
+       "ours": 30
+      },
+      "acc_eos": {
+       "theirs": 70,
+       "ours": 45
+      },
+      "cum_accrued": {
+       "theirs": 150.32876712328766,
+       "ours": 150.0173960813038
+      },
+      "cum_used": {
+       "theirs": 84,
+       "ours": 68
+      },
+      "used_through": {
+       "theirs": 84,
+       "ours": 68
+      },
+      "app_current": {
+       "theirs": 7.9178082191780845,
+       "ours": 23.62204724409449
+      },
+      "app_year_end": {
+       "theirs": 14,
+       "ours": 30
+      },
+      "summary_current": {
+       "theirs": 7.9178082191780845,
+       "ours": 23.62
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5049",
+      "clean": false,
+      "join": "2025-09-03",
+      "overrides": {
+       "2026": {
+        "used": 19,
+        "yearEnd": 23,
+        "carryNext": 14,
+        "current": 1,
+        "currentAsOf": "2026-06-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 7.997260273972602,
+       "ours": 1
+      },
+      "year_end": {
+       "theirs": 6.904109589041095,
+       "ours": 23
+      },
+      "carry": {
+       "theirs": 6.904109589041095,
+       "ours": 7.055335968379446
+      },
+      "cum_accrued": {
+       "theirs": 23.646575342465752,
+       "ours": 23.59076903924559
+      },
+      "app_current": {
+       "theirs": 7.997260273972602,
+       "ours": 1
+      },
+      "app_year_end": {
+       "theirs": 6.904109589041095,
+       "ours": 7.055335968379445
+      },
+      "summary_current": {
+       "theirs": 7.997260273972602,
+       "ours": 1
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5052",
+      "clean": false,
+      "join": "2021-12-18",
+      "overrides": {
+       "2026": {
+        "yearEnd": 23,
+        "carryNext": 1
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "year_end": {
+       "theirs": 31,
+       "ours": 23
+      },
+      "acc_eos": {
+       "theirs": 74.8054794520548,
+       "ours": 53
+      },
+      "cum_accrued": {
+       "theirs": 101.54794520547945,
+       "ours": 101.34938655923824
+      },
+      "app_current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "summary_current": {
+       "theirs": 26.742465753424657,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5057",
+      "clean": false,
+      "join": "2017-03-11",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 24.931506849315067,
+       "ours": 24.68503937007874
+      },
+      "acc_eos": {
+       "theirs": 176.27397260273972,
+       "ours": 70
+      },
+      "cum_accrued": {
+       "theirs": 240.2054794520548,
+       "ours": 239.9735009085403
+      },
+      "cum_used": {
+       "theirs": 39,
+       "ours": 29
+      },
+      "used_through": {
+       "theirs": 39,
+       "ours": 29
+      },
+      "app_current": {
+       "theirs": 24.931506849315067,
+       "ours": 24.68503937007874
+      },
+      "summary_current": {
+       "theirs": 24.931506849315067,
+       "ours": 24.69
+      }
+     },
+     "cause": "طريقة الاستحقاق + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5058",
+      "clean": false,
+      "join": "2023-09-09",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 31.742465753424657,
+       "ours": 31.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 38.55890410958904,
+       "ours": 32
+      },
+      "cum_accrued": {
+       "theirs": 65.30136986301369,
+       "ours": 65.07774076317384
+      },
+      "app_current": {
+       "theirs": 31.742465753424657,
+       "ours": 31.535433070866144
+      },
+      "summary_current": {
+       "theirs": 31.742465753424657,
+       "ours": 31.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5060",
+      "clean": false,
+      "join": "2025-11-02",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 10.194520547945203,
+       "ours": 7.187606983909621
+      },
+      "year_end": {
+       "theirs": 14.45205479452055,
+       "ours": 11.652173913043477
+      },
+      "carry": {
+       "theirs": 3.4520547945205475,
+       "ours": 3.652173913043478
+      },
+      "cum_accrued": {
+       "theirs": 20.194520547945203,
+       "ours": 20.18760698390962
+      },
+      "cum_used": {
+       "theirs": 10,
+       "ours": 13
+      },
+      "used_through": {
+       "theirs": 10,
+       "ours": 13
+      },
+      "app_current": {
+       "theirs": 10.194520547945203,
+       "ours": 7.187606983909621
+      },
+      "app_year_end": {
+       "theirs": 14.45205479452055,
+       "ours": 11.652173913043477
+      },
+      "summary_current": {
+       "theirs": 10.194520547945203,
+       "ours": 7.19
+      }
+     },
+     "cause": "طريقة الاستحقاق + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5061",
+      "clean": false,
+      "join": "2018-07-04",
+      "terminated": true
+     },
+     "bad": {
+      "current": {
+       "theirs": 10.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "year_end": {
+       "theirs": 15,
+       "ours": 31
+      },
+      "acc_eos": {
+       "theirs": 121.41369863013699,
+       "ours": 42
+      },
+      "cum_accrued": {
+       "theirs": 174.15616438356165,
+       "ours": 173.91381144924452
+      },
+      "cum_used": {
+       "theirs": 42,
+       "ours": 21
+      },
+      "used_through": {
+       "theirs": 26,
+       "ours": 21
+      },
+      "app_current": {
+       "theirs": 10.742465753424657,
+       "ours": 26.535433070866144
+      },
+      "app_year_end": {
+       "theirs": 15,
+       "ours": 31
+      },
+      "summary_current": {
+       "theirs": 10.742465753424657,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5066",
+      "clean": false,
+      "join": "2023-06-21",
+      "overrides": {
+       "2024": {
+        "used": 14
+       }
+      },
+      "terminated": true
+     },
+     "bad": {
+      "current": {
+       "theirs": 25.742465753424657,
+       "ours": 25.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 29.161643835616438,
+       "ours": 19.146153846153844
+      },
+      "cum_accrued": {
+       "theirs": 69.9041095890411,
+       "ours": 69.68158691701998
+      },
+      "app_current": {
+       "theirs": 25.742465753424657,
+       "ours": 25.535433070866144
+      },
+      "summary_current": {
+       "theirs": 25.742465753424657,
+       "ours": 25.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5068",
+      "clean": false,
+      "join": "2018-01-20",
+      "overrides": {
+       "2020": {
+        "used": 9
+       },
+       "2023": {
+        "used": 22,
+        "yearEnd": 7,
+        "carryNext": 1
+       },
+       "2026": {
+        "entitlement": 30,
+        "yearEnd": 2
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 17.742465753424657,
+       "ours": 17.535433070866144
+      },
+      "year_end": {
+       "theirs": 22,
+       "ours": 2
+      },
+      "acc_eos": {
+       "theirs": 108.90684931506848,
+       "ours": 23
+      },
+      "cum_accrued": {
+       "theirs": 183.64931506849314,
+       "ours": 183.400297935731
+      },
+      "app_current": {
+       "theirs": 17.742465753424657,
+       "ours": 17.535433070866144
+      },
+      "app_year_end": {
+       "theirs": 22,
+       "ours": 31
+      },
+      "summary_current": {
+       "theirs": 17.742465753424657,
+       "ours": 17.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    }
+   ],
+   "notes": [
+    "موظفون بدون أرقام مستوردة أو مرضية أو تعديلات (35): 35 فيهم فرق — الحقول: {\"current\":34,\"acc_eos\":33,\"cum_accrued\":34,\"app_current\":34,\"summary_current\":34,\"year_end\":2,\"app_year_end\":2}"
+   ]
+  },
+  {
+   "id": "leave_monthly",
+   "title": "محرك الإجازات — طريقة شهرية",
+   "rows": [
+    98,
+    101,
+    102,
+    103,
+    104,
+    105,
+    107,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114
+   ],
+   "cases": 300,
+   "diffCases": 300,
+   "fields": {
+    "current": 296,
+    "acc_eos": 262,
+    "cum_accrued": 296,
+    "app_current": 296,
+    "summary_current": 296,
+    "year_end": 86,
+    "app_year_end": 79,
+    "cum_used": 144,
+    "used_through": 143,
+    "carry": 18
+   },
+   "causes": {
+    "طريقة الاستحقاق + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 24,
+    "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 48,
+    "طريقة الاستحقاق": 3,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 24,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 44,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 25,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 10,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 6,
+    "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 3,
+    "طريقة الاستحقاق + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 20,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 4,
+    "طريقة الاستحقاق + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 7,
+    "طريقة الاستحقاق + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 6,
+    "طريقة الاستحقاق + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 6,
+    "طريقة الاستحقاق + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 3,
+    "طريقة الاستحقاق + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 2,
+    "طريقة الاستحقاق + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 10,
+    "طريقة الاستحقاق + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 6,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 6,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "طريقة الاستحقاق + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 3,
+    "طريقة الاستحقاق + leaveUsed<سنة> + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "طريقة الاستحقاق + leaveUsed<سنة> + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 7,
+    "طريقة الاستحقاق + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 4,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "طريقة الاستحقاق + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 4,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 2,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 2,
+    "طريقة الاستحقاق + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "طريقة الاستحقاق + leaveUsed<سنة> + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "44": 300,
+    "98": 300,
+    "101": 300,
+    "103": 265,
+    "105": 265,
+    "107": 265,
+    "110": 300,
+    "111": 35
+   },
+   "rowDiffs": {
+    "44": 143,
+    "98": 300,
+    "101": 18,
+    "103": 144,
+    "105": 144,
+    "107": 144,
+    "110": 262
+   },
+   "samples": [
+    {
+     "input": {
+      "id": "5000",
+      "clean": true,
+      "join": "2024-01-24",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 18.766129032258064,
+       "ours": 18.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 30.701612903225808,
+       "ours": 30.588932806324113
+      },
+      "cum_accrued": {
+       "theirs": 57.46774193548387,
+       "ours": 57.12436587719026
+      },
+      "app_current": {
+       "theirs": 18.766129032258064,
+       "ours": 18.535433070866144
+      },
+      "summary_current": {
+       "theirs": 18.766129032258064,
+       "ours": 18.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5001",
+      "clean": true,
+      "join": "2026-06-27",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 9.28494623655914,
+       "ours": 9.448818897637794
+      },
+      "year_end": {
+       "theirs": 15.333333333333332,
+       "ours": 15.826771653543306
+      },
+      "cum_accrued": {
+       "theirs": 9.28494623655914,
+       "ours": 9.448818897637794
+      },
+      "app_current": {
+       "theirs": 9.28494623655914,
+       "ours": 9.448818897637794
+      },
+      "app_year_end": {
+       "theirs": 15.333333333333332,
+       "ours": 15.826771653543306
+      },
+      "summary_current": {
+       "theirs": 9.28494623655914,
+       "ours": 9.45
+      }
+     },
+     "cause": "طريقة الاستحقاق + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5002",
+      "clean": true,
+      "join": "2020-04-25",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 19.766129032258064,
+       "ours": 19.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 104.35,
+       "ours": 48
+      },
+      "cum_accrued": {
+       "theirs": 136.11612903225807,
+       "ours": 135.93773192144084
+      },
+      "app_current": {
+       "theirs": 19.766129032258064,
+       "ours": 19.535433070866144
+      },
+      "summary_current": {
+       "theirs": 19.766129032258064,
+       "ours": 19.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5003",
+      "clean": true,
+      "join": "2021-09-05",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 72.76666666666667,
+       "ours": 46
+      },
+      "cum_accrued": {
+       "theirs": 107.53279569892473,
+       "ours": 107.37264237319174
+      },
+      "app_current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "summary_current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5004",
+      "clean": true,
+      "join": "2026-12-25",
+      "terminated": false
+     },
+     "bad": {
+      "year_end": {
+       "theirs": 0.47043010752688175,
+       "ours": 0.4921259842519685
+      },
+      "app_year_end": {
+       "theirs": 0.47043010752688175,
+       "ours": 0.4921259842519685
+      }
+     },
+     "cause": "طريقة الاستحقاق"
+    },
+    {
+     "input": {
+      "id": "5035",
+      "clean": false,
+      "join": "2022-05-05",
+      "overrides": {
+       "2022": {
+        "entitlement": 30
+       },
+       "2025": {
+        "entitlement": 30,
+        "eos": 1
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 28,
+       "ours": 58
+      },
+      "cum_accrued": {
+       "theirs": 118.76612903225806,
+       "ours": 118.53543307086615
+      },
+      "cum_used": {
+       "theirs": 38,
+       "ours": 4
+      },
+      "used_through": {
+       "theirs": 38,
+       "ours": 4
+      },
+      "app_current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "summary_current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5036",
+      "clean": false,
+      "join": "2021-12-17",
+      "overrides": {
+       "2021": {
+        "entitlement": 30,
+        "eos": 16
+       },
+       "2024": {
+        "used": 6,
+        "entitlement": 30,
+        "yearEnd": 11,
+        "asOf": "2024-09-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 33.95161290322581,
+       "ours": 33.62204724409449
+      },
+      "acc_eos": {
+       "theirs": 115,
+       "ours": 31
+      },
+      "cum_accrued": {
+       "theirs": 173.9516129032258,
+       "ours": 173.6220472440945
+      },
+      "cum_used": {
+       "theirs": 21,
+       "ours": 9
+      },
+      "used_through": {
+       "theirs": 21,
+       "ours": 9
+      },
+      "app_current": {
+       "theirs": 33.95161290322581,
+       "ours": 33.62204724409449
+      },
+      "summary_current": {
+       "theirs": 33.95161290322581,
+       "ours": 33.62
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5037",
+      "clean": false,
+      "join": "2015-08-28",
+      "overrides": {
+       "2015": {
+        "used": 4,
+        "entitlement": 30,
+        "yearEnd": 19
+       },
+       "2019": {
+        "used": 3,
+        "yearEnd": 33
+       },
+       "2022": {
+        "carry": 6,
+        "eos": 7,
+        "asOf": "2022-09-01"
+       },
+       "2026": {
+        "yearEnd": 18
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 33.95161290322581,
+       "ours": 33.62204724409449
+      },
+      "year_end": {
+       "theirs": 40,
+       "ours": 18
+      },
+      "acc_eos": {
+       "theirs": 269,
+       "ours": 77
+      },
+      "cum_accrued": {
+       "theirs": 353.9516129032258,
+       "ours": 353.62204724409446
+      },
+      "app_current": {
+       "theirs": 33.95161290322581,
+       "ours": 33.62204724409449
+      },
+      "summary_current": {
+       "theirs": 33.95161290322581,
+       "ours": 33.62
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5039",
+      "clean": false,
+      "join": "2018-11-01",
+      "overrides": {
+       "2026": {
+        "used": 25,
+        "carry": 4
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 121.5,
+       "ours": 43
+      },
+      "cum_accrued": {
+       "theirs": 167.26612903225805,
+       "ours": 167.02191955735262
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5040",
+      "clean": false,
+      "join": "2022-06-15",
+      "overrides": {
+       "2023": {
+        "used": 9,
+        "eos": 5
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 29.95967741935484,
+       "ours": 29.68503937007874
+      },
+      "acc_eos": {
+       "theirs": 54.611111111111114,
+       "ours": 49
+      },
+      "cum_accrued": {
+       "theirs": 108.57078853046596,
+       "ours": 108.39160307664245
+      },
+      "cum_used": {
+       "theirs": 13,
+       "ours": 16
+      },
+      "used_through": {
+       "theirs": 13,
+       "ours": 16
+      },
+      "app_current": {
+       "theirs": 29.95967741935484,
+       "ours": 29.68503937007874
+      },
+      "summary_current": {
+       "theirs": 29.95967741935484,
+       "ours": 29.69
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5041",
+      "clean": false,
+      "join": "2017-09-24",
+      "overrides": {
+       "2018": {
+        "used": 1,
+        "entitlement": 25,
+        "carry": 4
+       },
+       "2020": {
+        "carryNext": 6
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 12.766129032258064,
+       "ours": 12.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 138,
+       "ours": 44
+      },
+      "cum_accrued": {
+       "theirs": 194.4244623655914,
+       "ours": 194.27004845548151
+      },
+      "cum_used": {
+       "theirs": 38,
+       "ours": 24
+      },
+      "used_through": {
+       "theirs": 38,
+       "ours": 24
+      },
+      "app_current": {
+       "theirs": 12.766129032258064,
+       "ours": 12.535433070866144
+      },
+      "summary_current": {
+       "theirs": 12.766129032258064,
+       "ours": 12.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5042",
+      "clean": false,
+      "join": "2016-10-28",
+      "overrides": {
+       "2019": {
+        "entitlement": 25,
+        "yearEnd": 8,
+        "carryNext": 0,
+        "asOf": "2019-11-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 133.7258064516129,
+       "ours": 48
+      },
+      "cum_accrued": {
+       "theirs": 213.49193548387098,
+       "ours": 213.18408171951478
+      },
+      "cum_used": {
+       "theirs": 41,
+       "ours": 25
+      },
+      "used_through": {
+       "theirs": 41,
+       "ours": 25
+      },
+      "app_current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "summary_current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5043",
+      "clean": false,
+      "join": "2023-07-10",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 28.766129032258064,
+       "ours": 28.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 36.99193548387097,
+       "ours": 27.096153846153847
+      },
+      "cum_accrued": {
+       "theirs": 68.75806451612902,
+       "ours": 68.63158691701999
+      },
+      "app_current": {
+       "theirs": 28.766129032258064,
+       "ours": 28.535433070866144
+      },
+      "summary_current": {
+       "theirs": 28.766129032258064,
+       "ours": 28.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5044",
+      "clean": false,
+      "join": "2018-02-22",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 23.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "year_end": {
+       "theirs": 28,
+       "ours": 31
+      },
+      "acc_eos": {
+       "theirs": 139.9375,
+       "ours": 41
+      },
+      "cum_accrued": {
+       "theirs": 181.70362903225805,
+       "ours": 181.45435198978504
+      },
+      "cum_used": {
+       "theirs": 18,
+       "ours": 12
+      },
+      "used_through": {
+       "theirs": 18,
+       "ours": 12
+      },
+      "app_current": {
+       "theirs": 23.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "app_year_end": {
+       "theirs": 28,
+       "ours": 31
+      },
+      "summary_current": {
+       "theirs": 23.766129032258064,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5045",
+      "clean": false,
+      "join": "2022-07-17",
+      "overrides": {
+       "2024": {
+        "used": 14,
+        "entitlement": 21,
+        "yearEnd": 26
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 33.95161290322581,
+       "ours": 33.62204724409449
+      },
+      "acc_eos": {
+       "theirs": 70.70967741935485,
+       "ours": 46
+      },
+      "cum_accrued": {
+       "theirs": 118.66129032258065,
+       "ours": 118.52166114370839
+      },
+      "app_current": {
+       "theirs": 33.95161290322581,
+       "ours": 33.62204724409449
+      },
+      "summary_current": {
+       "theirs": 33.95161290322581,
+       "ours": 33.62
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5046",
+      "clean": false,
+      "join": "2021-10-15",
+      "overrides": {
+       "2021": {
+        "carry": 7
+       },
+       "2022": {
+        "used": 17,
+        "entitlement": 30,
+        "asOf": "2022-02-01"
+       },
+       "2023": {
+        "used": 17,
+        "yearEnd": 13,
+        "carryNext": 12,
+        "asOf": "2023-07-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 7.951612903225808,
+       "ours": 23.62204724409449
+      },
+      "year_end": {
+       "theirs": 14,
+       "ours": 30
+      },
+      "acc_eos": {
+       "theirs": 70,
+       "ours": 45
+      },
+      "cum_accrued": {
+       "theirs": 150.32258064516128,
+       "ours": 150.0173960813038
+      },
+      "cum_used": {
+       "theirs": 84,
+       "ours": 68
+      },
+      "used_through": {
+       "theirs": 84,
+       "ours": 68
+      },
+      "app_current": {
+       "theirs": 7.951612903225808,
+       "ours": 23.62204724409449
+      },
+      "app_year_end": {
+       "theirs": 14,
+       "ours": 30
+      },
+      "summary_current": {
+       "theirs": 7.951612903225808,
+       "ours": 23.62
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5049",
+      "clean": false,
+      "join": "2025-09-03",
+      "overrides": {
+       "2026": {
+        "used": 19,
+        "yearEnd": 23,
+        "carryNext": 14,
+        "current": 1,
+        "currentAsOf": "2026-06-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 7.9577956989247305,
+       "ours": 1
+      },
+      "year_end": {
+       "theirs": 6.883333333333333,
+       "ours": 23
+      },
+      "carry": {
+       "theirs": 6.883333333333334,
+       "ours": 7.055335968379446
+      },
+      "cum_accrued": {
+       "theirs": 23.649462365591397,
+       "ours": 23.59076903924559
+      },
+      "app_current": {
+       "theirs": 7.9577956989247305,
+       "ours": 1
+      },
+      "app_year_end": {
+       "theirs": 6.883333333333333,
+       "ours": 7.055335968379445
+      },
+      "summary_current": {
+       "theirs": 7.9577956989247305,
+       "ours": 1
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5052",
+      "clean": false,
+      "join": "2021-12-18",
+      "overrides": {
+       "2026": {
+        "yearEnd": 23,
+        "carryNext": 1
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "year_end": {
+       "theirs": 31,
+       "ours": 23
+      },
+      "acc_eos": {
+       "theirs": 74.79032258064515,
+       "ours": 53
+      },
+      "cum_accrued": {
+       "theirs": 101.55645161290322,
+       "ours": 101.34938655923824
+      },
+      "app_current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "summary_current": {
+       "theirs": 26.766129032258064,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5057",
+      "clean": false,
+      "join": "2017-03-11",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 24.95967741935484,
+       "ours": 24.68503937007874
+      },
+      "acc_eos": {
+       "theirs": 176.16129032258064,
+       "ours": 70
+      },
+      "cum_accrued": {
+       "theirs": 240.1209677419355,
+       "ours": 239.9735009085403
+      },
+      "cum_used": {
+       "theirs": 39,
+       "ours": 29
+      },
+      "used_through": {
+       "theirs": 39,
+       "ours": 29
+      },
+      "app_current": {
+       "theirs": 24.95967741935484,
+       "ours": 24.68503937007874
+      },
+      "summary_current": {
+       "theirs": 24.95967741935484,
+       "ours": 24.69
+      }
+     },
+     "cause": "طريقة الاستحقاق + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5058",
+      "clean": false,
+      "join": "2023-09-09",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 31.766129032258064,
+       "ours": 31.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 38.53333333333333,
+       "ours": 32
+      },
+      "cum_accrued": {
+       "theirs": 65.2994623655914,
+       "ours": 65.07774076317384
+      },
+      "app_current": {
+       "theirs": 31.766129032258064,
+       "ours": 31.535433070866144
+      },
+      "summary_current": {
+       "theirs": 31.766129032258064,
+       "ours": 31.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5060",
+      "clean": false,
+      "join": "2025-11-02",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 10.20779569892473,
+       "ours": 7.187606983909621
+      },
+      "year_end": {
+       "theirs": 14.441666666666666,
+       "ours": 11.652173913043477
+      },
+      "carry": {
+       "theirs": 3.441666666666667,
+       "ours": 3.652173913043478
+      },
+      "cum_accrued": {
+       "theirs": 20.20779569892473,
+       "ours": 20.18760698390962
+      },
+      "cum_used": {
+       "theirs": 10,
+       "ours": 13
+      },
+      "used_through": {
+       "theirs": 10,
+       "ours": 13
+      },
+      "app_current": {
+       "theirs": 10.20779569892473,
+       "ours": 7.187606983909621
+      },
+      "app_year_end": {
+       "theirs": 14.441666666666666,
+       "ours": 11.652173913043477
+      },
+      "summary_current": {
+       "theirs": 10.20779569892473,
+       "ours": 7.19
+      }
+     },
+     "cause": "طريقة الاستحقاق + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5061",
+      "clean": false,
+      "join": "2018-07-04",
+      "terminated": true
+     },
+     "bad": {
+      "current": {
+       "theirs": 10.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "year_end": {
+       "theirs": 15,
+       "ours": 31
+      },
+      "acc_eos": {
+       "theirs": 121.33064516129032,
+       "ours": 42
+      },
+      "cum_accrued": {
+       "theirs": 174.09677419354836,
+       "ours": 173.91381144924452
+      },
+      "cum_used": {
+       "theirs": 42,
+       "ours": 21
+      },
+      "used_through": {
+       "theirs": 26,
+       "ours": 21
+      },
+      "app_current": {
+       "theirs": 10.766129032258064,
+       "ours": 26.535433070866144
+      },
+      "app_year_end": {
+       "theirs": 15,
+       "ours": 31
+      },
+      "summary_current": {
+       "theirs": 10.766129032258064,
+       "ours": 26.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5066",
+      "clean": false,
+      "join": "2023-06-21",
+      "overrides": {
+       "2024": {
+        "used": 14
+       }
+      },
+      "terminated": true
+     },
+     "bad": {
+      "current": {
+       "theirs": 25.766129032258064,
+       "ours": 25.535433070866144
+      },
+      "acc_eos": {
+       "theirs": 29.083333333333332,
+       "ours": 19.146153846153844
+      },
+      "cum_accrued": {
+       "theirs": 69.84946236559139,
+       "ours": 69.68158691701998
+      },
+      "app_current": {
+       "theirs": 25.766129032258064,
+       "ours": 25.535433070866144
+      },
+      "summary_current": {
+       "theirs": 25.766129032258064,
+       "ours": 25.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5068",
+      "clean": false,
+      "join": "2018-01-20",
+      "overrides": {
+       "2020": {
+        "used": 9
+       },
+       "2023": {
+        "used": 22,
+        "yearEnd": 7,
+        "carryNext": 1
+       },
+       "2026": {
+        "entitlement": 30,
+        "yearEnd": 2
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 17.766129032258064,
+       "ours": 17.535433070866144
+      },
+      "year_end": {
+       "theirs": 22,
+       "ours": 2
+      },
+      "acc_eos": {
+       "theirs": 108.9274193548387,
+       "ours": 23
+      },
+      "cum_accrued": {
+       "theirs": 183.69354838709677,
+       "ours": 183.400297935731
+      },
+      "app_current": {
+       "theirs": 17.766129032258064,
+       "ours": 17.535433070866144
+      },
+      "app_year_end": {
+       "theirs": 22,
+       "ours": 31
+      },
+      "summary_current": {
+       "theirs": 17.766129032258064,
+       "ours": 17.54
+      }
+     },
+     "cause": "طريقة الاستحقاق + الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    }
+   ],
+   "notes": [
+    "موظفون بدون أرقام مستوردة أو مرضية أو تعديلات (35): 35 فيهم فرق — الحقول: {\"current\":34,\"acc_eos\":33,\"cum_accrued\":33,\"app_current\":34,\"summary_current\":34,\"year_end\":2,\"app_year_end\":2}"
+   ]
+  },
+  {
+   "id": "leave_workdays",
+   "title": "محرك الإجازات — طريقة أيام عمل (= طريقتنا)",
+   "rows": [
+    98,
+    101,
+    102,
+    103,
+    104,
+    105,
+    107,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114
+   ],
+   "cases": 300,
+   "diffCases": 259,
+   "fields": {
+    "acc_eos": 237,
+    "app_current": 61,
+    "cum_used": 144,
+    "used_through": 143,
+    "year_end": 68,
+    "current": 59,
+    "app_year_end": 60,
+    "summary_current": 62,
+    "cum_accrued": 2,
+    "carry": 7
+   },
+   "causes": {
+    "الفائض من أول سنة بدون الحقل القديم": 48,
+    "الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم": 18,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم": 33,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم": 25,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم": 10,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية": 4,
+    "الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية": 3,
+    "leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 8,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 12,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 3,
+    "leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم": 13,
+    "استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 3,
+    "leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية": 7,
+    "رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم": 9,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية": 2,
+    "استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم": 4,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 6,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "استرجاع السنوية المقطوعة + التعديلات اليدوية": 3,
+    "leaveUsed<سنة> + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة": 2,
+    "استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة>": 1,
+    "leaveUsed<سنة> + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 6,
+    "leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية": 3,
+    "استرجاع السنوية المقطوعة": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 2,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية": 3,
+    "الأرقام المستوردة (yearEnd/current/carryNext)": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 2,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية": 2,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + التعديلات اليدوية": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)": 1,
+    "leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية": 1,
+    "leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "leaveUsed<سنة> + التعديلات اليدوية": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية": 1,
+    "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي": 1
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "44": 300,
+    "101": 300,
+    "102": 300,
+    "103": 265,
+    "104": 300,
+    "105": 265,
+    "107": 265,
+    "110": 300,
+    "111": 35,
+    "112": 300,
+    "113": 300,
+    "114": 300
+   },
+   "rowDiffs": {
+    "44": 143,
+    "101": 7,
+    "102": 68,
+    "103": 145,
+    "104": 59,
+    "105": 145,
+    "107": 145,
+    "110": 237,
+    "112": 61,
+    "113": 60,
+    "114": 62
+   },
+   "samples": [
+    {
+     "input": {
+      "id": "5002",
+      "clean": true,
+      "join": "2020-04-25",
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 104.40229885057471,
+       "ours": 48
+      }
+     },
+     "cause": "الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5003",
+      "clean": true,
+      "join": "2021-09-05",
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 72.83720930232559,
+       "ours": 46
+      }
+     },
+     "cause": "الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5005",
+      "clean": true,
+      "join": "2022-11-24",
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 78.01158301158301,
+       "ours": 68.01158301158301
+      },
+      "app_current": {
+       "theirs": 32.62204724409449,
+       "ours": 28.62204724409449
+      }
+     },
+     "cause": "الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5035",
+      "clean": false,
+      "join": "2022-05-05",
+      "overrides": {
+       "2022": {
+        "entitlement": 30
+       },
+       "2025": {
+        "entitlement": 30,
+        "eos": 1
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 28,
+       "ours": 58
+      },
+      "cum_used": {
+       "theirs": 38,
+       "ours": 4
+      },
+      "used_through": {
+       "theirs": 38,
+       "ours": 4
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5036",
+      "clean": false,
+      "join": "2021-12-17",
+      "overrides": {
+       "2021": {
+        "entitlement": 30,
+        "eos": 16
+       },
+       "2024": {
+        "used": 6,
+        "entitlement": 30,
+        "yearEnd": 11,
+        "asOf": "2024-09-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 115,
+       "ours": 31
+      },
+      "cum_used": {
+       "theirs": 21,
+       "ours": 9
+      },
+      "used_through": {
+       "theirs": 21,
+       "ours": 9
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5037",
+      "clean": false,
+      "join": "2015-08-28",
+      "overrides": {
+       "2015": {
+        "used": 4,
+        "entitlement": 30,
+        "yearEnd": 19
+       },
+       "2019": {
+        "used": 3,
+        "yearEnd": 33
+       },
+       "2022": {
+        "carry": 6,
+        "eos": 7,
+        "asOf": "2022-09-01"
+       },
+       "2026": {
+        "yearEnd": 18
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "year_end": {
+       "theirs": 40,
+       "ours": 18
+      },
+      "acc_eos": {
+       "theirs": 269,
+       "ours": 77
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5039",
+      "clean": false,
+      "join": "2018-11-01",
+      "overrides": {
+       "2026": {
+        "used": 25,
+        "carry": 4
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 121.48648648648648,
+       "ours": 43
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5040",
+      "clean": false,
+      "join": "2022-06-15",
+      "overrides": {
+       "2023": {
+        "used": 9,
+        "eos": 5
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 54.706563706563706,
+       "ours": 49
+      },
+      "cum_used": {
+       "theirs": 13,
+       "ours": 16
+      },
+      "used_through": {
+       "theirs": 13,
+       "ours": 16
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5041",
+      "clean": false,
+      "join": "2017-09-24",
+      "overrides": {
+       "2018": {
+        "used": 1,
+        "entitlement": 25,
+        "carry": 4
+       },
+       "2020": {
+        "carryNext": 6
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 138,
+       "ours": 44
+      },
+      "cum_used": {
+       "theirs": 38,
+       "ours": 24
+      },
+      "used_through": {
+       "theirs": 38,
+       "ours": 24
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5042",
+      "clean": false,
+      "join": "2016-10-28",
+      "overrides": {
+       "2019": {
+        "entitlement": 25,
+        "yearEnd": 8,
+        "carryNext": 0,
+        "asOf": "2019-11-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 133.64864864864865,
+       "ours": 48
+      },
+      "cum_used": {
+       "theirs": 41,
+       "ours": 25
+      },
+      "used_through": {
+       "theirs": 41,
+       "ours": 25
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5043",
+      "clean": false,
+      "join": "2023-07-10",
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 37.09615384615385,
+       "ours": 27.096153846153847
+      }
+     },
+     "cause": "الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5044",
+      "clean": false,
+      "join": "2018-02-22",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 23.535433070866144,
+       "ours": 26.535433070866144
+      },
+      "year_end": {
+       "theirs": 28,
+       "ours": 31
+      },
+      "acc_eos": {
+       "theirs": 139.9189189189189,
+       "ours": 41
+      },
+      "cum_used": {
+       "theirs": 18,
+       "ours": 12
+      },
+      "used_through": {
+       "theirs": 18,
+       "ours": 12
+      },
+      "app_current": {
+       "theirs": 23.535433070866144,
+       "ours": 26.535433070866144
+      },
+      "app_year_end": {
+       "theirs": 28,
+       "ours": 31
+      },
+      "summary_current": {
+       "theirs": 23.535433070866144,
+       "ours": 26.54
+      }
+     },
+     "cause": "leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5045",
+      "clean": false,
+      "join": "2022-07-17",
+      "overrides": {
+       "2024": {
+        "used": 14,
+        "entitlement": 21,
+        "yearEnd": 26
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 70.8996138996139,
+       "ours": 46
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5046",
+      "clean": false,
+      "join": "2021-10-15",
+      "overrides": {
+       "2021": {
+        "carry": 7
+       },
+       "2022": {
+        "used": 17,
+        "entitlement": 30,
+        "asOf": "2022-02-01"
+       },
+       "2023": {
+        "used": 17,
+        "yearEnd": 13,
+        "carryNext": 12,
+        "asOf": "2023-07-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 7.622047244094489,
+       "ours": 23.62204724409449
+      },
+      "year_end": {
+       "theirs": 14,
+       "ours": 30
+      },
+      "acc_eos": {
+       "theirs": 70,
+       "ours": 45
+      },
+      "cum_used": {
+       "theirs": 84,
+       "ours": 68
+      },
+      "used_through": {
+       "theirs": 84,
+       "ours": 68
+      },
+      "app_current": {
+       "theirs": 7.622047244094489,
+       "ours": 23.62204724409449
+      },
+      "app_year_end": {
+       "theirs": 14,
+       "ours": 30
+      },
+      "summary_current": {
+       "theirs": 7.622047244094489,
+       "ours": 23.62
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5049",
+      "clean": false,
+      "join": "2025-09-03",
+      "overrides": {
+       "2026": {
+        "used": 19,
+        "yearEnd": 23,
+        "carryNext": 14,
+        "current": 1,
+        "currentAsOf": "2026-06-01"
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 8.102362204724411,
+       "ours": 1
+      },
+      "year_end": {
+       "theirs": 7.055335968379445,
+       "ours": 23
+      },
+      "app_current": {
+       "theirs": 8.102362204724411,
+       "ours": 1
+      },
+      "summary_current": {
+       "theirs": 8.102362204724411,
+       "ours": 1
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5051",
+      "clean": false,
+      "join": "2018-03-06",
+      "overrides": {
+       "2025": {
+        "used": 1,
+        "carry": 3,
+        "carryNext": 2
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 162.65637065637065,
+       "ours": 46
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5057",
+      "clean": false,
+      "join": "2017-03-11",
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 176.28846153846155,
+       "ours": 70
+      },
+      "cum_used": {
+       "theirs": 39,
+       "ours": 29
+      },
+      "used_through": {
+       "theirs": 39,
+       "ours": 29
+      }
+     },
+     "cause": "leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5058",
+      "clean": false,
+      "join": "2023-09-09",
+      "terminated": false
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 38.54230769230769,
+       "ours": 32
+      }
+     },
+     "cause": "الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5060",
+      "clean": false,
+      "join": "2025-11-02",
+      "terminated": false
+     },
+     "bad": {
+      "current": {
+       "theirs": 10.187606983909621,
+       "ours": 7.187606983909621
+      },
+      "year_end": {
+       "theirs": 14.652173913043477,
+       "ours": 11.652173913043477
+      },
+      "cum_used": {
+       "theirs": 10,
+       "ours": 13
+      },
+      "used_through": {
+       "theirs": 10,
+       "ours": 13
+      },
+      "app_current": {
+       "theirs": 10.187606983909621,
+       "ours": 7.187606983909621
+      },
+      "app_year_end": {
+       "theirs": 14.652173913043477,
+       "ours": 11.652173913043477
+      },
+      "summary_current": {
+       "theirs": 10.187606983909621,
+       "ours": 7.19
+      }
+     },
+     "cause": "استرجاع السنوية المقطوعة + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5061",
+      "clean": false,
+      "join": "2018-07-04",
+      "terminated": true
+     },
+     "bad": {
+      "current": {
+       "theirs": 10.535433070866144,
+       "ours": 26.535433070866144
+      },
+      "year_end": {
+       "theirs": 15,
+       "ours": 31
+      },
+      "acc_eos": {
+       "theirs": 121.37837837837839,
+       "ours": 42
+      },
+      "cum_used": {
+       "theirs": 42,
+       "ours": 21
+      },
+      "used_through": {
+       "theirs": 26,
+       "ours": 21
+      },
+      "app_current": {
+       "theirs": 10.535433070866144,
+       "ours": 26.535433070866144
+      },
+      "app_year_end": {
+       "theirs": 15,
+       "ours": 31
+      },
+      "summary_current": {
+       "theirs": 10.535433070866144,
+       "ours": 26.54
+      }
+     },
+     "cause": "leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    },
+    {
+     "input": {
+      "id": "5068",
+      "clean": false,
+      "join": "2018-01-20",
+      "overrides": {
+       "2020": {
+        "used": 9
+       },
+       "2023": {
+        "used": 22,
+        "yearEnd": 7,
+        "carryNext": 1
+       },
+       "2026": {
+        "entitlement": 30,
+        "yearEnd": 2
+       }
+      },
+      "terminated": false
+     },
+     "bad": {
+      "year_end": {
+       "theirs": 22,
+       "ours": 2
+      },
+      "acc_eos": {
+       "theirs": 108.86486486486487,
+       "ours": 23
+      },
+      "app_year_end": {
+       "theirs": 22,
+       "ours": 31
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + الفائض من أول سنة بدون الحقل القديم + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5070",
+      "clean": false,
+      "join": "2025-01-21",
+      "terminated": false
+     },
+     "bad": {
+      "app_current": {
+       "theirs": 22.535433070866144,
+       "ours": 20.535433070866144
+      }
+     },
+     "cause": "رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة) + التعديلات اليدوية"
+    },
+    {
+     "input": {
+      "id": "5072",
+      "clean": false,
+      "join": "2018-06-16",
+      "terminated": true
+     },
+     "bad": {
+      "acc_eos": {
+       "theirs": 111.43243243243244,
+       "ours": 34
+      },
+      "cum_used": {
+       "theirs": 45,
+       "ours": 31
+      },
+      "used_through": {
+       "theirs": 30,
+       "ours": 15
+      }
+     },
+     "cause": "leaveUsed<سنة> + استرجاع السنوية المقطوعة + الفائض من أول سنة بدون الحقل القديم"
+    },
+    {
+     "input": {
+      "id": "5074",
+      "clean": false,
+      "join": "2021-05-21",
+      "overrides": {
+       "2021": {
+        "used": 24,
+        "yearEnd": 1,
+        "carryNext": 3,
+        "asOf": "2021-02-01"
+       }
+      },
+      "terminated": true
+     },
+     "bad": {
+      "current": {
+       "theirs": 24.535433070866144,
+       "ours": 26.535433070866144
+      },
+      "year_end": {
+       "theirs": 29,
+       "ours": 31
+      },
+      "acc_eos": {
+       "theirs": 61,
+       "ours": 45
+      },
+      "cum_used": {
+       "theirs": 42,
+       "ours": 32
+      },
+      "used_through": {
+       "theirs": 40,
+       "ours": 32
+      },
+      "app_current": {
+       "theirs": 24.535433070866144,
+       "ours": 26.535433070866144
+      },
+      "app_year_end": {
+       "theirs": 29,
+       "ours": 31
+      },
+      "summary_current": {
+       "theirs": 24.535433070866144,
+       "ours": 1
+      }
+     },
+     "cause": "الأرقام المستوردة (yearEnd/current/carryNext) + leaveUsed<سنة> + الفائض من أول سنة بدون الحقل القديم + تجميد رصيد المنتهي + رصيد التطبيق (الإجازة التي بدأت تُخصم كاملة)"
+    }
+   ],
+   "notes": [
+    "موظفون بدون أرقام مستوردة أو مرضية أو تعديلات (35): 26 فيهم فرق — الحقول: {\"acc_eos\":26,\"app_current\":1}"
+   ]
+  },
+  {
+   "id": "attendance",
+   "title": "تقارير الحضور (تجميع الجلسات وتصنيف الأيام والملخص)",
+   "rows": [
+    121,
+    122,
+    123,
+    124
+   ],
+   "cases": 6640,
+   "diffCases": 400,
+   "fields": {},
+   "causes": {
+    "جدول الدوام ورمضان غير موجود عندنا (🔵)": 400
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "121": 6215,
+    "122": 6215,
+    "123": 25,
+    "125": 400,
+    "126": 400
+   },
+   "rowDiffs": {
+    "125": 400,
+    "126": 400
+   },
+   "samples": [],
+   "notes": []
+  },
+  {
+   "id": "tafqeet",
+   "title": "التفقيط",
+   "rows": [
+    156
+   ],
+   "cases": 5032,
+   "diffCases": 0,
+   "fields": {},
+   "causes": {},
+   "unexplained": 0,
+   "rowCases": {
+    "156": 5032
+   },
+   "rowDiffs": {},
+   "samples": [],
+   "notes": []
+  },
+  {
+   "id": "alerts",
+   "title": "تنبيهات لوحة التحكم (V142) والأيام المتبقية",
+   "rows": [
+    147,
+    148,
+    61
+   ],
+   "cases": 3000,
+   "diffCases": 407,
+   "fields": {
+    "has": 407
+   },
+   "causes": {
+    "التأمين الطبي ليس في collectAlerts": 225,
+    "حدود V142 (60/90/60) مقابل 90": 177,
+    "تنبيه التجربة عندهم فقط": 5
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "61": 2400,
+    "147": 2400,
+    "148": 600
+   },
+   "rowDiffs": {
+    "147": 402,
+    "148": 5
+   },
+   "samples": [
+    {
+     "input": {
+      "id": "9001",
+      "kind": "insurance"
+     },
+     "bad": {
+      "has": {
+       "theirs": false,
+       "ours": true
+      }
+     },
+     "cause": "التأمين الطبي ليس في collectAlerts"
+    },
+    {
+     "input": {
+      "id": "9005",
+      "kind": "insurance"
+     },
+     "bad": {
+      "has": {
+       "theirs": false,
+       "ours": true
+      }
+     },
+     "cause": "التأمين الطبي ليس في collectAlerts"
+    },
+    {
+     "input": {
+      "id": "9006",
+      "kind": "contract"
+     },
+     "bad": {
+      "has": {
+       "theirs": true,
+       "ours": false
+      }
+     },
+     "cause": "حدود V142 (60/90/60) مقابل 90"
+    },
+    {
+     "input": {
+      "id": "9011",
+      "kind": "iqama"
+     },
+     "bad": {
+      "has": {
+       "theirs": false,
+       "ours": true
+      }
+     },
+     "cause": "حدود V142 (60/90/60) مقابل 90"
+    },
+    {
+     "input": {
+      "id": "9193",
+      "kind": "probation"
+     },
+     "bad": {
+      "has": {
+       "theirs": true,
+       "ours": false
+      }
+     },
+     "cause": "تنبيه التجربة عندهم فقط"
+    },
+    {
+     "input": {
+      "id": "9205",
+      "kind": "probation"
+     },
+     "bad": {
+      "has": {
+       "theirs": true,
+       "ours": false
+      }
+     },
+     "cause": "تنبيه التجربة عندهم فقط"
+    }
+   ],
+   "notes": []
+  },
+  {
+   "id": "salcalc",
+   "title": "حاسبة الراتب (4 أوضاع)",
+   "rows": [
+    163,
+    164,
+    165,
+    166,
+    167
+   ],
+   "cases": 4000,
+   "diffCases": 4000,
+   "fields": {},
+   "causes": {
+    "غير موجود عندنا (🔵)": 4000
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "163": 4000,
+    "164": 4000,
+    "165": 4000,
+    "166": 4000,
+    "167": 4000
+   },
+   "rowDiffs": {
+    "163": 4000,
+    "164": 4000,
+    "165": 4000,
+    "166": 4000,
+    "167": 4000
+   },
+   "samples": [],
+   "notes": []
+  },
+  {
+   "id": "tax",
+   "title": "ضريبة القيمة المضافة",
+   "rows": [
+    168,
+    169
+   ],
+   "cases": 1000,
+   "diffCases": 1000,
+   "fields": {},
+   "causes": {
+    "غير موجود عندنا (🔵)": 1000
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "168": 1000,
+    "169": 1000
+   },
+   "rowDiffs": {
+    "168": 1000,
+    "169": 1000
+   },
+   "samples": [],
+   "notes": []
+  },
+  {
+   "id": "assets",
+   "title": "إهلاك الأصول والجرد السنوي",
+   "rows": [
+    174,
+    175,
+    176
+   ],
+   "cases": 1500,
+   "diffCases": 1500,
+   "fields": {},
+   "causes": {
+    "غير موجود عندنا (🔵)": 1500
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "174": 1500,
+    "175": 1500,
+    "176": 1500
+   },
+   "rowDiffs": {
+    "174": 1500,
+    "175": 1500,
+    "176": 1500
+   },
+   "samples": [],
+   "notes": []
+  },
+  {
+   "id": "yearreport",
+   "title": "جرد الأصول السنوي (المجاميع)",
+   "rows": [
+    176
+   ],
+   "cases": 60,
+   "diffCases": 60,
+   "fields": {},
+   "causes": {
+    "غير موجود عندنا (🔵)": 60
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "176": 60
+   },
+   "rowDiffs": {
+    "176": 60
+   },
+   "samples": [],
+   "notes": []
+  },
+  {
+   "id": "wps",
+   "title": "فحص الآيبان والهوية",
+   "rows": [
+    172,
+    173
+   ],
+   "cases": 1000,
+   "diffCases": 1000,
+   "fields": {},
+   "causes": {
+    "غير موجود عندنا (🔵)": 1000
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "172": 1000,
+    "173": 1000
+   },
+   "rowDiffs": {
+    "172": 1000,
+    "173": 1000
+   },
+   "samples": [],
+   "notes": []
+  },
+  {
+   "id": "goals",
+   "title": "المستهدفات والتقييم (النسبة، التصنيف، مفتاح الفترة)",
+   "rows": [
+    177,
+    179,
+    180
+   ],
+   "cases": 1000,
+   "diffCases": 1000,
+   "fields": {},
+   "causes": {
+    "غير موجود عندنا (🔵)": 1000
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "177": 1000,
+    "179": 1000,
+    "180": 1000
+   },
+   "rowDiffs": {
+    "177": 1000,
+    "179": 1000,
+    "180": 1000
+   },
+   "samples": [],
+   "notes": []
+  },
+  {
+   "id": "egypt",
+   "title": "دولة مصر (التأمينات والضريبة والشهداء والإجازات والاستقالة)",
+   "rows": [
+    31,
+    56,
+    94,
+    120,
+    182,
+    183,
+    184,
+    185
+   ],
+   "cases": 1500,
+   "diffCases": 1500,
+   "fields": {},
+   "causes": {
+    "غير موجود عندنا (🔵)": 1500
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "31": 1500,
+    "56": 1500,
+    "94": 1500,
+    "120": 1500,
+    "182": 1500,
+    "183": 1500,
+    "184": 1500,
+    "185": 1500
+   },
+   "rowDiffs": {
+    "31": 1500,
+    "56": 1500,
+    "94": 1500,
+    "120": 1500,
+    "182": 1500,
+    "183": 1500,
+    "184": 1500,
+    "185": 1500
+   },
+   "samples": [],
+   "notes": []
+  },
+  {
+   "id": "inscalc",
+   "title": "حاسبة التأمينات / ملف GOSI الشهري (calcFor)",
+   "rows": [
+    170
+   ],
+   "cases": 1500,
+   "diffCases": 1500,
+   "fields": {},
+   "causes": {
+    "غير موجود عندنا (🔵)": 1500
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "170": 1500
+   },
+   "rowDiffs": {
+    "170": 1500
+   },
+   "samples": [],
+   "notes": []
+  },
+  {
+   "id": "prov",
+   "title": "تقرير المخصصات (provFor)",
+   "rows": [
+    171
+   ],
+   "cases": 1500,
+   "diffCases": 1500,
+   "fields": {},
+   "causes": {
+    "غير موجود عندنا (🔵)": 1500
+   },
+   "unexplained": 0,
+   "rowCases": {
+    "171": 1500
+   },
+   "rowDiffs": {
+    "171": 1500
+   },
+   "samples": [],
+   "notes": []
+  }
+ ],
+ "verdict": [
+  {
+   "row": 1,
+   "area": "المسيّر (PAYX)",
+   "formula": "V الراتب حسب الأيام",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 2,
+   "area": "المسيّر (PAYX)",
+   "formula": "Y بدل السكن بالأيام",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 3,
+   "area": "المسيّر (PAYX)",
+   "formula": "Z بدل المواصلات بالأيام",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 4,
+   "area": "المسيّر (PAYX)",
+   "formula": "AA بدل المشروع بالأيام",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 5,
+   "area": "المسيّر (PAYX)",
+   "formula": "AB البدلات الأخرى بالأيام",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 6,
+   "area": "المسيّر (PAYX)",
+   "formula": "T الراتب شامل البدلات",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 7,
+   "area": "المسيّر (PAYX)",
+   "formula": "X الإضافي",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 8,
+   "area": "المسيّر (PAYX)",
+   "formula": "I نهاية العقد",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 10,
+   "area": "المسيّر (PAYX)",
+   "formula": "AD/AE/AF مدة الخدمة سنة/شهر/يوم",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 11,
+   "area": "المسيّر (PAYX)",
+   "formula": "K سنوات الخدمة",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 12,
+   "area": "المسيّر (PAYX)",
+   "formula": "N رصيد الإجازة خلال التعاقد",
+   "status": "غير مطابق",
+   "cases": 20006,
+   "diffs": 1451,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 13,
+   "area": "المسيّر (PAYX)",
+   "formula": "O ما تم استحقاقه (أيام مأخوذة)",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 14,
+   "area": "المسيّر (PAYX)",
+   "formula": "P الرصيد المستحق",
+   "status": "غير مطابق",
+   "cases": 20006,
+   "diffs": 1451,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 15,
+   "area": "المسيّر (PAYX)",
+   "formula": "AC بدل الإجازة",
+   "status": "غير مطابق",
+   "cases": 20006,
+   "diffs": 1451,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 16,
+   "area": "المسيّر (PAYX)",
+   "formula": "AG تكلفة السنوات",
+   "status": "شبه مطابق",
+   "cases": 20006,
+   "diffs": 560,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 17,
+   "area": "المسيّر (PAYX)",
+   "formula": "AH تكلفة الشهور",
+   "status": "شبه مطابق",
+   "cases": 20006,
+   "diffs": 364,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 18,
+   "area": "المسيّر (PAYX)",
+   "formula": "AI تكلفة الأيام",
+   "status": "شبه مطابق",
+   "cases": 20006,
+   "diffs": 378,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 19,
+   "area": "المسيّر (PAYX)",
+   "formula": "AJ إجمالي المكافأة",
+   "status": "شبه مطابق",
+   "cases": 20006,
+   "diffs": 596,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 20,
+   "area": "المسيّر (PAYX)",
+   "formula": "أسباب الإنهاء ومعامل المكافأة",
+   "status": "غير مطابق",
+   "cases": 20006,
+   "diffs": 1085,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 21,
+   "area": "المسيّر (PAYX)",
+   "formula": "التعرف على سبب الإنهاء من النص",
+   "status": "شبه مطابق",
+   "cases": 20006,
+   "diffs": 1085,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 22,
+   "area": "المسيّر (PAYX)",
+   "formula": "AK مكافأة نهاية الخدمة",
+   "status": "غير مطابق",
+   "cases": 20006,
+   "diffs": 1085,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 23,
+   "area": "المسيّر (PAYX)",
+   "formula": "AM إجمالي المستحق",
+   "status": "غير مطابق",
+   "cases": 20006,
+   "diffs": 2346,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 24,
+   "area": "المسيّر (PAYX)",
+   "formula": "أيام التأمينات",
+   "status": "مطابق",
+   "cases": 20006,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 25,
+   "area": "المسيّر (PAYX)",
+   "formula": "AQ الأجر الخاضع للتأمينات",
+   "status": "غير مطابق",
+   "cases": 20006,
+   "diffs": 4690,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 26,
+   "area": "المسيّر (PAYX)",
+   "formula": "AO تأمينات الموظف",
+   "status": "غير مطابق",
+   "cases": 20006,
+   "diffs": 2055,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 27,
+   "area": "المسيّر (PAYX)",
+   "formula": "AR تأمينات الشركة",
+   "status": "غير مطابق",
+   "cases": 20006,
+   "diffs": 2939,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 29,
+   "area": "المسيّر (PAYX)",
+   "formula": "AU إجمالي المستقطع",
+   "status": "شبه مطابق",
+   "cases": 20006,
+   "diffs": 1963,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 30,
+   "area": "المسيّر (PAYX)",
+   "formula": "AV / AW الصافي والصافي بالريال",
+   "status": "غير مطابق",
+   "cases": 20006,
+   "diffs": 4070,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "payx"
+   ]
+  },
+  {
+   "row": 31,
+   "area": "المسيّر (PAYX)",
+   "formula": "ضريبة الدخل والشهداء (مصر)",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "egypt"
+   ]
+  },
+  {
+   "row": 32,
+   "area": "صفوف المسيّر",
+   "formula": "من يدخل المسيّر",
+   "status": "شبه مطابق",
+   "cases": 6000,
+   "diffs": 339,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "rows"
+   ]
+  },
+  {
+   "row": 33,
+   "area": "صفوف المسيّر",
+   "formula": "أيام العمل/التأمينات الافتراضية",
+   "status": "مطابق",
+   "cases": 4659,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "rows"
+   ]
+  },
+  {
+   "row": 34,
+   "area": "صفوف المسيّر",
+   "formula": "حالة التأمينات الافتراضية",
+   "status": "مطابق",
+   "cases": 4659,
+   "diffs": 238,
+   "found": true,
+   "agrees": false,
+   "note": "خطأ عندنا كشفته الأداة: /salary/basis يرسل insSystem كما هو (new/old) وصفحة المسيّر تقارنه بـ \"matching\"، فالمطابق يظهر «لا يطابق». يُصلَح في المهمة 3.",
+   "suites": [
+    "rows"
+   ]
+  },
+  {
+   "row": 36,
+   "area": "صفوف المسيّر",
+   "formula": "أيام الإجازة السنوية في الصف",
+   "status": "شبه مطابق",
+   "cases": 4659,
+   "diffs": 0,
+   "found": false,
+   "agrees": false,
+   "note": "نفس المصدر للسعودية؛ الفرق لمصر فقط (يُغطّى في مجموعة egypt).",
+   "suites": [
+    "rows"
+   ]
+  },
+  {
+   "row": 37,
+   "area": "صفوف المسيّر",
+   "formula": "تمرير noEos للمحرك",
+   "status": "غير مطابق",
+   "cases": 4659,
+   "diffs": 1524,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "rows"
+   ]
+  },
+  {
+   "row": 41,
+   "area": "صفوف المسيّر",
+   "formula": "ترحيل الإضافي القديم لمبلغ يدوي",
+   "status": "عندهم فقط",
+   "cases": 4659,
+   "diffs": 419,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "rows"
+   ]
+  },
+  {
+   "row": 42,
+   "area": "صفوف المسيّر",
+   "formula": "مجاميع المسيّر",
+   "status": "شبه مطابق",
+   "cases": 240,
+   "diffs": 239,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "rows"
+   ]
+  },
+  {
+   "row": 44,
+   "area": "صفوف المسيّر",
+   "formula": "ما تم استحقاقه (usedThrough)",
+   "status": "شبه مطابق",
+   "cases": 900,
+   "diffs": 429,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_calendar",
+    "leave_monthly",
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 45,
+   "area": "التأمينات",
+   "formula": "جدول النسب حسب التاريخ",
+   "status": "غير مطابق",
+   "cases": 60,
+   "diffs": 48,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "rates"
+   ]
+  },
+  {
+   "row": 46,
+   "area": "التأمينات",
+   "formula": "النسب قبل 2026",
+   "status": "غير مطابق",
+   "cases": 24,
+   "diffs": 24,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "rates"
+   ]
+  },
+  {
+   "row": 47,
+   "area": "التأمينات",
+   "formula": "نسبة 55 سنة فأكثر",
+   "status": "مطابق",
+   "cases": 60,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "rates"
+   ]
+  },
+  {
+   "row": 48,
+   "area": "التأمينات",
+   "formula": "الحد الأعلى للأجر",
+   "status": "مطابق",
+   "cases": 84,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "rates"
+   ]
+  },
+  {
+   "row": 54,
+   "area": "التأمينات",
+   "formula": "تأمينات الموظف عند حفظ بياناته (31/31)",
+   "status": "شبه مطابق",
+   "cases": 3000,
+   "diffs": 1048,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "figures"
+   ]
+  },
+  {
+   "row": 56,
+   "area": "التأمينات",
+   "formula": "تأمينات مصر",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "egypt"
+   ]
+  },
+  {
+   "row": 57,
+   "area": "بيانات الموظف",
+   "formula": "إجمالي الراتب",
+   "status": "مطابق",
+   "cases": 3000,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "figures"
+   ]
+  },
+  {
+   "row": 58,
+   "area": "بيانات الموظف",
+   "formula": "صافي الراتب",
+   "status": "شبه مطابق",
+   "cases": 3000,
+   "diffs": 468,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "figures"
+   ]
+  },
+  {
+   "row": 61,
+   "area": "بيانات الموظف",
+   "formula": "الأيام المتبقية (إقامة/جواز/عقد/تأمين طبي)",
+   "status": "مطابق",
+   "cases": 2400,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "alerts"
+   ]
+  },
+  {
+   "row": 67,
+   "area": "نهاية الخدمة",
+   "formula": "مكافأة م.84",
+   "status": "مطابق",
+   "cases": 303,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "eos"
+   ]
+  },
+  {
+   "row": 68,
+   "area": "نهاية الخدمة",
+   "formula": "م.74 / م.74(3) / م.74(4)",
+   "status": "مطابق",
+   "cases": 909,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "eos"
+   ]
+  },
+  {
+   "row": 69,
+   "area": "نهاية الخدمة",
+   "formula": "م.85 / م.75 الاستقالة",
+   "status": "غير مطابق",
+   "cases": 606,
+   "diffs": 6,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "eos"
+   ]
+  },
+  {
+   "row": 70,
+   "area": "نهاية الخدمة",
+   "formula": "م.87 مكافأة كاملة",
+   "status": "عندنا فقط",
+   "cases": 303,
+   "diffs": 300,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "eos"
+   ]
+  },
+  {
+   "row": 71,
+   "area": "نهاية الخدمة",
+   "formula": "م.77 عقد غير محدد",
+   "status": "مطابق",
+   "cases": 303,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "eos"
+   ]
+  },
+  {
+   "row": 72,
+   "area": "نهاية الخدمة",
+   "formula": "م.77 عقد محدد المدة",
+   "status": "عندنا فقط",
+   "cases": 60,
+   "diffs": 59,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "eos"
+   ]
+  },
+  {
+   "row": 73,
+   "area": "نهاية الخدمة",
+   "formula": "م.80 فصل تأديبي",
+   "status": "مطابق",
+   "cases": 303,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "eos"
+   ]
+  },
+  {
+   "row": 76,
+   "area": "نهاية الخدمة",
+   "formula": "نص المدة «س سنة ش شهر ي يوم»",
+   "status": "مطابق",
+   "cases": 2000,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "eos"
+   ]
+  },
+  {
+   "row": 78,
+   "area": "المخالصة",
+   "formula": "المدة سنة/شهر/يوم والسنوات",
+   "status": "مطابق",
+   "cases": 19868,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 79,
+   "area": "المخالصة",
+   "formula": "e84",
+   "status": "مطابق",
+   "cases": 19868,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 80,
+   "area": "المخالصة",
+   "formula": "م.84 / م.74 / تقاعد / وفاة",
+   "status": "مطابق",
+   "cases": 7960,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 81,
+   "area": "المخالصة",
+   "formula": "م.85 / م.75",
+   "status": "غير مطابق",
+   "cases": 4012,
+   "diffs": 0,
+   "found": false,
+   "agrees": false,
+   "note": "في المخالصة لا تساوي المدة 5 سنوات بالضبط (اليوم الأخير يُحسب، fd ≥ 1)، فالفرق بين < و ≤ نظري. يُعدَّل الشرط ليطابقهم.",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 82,
+   "area": "المخالصة",
+   "formula": "م.87",
+   "status": "عندنا فقط",
+   "cases": 1935,
+   "diffs": 1935,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 83,
+   "area": "المخالصة",
+   "formula": "م.77",
+   "status": "شبه مطابق",
+   "cases": 1975,
+   "diffs": 597,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 84,
+   "area": "المخالصة",
+   "formula": "م.80 / م.53",
+   "status": "مطابق",
+   "cases": 3986,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 85,
+   "area": "المخالصة",
+   "formula": "الإجازة المستحقة",
+   "status": "مطابق",
+   "cases": 18812,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 86,
+   "area": "المخالصة",
+   "formula": "الرصيد المتبقي وبدله",
+   "status": "مطابق",
+   "cases": 18812,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 87,
+   "area": "المخالصة",
+   "formula": "راتب الفترة",
+   "status": "مطابق",
+   "cases": 19868,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 88,
+   "area": "المخالصة",
+   "formula": "خصم الإجازة الزائدة",
+   "status": "مطابق",
+   "cases": 18812,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 89,
+   "area": "المخالصة",
+   "formula": "الإضافات والخصومات (مبلغ أو أيام)",
+   "status": "مطابق",
+   "cases": 19868,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 90,
+   "area": "المخالصة",
+   "formula": "الصافي",
+   "status": "غير مطابق",
+   "cases": 18812,
+   "diffs": 1971,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 91,
+   "area": "المخالصة",
+   "formula": "تقريب المدخلات",
+   "status": "شبه مطابق",
+   "cases": 2112,
+   "diffs": 1056,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "settle"
+   ]
+  },
+  {
+   "row": 94,
+   "area": "المخالصة",
+   "formula": "مخالصة مصر",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "egypt"
+   ]
+  },
+  {
+   "row": 98,
+   "area": "الإجازات",
+   "formula": "طريقة الاستحقاق",
+   "status": "غير مطابق",
+   "cases": 600,
+   "diffs": 600,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_calendar",
+    "leave_monthly"
+   ]
+  },
+  {
+   "row": 101,
+   "area": "الإجازات",
+   "formula": "سلسلة الترحيل من السنة السابقة",
+   "status": "شبه مطابق",
+   "cases": 900,
+   "diffs": 44,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_calendar",
+    "leave_monthly",
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 102,
+   "area": "الإجازات",
+   "formula": "إقفال السنة",
+   "status": "شبه مطابق",
+   "cases": 300,
+   "diffs": 68,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 103,
+   "area": "الإجازات",
+   "formula": "رصيد نهاية السنة المستورد (yearEnd)",
+   "status": "غير مطابق",
+   "cases": 795,
+   "diffs": 433,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_calendar",
+    "leave_monthly",
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 104,
+   "area": "الإجازات",
+   "formula": "الرصيد الحالي المستورد (current)",
+   "status": "غير مطابق",
+   "cases": 300,
+   "diffs": 59,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 105,
+   "area": "الإجازات",
+   "formula": "المستخدم الأساسي (baseline)",
+   "status": "شبه مطابق",
+   "cases": 795,
+   "diffs": 433,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_calendar",
+    "leave_monthly",
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 107,
+   "area": "الإجازات",
+   "formula": "استرجاع السنوية المقطوعة بإجازة أخرى",
+   "status": "عندهم فقط",
+   "cases": 795,
+   "diffs": 433,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_calendar",
+    "leave_monthly",
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 110,
+   "area": "الإجازات",
+   "formula": "فائض نهاية الخدمة المتراكم",
+   "status": "غير مطابق",
+   "cases": 900,
+   "diffs": 762,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_calendar",
+    "leave_monthly",
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 111,
+   "area": "الإجازات",
+   "formula": "المجاميع منذ المباشرة (مستحق/مستخدم/متبقي)",
+   "status": "مطابق",
+   "cases": 105,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_calendar",
+    "leave_monthly",
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 112,
+   "area": "الإجازات",
+   "formula": "رصيد تطبيق الموظف",
+   "status": "غير مطابق",
+   "cases": 300,
+   "diffs": 61,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 113,
+   "area": "الإجازات",
+   "formula": "رصيد نهاية السنة في التطبيق",
+   "status": "عندنا فقط",
+   "cases": 300,
+   "diffs": 60,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 114,
+   "area": "الإجازات",
+   "formula": "رصيد الموظف المنتهي",
+   "status": "عندنا فقط",
+   "cases": 300,
+   "diffs": 62,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "leave_workdays"
+   ]
+  },
+  {
+   "row": 120,
+   "area": "الإجازات",
+   "formula": "إجازات مصر",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "egypt"
+   ]
+  },
+  {
+   "row": 121,
+   "area": "الحضور والبصمة",
+   "formula": "تجميع جلسات اليوم",
+   "status": "مطابق",
+   "cases": 6215,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "attendance"
+   ]
+  },
+  {
+   "row": 122,
+   "area": "الحضور والبصمة",
+   "formula": "تصنيف كل يوم",
+   "status": "مطابق",
+   "cases": 6215,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "attendance"
+   ]
+  },
+  {
+   "row": 123,
+   "area": "الحضور والبصمة",
+   "formula": "ملخص الموظف (المتوقع، التأخير، الخروج المبكر، النسبة، متوسط الدخول)",
+   "status": "مطابق",
+   "cases": 25,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "attendance"
+   ]
+  },
+  {
+   "row": 125,
+   "area": "الحضور والبصمة",
+   "formula": "جدول الدوام الرسمي ورمضان",
+   "status": "عندهم فقط",
+   "cases": 400,
+   "diffs": 400,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "attendance"
+   ]
+  },
+  {
+   "row": 126,
+   "area": "الحضور والبصمة",
+   "formula": "تحديد رمضان",
+   "status": "عندهم فقط",
+   "cases": 400,
+   "diffs": 400,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "attendance"
+   ]
+  },
+  {
+   "row": 147,
+   "area": "لوحة التحكم والتقارير",
+   "formula": "تنبيهات لوحة التحكم",
+   "status": "غير مطابق",
+   "cases": 2400,
+   "diffs": 402,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "alerts"
+   ]
+  },
+  {
+   "row": 148,
+   "area": "لوحة التحكم والتقارير",
+   "formula": "تنبيه نهاية فترة التجربة",
+   "status": "عندهم فقط",
+   "cases": 600,
+   "diffs": 5,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "alerts"
+   ]
+  },
+  {
+   "row": 156,
+   "area": "النماذج",
+   "formula": "التفقيط",
+   "status": "مطابق",
+   "cases": 5032,
+   "diffs": 0,
+   "found": false,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "tafqeet"
+   ]
+  },
+  {
+   "row": 163,
+   "area": "ميزات جديدة",
+   "formula": "حاسبة الراتب: إجمالي ← مكونات",
+   "status": "عندهم فقط",
+   "cases": 4000,
+   "diffs": 4000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "salcalc"
+   ]
+  },
+  {
+   "row": 164,
+   "area": "ميزات جديدة",
+   "formula": "حاسبة الراتب: صافي ← مكونات",
+   "status": "عندهم فقط",
+   "cases": 4000,
+   "diffs": 4000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "salcalc"
+   ]
+  },
+  {
+   "row": 165,
+   "area": "ميزات جديدة",
+   "formula": "حاسبة الراتب: أساسي ← إجمالي وصافي",
+   "status": "عندهم فقط",
+   "cases": 4000,
+   "diffs": 4000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "salcalc"
+   ]
+  },
+  {
+   "row": 166,
+   "area": "ميزات جديدة",
+   "formula": "حاسبة الراتب: بدل مطلوب لصافي محدد",
+   "status": "عندهم فقط",
+   "cases": 4000,
+   "diffs": 4000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "salcalc"
+   ]
+  },
+  {
+   "row": 167,
+   "area": "ميزات جديدة",
+   "formula": "تكلفة الشركة في حاسبة الراتب",
+   "status": "عندهم فقط",
+   "cases": 4000,
+   "diffs": 4000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "salcalc"
+   ]
+  },
+  {
+   "row": 168,
+   "area": "ميزات جديدة",
+   "formula": "ضريبة القيمة المضافة من الشامل",
+   "status": "عندهم فقط",
+   "cases": 1000,
+   "diffs": 1000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "tax"
+   ]
+  },
+  {
+   "row": 169,
+   "area": "ميزات جديدة",
+   "formula": "ضريبة القيمة المضافة من غير الشامل",
+   "status": "عندهم فقط",
+   "cases": 1000,
+   "diffs": 1000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "tax"
+   ]
+  },
+  {
+   "row": 170,
+   "area": "ميزات جديدة",
+   "formula": "ملف التأمينات الشهري",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "inscalc"
+   ]
+  },
+  {
+   "row": 171,
+   "area": "ميزات جديدة",
+   "formula": "تقرير المخصصات",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "prov"
+   ]
+  },
+  {
+   "row": 172,
+   "area": "ميزات جديدة",
+   "formula": "ملف تحويل الرواتب (WPS)",
+   "status": "عندهم فقط",
+   "cases": 1000,
+   "diffs": 1000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "wps"
+   ]
+  },
+  {
+   "row": 173,
+   "area": "ميزات جديدة",
+   "formula": "فحص الآيبان والهوية",
+   "status": "عندهم فقط",
+   "cases": 1000,
+   "diffs": 1000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "wps"
+   ]
+  },
+  {
+   "row": 174,
+   "area": "ميزات جديدة",
+   "formula": "إهلاك الأصول",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "assets"
+   ]
+  },
+  {
+   "row": 175,
+   "area": "ميزات جديدة",
+   "formula": "نسبة الإهلاك السنوية",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "assets"
+   ]
+  },
+  {
+   "row": 176,
+   "area": "ميزات جديدة",
+   "formula": "جرد الأصول السنوي",
+   "status": "عندهم فقط",
+   "cases": 1560,
+   "diffs": 1560,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "assets",
+    "yearreport"
+   ]
+  },
+  {
+   "row": 177,
+   "area": "ميزات جديدة",
+   "formula": "نسبة إنجاز المستهدف",
+   "status": "عندهم فقط",
+   "cases": 1000,
+   "diffs": 1000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "goals"
+   ]
+  },
+  {
+   "row": 179,
+   "area": "ميزات جديدة",
+   "formula": "تصنيف التقييم",
+   "status": "عندهم فقط",
+   "cases": 1000,
+   "diffs": 1000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "goals"
+   ]
+  },
+  {
+   "row": 180,
+   "area": "ميزات جديدة",
+   "formula": "مفتاح الفترة (سنوي/ربع/شهري)",
+   "status": "عندهم فقط",
+   "cases": 1000,
+   "diffs": 1000,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "goals"
+   ]
+  },
+  {
+   "row": 182,
+   "area": "ميزات جديدة",
+   "formula": "ضريبة الدخل في مصر",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "egypt"
+   ]
+  },
+  {
+   "row": 183,
+   "area": "ميزات جديدة",
+   "formula": "مساهمة الشهداء في مصر",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "egypt"
+   ]
+  },
+  {
+   "row": 184,
+   "area": "ميزات جديدة",
+   "formula": "معامل الاستقالة في مصر",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "egypt"
+   ]
+  },
+  {
+   "row": 185,
+   "area": "ميزات جديدة",
+   "formula": "تعويض م.77 في مصر",
+   "status": "عندهم فقط",
+   "cases": 1500,
+   "diffs": 1500,
+   "found": true,
+   "agrees": true,
+   "note": "",
+   "suites": [
+    "egypt"
+   ]
+  }
+ ]
+}
