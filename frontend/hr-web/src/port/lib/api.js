@@ -161,7 +161,8 @@ export async function raw(path, { method = 'POST', body } = {}) {
 
 const FUNCTIONS = {
   'ariba-brand-colors': (b) => post('/settings/brand/extract', b),
-  'ariba-send-email': (b) => post('/mail/send-document', b),
+  // Their send-email function also answers {test:true} (Settings › Mail › send test) — that is our /mail/test.
+  'ariba-send-email': (b) => post(b && b.test ? '/mail/test' : '/mail/send-document', b),
   'ariba-send-report': (b) => post('/mail/send-report', b),
   'ariba-password-recovery': (b) => request('/auth/password-recovery', { method: 'POST', body: b, anonymous: true }),
 };
