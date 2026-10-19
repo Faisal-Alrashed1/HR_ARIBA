@@ -34,3 +34,14 @@ byte-for-byte their code; ESLint skips it (they lint it with oxlint) except the 
 | `components/HrBell.jsx` | Polls every 20 s (plan §6), not every 3 s. |
 | `lib/arLetterhead.js` | Their optional bundled letterhead images are not in their delivery (Vite `import.meta.glob`); the letterhead from Settings is used. |
 | `engines/{runtime,country,empkind,holidays,insurance,payx}.js` | Re-export `src/lib/calc/*` — the same code (tools/react-parity) — so their screens and our pages share one runtime. `leave.js`, `payrollRows.js`, `attendance.js` are theirs unchanged. |
+
+## Their build setup
+| File | Change |
+|---|---|
+| `lib/ico-runtime.js` | Their `vite.config.js` makes this file the JSX runtime (every emoji → a Tabler icon). Here `next.config.ts` adds the same for files under `src/port` only (`next/ico/ico-loader.cjs` + `next/ico/jsx-*runtime.js`). Two lines changed: React is imported as `react/jsx-runtime`, and `jsxDEV` is added for dev mode. |
+
+## Our look on their screens (owner's request)
+| File | Change |
+|---|---|
+| `pages/Dashboard.jsx`, `styles/ariba-ours.css` | Our dashboard (commits 673ddb1, 9a345ee, 8ee52fc, 1d2bbed): dark green border on every KPI tile, a line icon on each tile, payroll figure in the text colour (not purple), the male/female silhouettes (`components/hr/gender-icons.tsx`) in one colour, gradient department bars, chart colours as hex (a canvas cannot read `var(--…)`, they drew black). |
+| `components/Layout.jsx` | The ARIBA logo (`/brand/ariba-logo.png`) in the sidebar when none is uploaded in Settings. |

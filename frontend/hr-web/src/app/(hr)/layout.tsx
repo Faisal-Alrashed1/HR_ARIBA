@@ -2,6 +2,8 @@ import "@tabler/icons-webfont/dist/tabler-icons.min.css";
 // Their stylesheets (ARIBA_HR_React/src/styles), as their main.jsx loads them.
 import "@/port/styles/legacy-base.css";
 import "@/port/styles/react-extra.css";
+// Our dashboard look on their screen (src/port/ADAPTED.md).
+import "@/port/styles/ariba-ours.css";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { ToastProvider } from "@/components/common/toast";

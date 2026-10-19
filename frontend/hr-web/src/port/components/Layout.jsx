@@ -118,5 +118,6 @@ export default function Layout() {
 function CompanyLogo() {
   const { settings } = useApp();
   const src = settings && settings.logo && settings.logo.data && /^data:image\/(png|jpe?g|gif|webp|svg\+xml);base64,/i.test(settings.logo.data) ? settings.logo.data : null;
-  return src ? <img src={src} style={{ width: 44, height: 44, objectFit: 'contain' }} alt="logo" /> : <span style={{ width: 44, height: 44 }} />;
+  // Ours: the ARIBA logo when none is uploaded in settings.
+  return <img src={src || '/brand/ariba-logo.png'} style={{ width: 44, height: 44, objectFit: 'contain' }} alt="logo" />;
 }

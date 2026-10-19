@@ -1,0 +1,8 @@
+/* Our dashboard look on their Dashboard.jsx (from our commits 673ddb1, 9a345ee, 8ee52fc, 1d2bbed):
+   KPI icons and numbers in the ARIBA greens, readable in day and night mode; same-colour gender silhouettes. */
+#KR .ariba-kpi-icon{color:var(--ariba-dark,#014D3D)}
+html[data-ariba-theme="dark"] #KR .ariba-kpi-icon,html[data-ariba-theme="dark"] #KR .ariba-kpi-num{color:var(--ariba-bright,#29B35E)!important}
+.ariba-gender-ic.male,.ariba-gender-ic.female{color:var(--ariba-dark,#014D3D)}
+html[data-ariba-theme="dark"] .ariba-gender-ic.male,html[data-ariba-theme="dark"] .ariba-gender-ic.female{color:var(--ariba-bright,#29B35E)}
+/* Every KPI tile has the dark green border (1d2bbed); legacy-base.css still carries the old grey payroll border. */
+html[data-ariba-theme] #KR#KR [data-ariba-kpi]{border-color:var(--ariba-dark,#014D3D)!important}

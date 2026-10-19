@@ -5,11 +5,13 @@ import { collectAlerts, dmy, isSaudiEmp } from '../lib/util.js';
 import { noEos } from '../engines/empkind.js';
 import { rpc } from '../lib/api.js';
 import { useLang } from '../lib/i18n.js';
+import { FemaleIcon, MaleIcon } from '@/components/hr/gender-icons';
 
-const EMP_COLORS = { 'أريبا': 'var(--ariba-dark,#014D3D)', 'الجيوميكانية': 'var(--ariba-bright,#29B35E)', 'أوبتيموم': '#E4E4BC' };
-const NAT_COLORS = { 'سعودي': 'var(--ariba-dark,#014D3D)', 'مصري': 'var(--ariba-bright,#29B35E)', 'أردني': '#E4E4BC', 'سوداني': '#231F20', 'سوري': '#4B5563', 'تونسي': '#9CA3AF' };
+const EMP_COLORS = { 'أريبا': '#014D3D', 'الجيوميكانية': '#29B35E', 'أوبتيموم': '#E4E4BC' };
+const NAT_COLORS = { 'سعودي': '#014D3D', 'مصري': '#29B35E', 'أردني': '#E4E4BC', 'سوداني': '#231F20', 'سوري': '#4B5563', 'تونسي': '#9CA3AF' };
 const DEPT_COLORS = ['#014D3D', '#29B35E', '#E4E4BC', '#4B5563', '#9CA3AF', '#231F20'];
 const FEMALE_NAMES = ['منى', 'زينب', 'ريم', 'بدريه', 'ساره', 'نوره', 'كادي', 'منيرة', 'دعاء', 'غدي', 'لينا', 'نهى', 'سجى', 'روان', 'أثير', 'هيا', 'نورة', 'فاطمة', 'عائشة', 'أفنان'];
+const KPI_ICON = { fontSize: 24, display: 'block', marginBottom: 6 };
 const count = (arr, f) => arr.reduce((m, e) => { const k = f(e); m[k] = (m[k] || 0) + 1; return m; }, {});
 
 export default function Dashboard() {
@@ -54,39 +56,42 @@ export default function Dashboard() {
       <div className="kr" id="KR" style={{ width: '100%', marginBottom: 0 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.5fr 1.5fr 0.8fr', gap: 14, marginBottom: 20, alignItems: 'stretch', width: '100%', boxSizing: 'border-box' }}>
           <div style={{ background: 'var(--ariba-dark,#014D3D)', borderRadius: 18, padding: '24px 20px', textAlign: 'center', color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 140 }}>
+            <i className="ti ti-users" aria-hidden="true" style={{ ...KPI_ICON, opacity: .9 }} />
             <div style={{ fontSize: 12, opacity: .8, letterSpacing: .5, marginBottom: 8 }}>{h ? 'EMPLOYEES' : 'الموظفون الحاليون'}</div>
             <div style={{ fontSize: 56, fontWeight: 900, lineHeight: 1, marginBottom: 8 }}>{a.length}</div>
             <div style={{ fontSize: 11, opacity: .7, borderTop: '1px solid rgba(255,255,255,.25)', paddingTop: 8 }}>{m.saudis.length} سعودي &nbsp;•&nbsp; {m.expats.length} وافد</div>
           </div>
-          <div style={{ background: 'var(--c2)', borderRadius: 18, padding: '24px 20px', textAlign: 'center', border: '2px solid var(--ariba-dark,#014D3D)', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 140 }}>
+          <div data-ariba-kpi="saudization" style={{ background: 'var(--c2)', borderRadius: 18, padding: '24px 20px', textAlign: 'center', border: '2px solid var(--ariba-dark,#014D3D)', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 140 }}>
+            <i className="ti ti-flag ariba-kpi-icon" aria-hidden="true" style={KPI_ICON} />
             <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 8 }}>{h ? 'SAUDIZATION' : 'نسبة السعودة'}</div>
-            <div style={{ fontSize: 52, fontWeight: 900, color: 'var(--ariba-dark,#014D3D)', lineHeight: 1, marginBottom: 10 }}>{m.saudiPct}<span style={{ fontSize: 22 }}>%</span></div>
+            <div className="ariba-kpi-num" style={{ fontSize: 52, fontWeight: 900, color: 'var(--ariba-dark,#014D3D)', lineHeight: 1, marginBottom: 10 }}>{m.saudiPct}<span style={{ fontSize: 22 }}>%</span></div>
             <div style={{ height: 8, background: 'var(--bd)', borderRadius: 4 }}><div style={{ height: 8, borderRadius: 4, background: 'var(--ariba-dark,#014D3D)', width: m.saudiPct + '%' }} /></div>
           </div>
-          <div style={{ background: 'var(--c2)', borderRadius: 18, padding: '24px 20px', textAlign: 'center', border: '2px solid #8b5cf6', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 140 }}>
+          <div data-ariba-kpi="payroll" style={{ background: 'var(--c2)', borderRadius: 18, padding: '24px 20px', textAlign: 'center', border: '2px solid var(--ariba-dark,#014D3D)', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 140 }}>
+            <i className="ti ti-cash ariba-kpi-icon" aria-hidden="true" style={KPI_ICON} />
             <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 8 }}>{h ? 'MONTHLY PAYROLL' : 'إجمالي الرواتب'}</div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: '#8b5cf6', lineHeight: 1.2, marginBottom: 6 }}>{Math.round(m.totSal).toLocaleString('ar-SA')}</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--tx)', lineHeight: 1.2, marginBottom: 6 }}>{Math.round(m.totSal).toLocaleString('ar-SA')}</div>
             <div style={{ fontSize: 12, color: 'var(--mu)' }}>ريال سعودي / شهرياً</div>
           </div>
-          <div style={{ background: 'var(--c2)', borderRadius: 18, padding: '24px 20px', border: '2px solid #e5e7eb', minHeight: 140 }}>
+          <div data-ariba-kpi="gender" style={{ background: 'var(--c2)', borderRadius: 18, padding: '24px 20px', border: '2px solid var(--ariba-dark,#014D3D)', minHeight: 140 }}>
             <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 14, fontWeight: 600 }}>{h ? 'GENDER DISTRIBUTION' : 'توزيع الجنس'}</div>
             <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: 'calc(100% - 36px)' }}>
-              <div style={{ textAlign: 'center' }}><div style={{ fontSize: 36, marginBottom: 6 }}>👨</div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--ariba-dark,#014D3D)', lineHeight: 1 }}>{m.males.length}</div><div style={{ fontSize: 12, color: 'var(--mu)', marginTop: 4 }}>{m.malePct}% ذكور</div></div>
+              <div style={{ textAlign: 'center' }}><div style={{ marginBottom: 6 }}><MaleIcon /></div><div className="ariba-kpi-num" style={{ fontSize: 28, fontWeight: 900, color: 'var(--ariba-dark,#014D3D)', lineHeight: 1 }}>{m.males.length}</div><div style={{ fontSize: 12, color: 'var(--mu)', marginTop: 4 }}>{m.malePct}% ذكور</div></div>
               <div style={{ width: 1, height: 60, background: 'var(--bd)' }} />
-              <div style={{ textAlign: 'center' }}><div style={{ fontSize: 36, marginBottom: 6 }}>👩</div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--ariba-bright,#29B35E)', lineHeight: 1 }}>{m.females.length}</div><div style={{ fontSize: 12, color: 'var(--mu)', marginTop: 4 }}>{m.femalePct}% إناث</div></div>
+              <div style={{ textAlign: 'center' }}><div style={{ marginBottom: 6 }}><FemaleIcon /></div><div className="ariba-kpi-num" style={{ fontSize: 28, fontWeight: 900, color: 'var(--ariba-dark,#014D3D)', lineHeight: 1 }}>{m.females.length}</div><div style={{ fontSize: 12, color: 'var(--mu)', marginTop: 4 }}>{m.femalePct}% إناث</div></div>
             </div>
           </div>
-          <div style={{ background: 'var(--c2)', borderRadius: 18, padding: '24px 20px', border: '2px solid #e5e7eb', minHeight: 140 }}>
+          <div data-ariba-kpi="departments" style={{ background: 'var(--c2)', borderRadius: 18, padding: '24px 20px', border: '2px solid var(--ariba-dark,#014D3D)', minHeight: 140 }}>
             <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 12, fontWeight: 600 }}>{h ? 'DEPARTMENTS' : 'توزيع الأقسام'}</div>
             {m.deptKeys.map((d) => { const p = Math.round(m.deptMap[d] / a.length * 100); return (
               <div key={d} style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}><span style={{ color: 'var(--tx)' }}>{d}</span><span style={{ fontWeight: 700, color: 'var(--ariba-dark,#014D3D)' }}>{m.deptMap[d]} <span style={{ color: 'var(--mu)', fontWeight: 400 }}>({p}%)</span></span></div>
-                <div style={{ height: 7, background: 'var(--bd)', borderRadius: 4 }}><div style={{ height: 7, borderRadius: 4, background: 'var(--ariba-dark,#014D3D)', width: p + '%', transition: 'width .5s' }} /></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}><span style={{ color: 'var(--tx)' }}>{d}</span><span className="ariba-kpi-num" style={{ fontWeight: 700, color: 'var(--ariba-dark,#014D3D)' }}>{m.deptMap[d]} <span style={{ color: 'var(--mu)', fontWeight: 400 }}>({p}%)</span></span></div>
+                <div style={{ height: 7, background: 'var(--bd)', borderRadius: 4 }}><div className="ariba-dept-bar" style={{ height: 7, borderRadius: 4, background: 'linear-gradient(90deg,#29B35E,#014D3D)', width: p + '%', transition: 'width .5s' }} /></div>
               </div>); })}
           </div>
-          <div style={{ background: 'var(--c2)', borderRadius: 18, padding: '20px 16px', border: '2px solid #e5e7eb', minHeight: 140, display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'center' }}>
-            {[['🔔 طلبات معلقة', pending, '#014D3D'], ['🔴 منتهية الخدمة', t.length, '#ef4444'], ['🎓 تمهير', m.tamheer.length, '#856a00']].map(([l, v, c]) => (
-              <div key={l} style={{ background: 'var(--c1)', borderRadius: 12, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ fontSize: 12, color: 'var(--mu)' }}>{l}</span><span style={{ fontSize: 26, fontWeight: 900, color: c }}>{v}</span></div>))}
+          <div data-ariba-kpi="pending" style={{ background: 'var(--c2)', borderRadius: 18, padding: '20px 16px', border: '2px solid var(--ariba-dark,#014D3D)', minHeight: 140, display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'center' }}>
+            {[['ti-bell', 'طلبات معلقة', pending], ['ti-user-off', 'منتهية الخدمة', t.length], ['ti-school', 'تمهير', m.tamheer.length]].map(([ic, l, v]) => (
+              <div key={l} style={{ background: 'var(--c1)', borderRadius: 12, padding: '12px 14px', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 10 }}><i className={'ti ' + ic + ' ariba-kpi-icon'} aria-hidden="true" style={{ fontSize: 22 }} /><span className="ariba-kpi-num" style={{ fontSize: 26, fontWeight: 900, color: 'var(--ariba-dark,#014D3D)', lineHeight: 1, minWidth: 28, textAlign: 'center' }}>{v}</span><span style={{ fontSize: 12, color: 'var(--mu)' }}>{l}</span></div>))}
           </div>
         </div>
       </div>

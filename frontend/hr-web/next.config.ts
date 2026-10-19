@@ -16,8 +16,12 @@ const csp = [
   "form-action 'self'",
 ].join("; ");
 
+// Their screens (src/port) use lib/ico-runtime.js as the JSX runtime, as their vite.config.js does: emoji → Tabler icons.
+const ICO = { loaders: ["./src/port/next/ico/ico-loader.cjs"], condition: { path: /^src\/port\// } };
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  turbopack: { rules: { "*.jsx": ICO, "*.js": ICO } },
   async headers() {
     return [
       {

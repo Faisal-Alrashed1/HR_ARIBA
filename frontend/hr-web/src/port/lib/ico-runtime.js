@@ -1,6 +1,7 @@
 // يستبدل أي إيموجي داخل نصوص الواجهة (JSX) بأيقونة رسمية (Tabler) بلون البرنامج المعتمد.
 // يعمل على مستوى jsx-runtime فلا يحتاج تعديل كل ملف، ويغطي النصوص الديناميكية والتنبيهات أيضاً.
-import * as R from '../../node_modules/react/jsx-runtime.js';
+import * as R from 'react/jsx-runtime';
+import * as D from 'react/jsx-dev-runtime';
 
 const G = (icon, keys) => keys.map((k) => [k, icon]);
 const MAP = Object.fromEntries([
@@ -45,3 +46,5 @@ function fix(type, props) {
 export const Fragment = R.Fragment;
 export const jsx = (t, p, k) => R.jsx(t, fix(t, p), k);
 export const jsxs = (t, p, k) => R.jsxs(t, fix(t, p), k);
+// Next.js dev mode compiles JSX to jsxDEV (their Vite alias pointed jsx-dev-runtime at this file too).
+export const jsxDEV = (t, p, k, s, src, self) => D.jsxDEV(t, fix(t, p), k, s, src, self);
