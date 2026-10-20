@@ -7,12 +7,12 @@ import { store } from "@/lib/store";
 
 export const palettes = {
   light: {
-    bg: "#F4F0E6", c: "#FFFDF8", c2: "#EEE9DC", bd: "#D8D2C4", bl: "#014D3D", gr: "#29B35E", rd: "#B54A4A", am: "#9B7A32",
-    pu: "#6B5B73", cy: "#014D3D", mu: "#59625F", dm: "#727A76", tx: "#17201D",
+    bg: "#F4F0E6", c: "#FFFDF8", c2: "#EEE9DC", bd: "#D8D2C4", bl: "#014D3D", gr: "#29B35E", rd: "#B54A4A", am: "#231F20",
+    pu: "#231F20", cy: "#014D3D", mu: "#59625F", dm: "#727A76", tx: "#231F20",
   },
   dark: {
     bg: "#014D3D", c: "#013D31", c2: "#075444", bd: "#176A58", bl: "#29B35E", gr: "#29B35E", rd: "#F07A7A", am: "#E4E4BC",
-    pu: "#D8C9DD", cy: "#E4E4BC", mu: "#D0D9D5", dm: "#E1E7E4", tx: "#FFFFFF",
+    pu: "#E4E4BC", cy: "#E4E4BC", mu: "#D0D9D5", dm: "#E1E7E4", tx: "#FFFFFF",
   },
 } as const;
 

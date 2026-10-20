@@ -12,7 +12,7 @@ const MID = ['#29B35E', '#22C55E', '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9', '
 const LIGHT = ['#F4F0E4', '#FFFFFF', '#F8FAFC', '#F1F5F9', '#EAF0FA', '#E8F5F3', '#ECFDF5', '#F0FDF4', '#FEFCE8', '#FFFBEB', '#FFF7ED', '#FEF2F2', '#FDF2F8', '#FAF5FF', '#F5F3FF', '#EEF2FF', '#F0F9FF', '#FBF0E6', '#F3EBFA', '#EEEFF2'];
 const autoAccent = (p) => { const h = rgb2hsl(hex2rgb(p)); return rgb2hex(hsl2rgb(h[0], 0.6, 0.43)); };
 const lbl = { fontSize: 11, color: 'var(--mu)', fontWeight: 600, display: 'block', marginBottom: 4 };
-const Sw = ({ c, onPick }) => <button type="button" data-c={c} title={c} onClick={() => onPick(c)} style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid rgba(0,0,0,.18)', background: c, cursor: 'pointer', padding: 0 }} />;
+const Sw = ({ c, onPick }) => <button type="button" data-keep-color="" data-c={c} title={c} onClick={() => onPick(c)} style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid rgba(0,0,0,.18)', background: c, cursor: 'pointer', padding: 0 }} />;
 
 export default function BrandCard() {
   const { settings, patchSettings } = useApp();
@@ -57,12 +57,12 @@ export default function BrandCard() {
             <label style={{ fontSize: 11.5 }}><input type="checkbox" id="BR_AUTO" checked={!B.a} onChange={(e) => live({ ...B, a: e.target.checked ? '' : autoAccent(B.p) })} /> {T('تلقائي من اللون الأساسي', 'Auto from the primary')}</label>
           </div></div>
         <div id="BR_PV"><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ ...swPv, background: pal.P }} /><span style={{ ...swPv, background: pal.A }} /><span style={{ ...swPv, background: pal.S, border: '1px solid ' + pal.bdL }} /><span style={{ ...swPv, background: pal.dBg }} /><span style={{ ...swPv, background: pal.dC2 }} /></div></div>
+          <span data-keep-color="" style={{ ...swPv, background: pal.P }} /><span data-keep-color="" style={{ ...swPv, background: pal.A }} /><span data-keep-color="" style={{ ...swPv, background: pal.S, border: '1px solid ' + pal.bdL }} /><span data-keep-color="" style={{ ...swPv, background: pal.dBg }} /><span data-keep-color="" style={{ ...swPv, background: pal.dC2 }} /></div></div>
       </div>
       <div style={{ marginTop: 12, fontSize: 11.5, color: 'var(--mu)' }}>{T('ألوان جاهزة: ', 'Presets: ')}</div>
       <div id="BR_PRE" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
         {PRESETS.map((p) => <button key={p[0]} type="button" className="btn bsm" style={{ display: 'flex', gap: 6, alignItems: 'center' }} onClick={() => { const orig = p[0] === DEFC.p && p[1] === DEFC.s; setB({ p: p[0], s: p[1], a: '' }); commit(orig ? null : { p: p[0], s: p[1], a: '' }, T('اتطبق: ', 'Applied: ') + T(p[2], p[3])); }}>
-          <span style={{ width: 14, height: 14, borderRadius: 4, background: p[0] }} /><span style={{ width: 14, height: 14, borderRadius: 4, background: p[1], border: '1px solid #ccc' }} />{T(p[2], p[3])}</button>)}
+          <span data-keep-color="" style={{ width: 14, height: 14, borderRadius: 4, background: p[0] }} /><span data-keep-color="" style={{ width: 14, height: 14, borderRadius: 4, background: p[1], border: '1px solid #ccc' }} />{T(p[2], p[3])}</button>)}
       </div>
       <div id="BR_ALL" style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--bd)' }}>
         <div style={{ fontWeight: 700, fontSize: 12.5, marginBottom: 6 }}>{T('كل الألوان — اختار اللون وبعدين اضغط عليه', 'All colors — pick, then click a swatch')}</div>

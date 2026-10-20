@@ -378,7 +378,9 @@ def submit_for(employee_id: str, body: dict[str, Any], request: Request, actor: 
 def staff_requests(actor: dict[str, Any] = Depends(c.current_actor), db: Session = Depends(get_db)):
     """ariba_staff_requests: every request (their AllRequests)."""
     pc.require(db, actor, "requests|leaves")
-    rows = c._rows(db, "SELECT * FROM public.workflow_requests WHERE request_type NOT LIKE 'template:%' ORDER BY created_at DESC LIMIT 2000")
+    # forms show once the employee has answered them (waiting for HR, approved or objected), like their AllRequests
+    rows = c._rows(db, """SELECT * FROM public.workflow_requests WHERE request_type NOT LIKE 'template:%'
+        OR current_stage IN ('hr','completed','rejected') ORDER BY created_at DESC LIMIT 2000""")
     return {"requests": _items(db, rows)}
 
 
@@ -404,7 +406,8 @@ def staff_queue(actor: dict[str, Any] = Depends(c.current_actor), db: Session = 
     """ariba_staff_queue: the pending requests (dashboard counter, Pending tab), with the stage they wait at."""
     if not (pc.can(db, actor, "requests|leaves") or actor.get("role") in {"manager", "ceo"}):
         return {"queue": []}
-    rows = c._rows(db, "SELECT * FROM public.workflow_requests WHERE status='pending' AND request_type NOT LIKE 'template:%' ORDER BY created_at")
+    rows = c._rows(db, """SELECT * FROM public.workflow_requests WHERE status='pending'
+        AND (request_type NOT LIKE 'template:%' OR current_stage='hr') ORDER BY created_at""")  # a signed form waits for HR here
     if not pc.can(db, actor, "requests|leaves"):
         rows = [r for r in rows if c._can_act(db, actor, r)]
     return {"queue": _items(db, rows)}

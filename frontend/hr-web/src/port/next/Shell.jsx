@@ -1,5 +1,6 @@
 // ADAPTED (not in their source): their app runs in the browser only (window, localStorage, sessionStorage at render).
 'use client';
+import './latn.js';
 import dynamic from 'next/dynamic';
 
 const PortApp = dynamic(() => import('./PortApp.jsx'), { ssr: false, loading: () => <div style={{ position: 'fixed', inset: 0, background: '#202522' }} /> });

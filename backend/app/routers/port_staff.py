@@ -361,7 +361,7 @@ def send_template(body: dict[str, Any], request: Request, actor: dict[str, Any] 
 @router.get("/staff/templates")
 def template_status(actor: dict[str, Any] = Depends(c.current_actor), db: Session = Depends(get_db)):
     pc.require(db, actor, "forms|documents")
-    rows = c._rows(db, """SELECT r.id,r.employee_id,r.payload->>'template_type' AS template_type,r.payload->>'title' AS title,r.status,r.created_at,
+    rows = c._rows(db, """SELECT r.id,r.employee_id,r.payload->>'template_type' AS template_type,r.payload->>'title' AS title,r.status,r.current_stage AS stage,r.created_at,r.updated_at,
         r.completed_at AS responded_at,(SELECT a.comment FROM public.workflow_actions a WHERE a.request_id=r.id AND a.action='rejected' ORDER BY a.created_at DESC LIMIT 1) AS rejection_reason
         FROM public.workflow_requests r WHERE r.request_type LIKE 'template:%' ORDER BY r.created_at DESC LIMIT 500""")
     return [{**r, "id": str(r["id"]), "template_type": r["template_type"] or ""} for r in rows]

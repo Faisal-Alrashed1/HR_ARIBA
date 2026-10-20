@@ -68,7 +68,7 @@ export default function TasksScreen() {
       </View>
       <T size={12} color={t.mu} style={{ marginVertical: 3 }}>
         {(isIn ? "من: " + (x.from_name ?? "") : "إلى: " + (x.to_name ?? "")) + " • "
-          + (x.kind === "meeting" && x.start_at ? new Date(x.start_at).toLocaleString("ar-EG", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }) : x.due_date ? "الموعد: " + fmt(x.due_date) : "")
+          + (x.kind === "meeting" && x.start_at ? new Date(x.start_at).toLocaleString("ar-EG-u-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }) : x.due_date ? "الموعد: " + fmt(x.due_date) : "")
           + (x.location ? " • " + x.location : "")}
       </T>
       {x.details ? <T size={12.5}>{x.details}</T> : null}

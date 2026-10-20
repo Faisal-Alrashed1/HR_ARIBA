@@ -284,6 +284,8 @@ export type Letter = {
   type: string;
   title: string;
   status: "pending" | "approved" | "rejected";
+  /** employee = waiting for my answer; manager = my manager signs; hr = HR approves; completed / rejected */
+  stage?: string;
   rejection_reason: string | null;
   created_at: string;
   responded_at: string | null;

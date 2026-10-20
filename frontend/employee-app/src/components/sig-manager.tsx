@@ -25,7 +25,7 @@ export function SigManager({ owner, visible, onClose, onSaved }: { owner: string
       {mode === "view" && cur ? (
         <>
           <View style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 8, backgroundColor: "#fff", alignItems: "center" }}>
-            {cur.startsWith("data:image/svg") ? <T size={12} color="#0a7a3f">✓ توقيع محفوظ</T> : <Image source={{ uri: cur }} style={{ height: 80, width: "100%" }} resizeMode="contain" />}
+            {cur.startsWith("data:image/svg") ? <T size={12} color="#014D3D">✓ توقيع محفوظ</T> : <Image source={{ uri: cur }} style={{ height: 80, width: "100%" }} resizeMode="contain" />}
           </View>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <Btn kind="ghost" title="رسم توقيع جديد" onPress={() => setMode("draw")} style={{ flex: 1 }} />

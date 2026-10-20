@@ -10,7 +10,7 @@ import { Icon } from "@/components/icons";
 import { PasswordSheet } from "@/components/password-sheet";
 import { T, useToast } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
-import { DataProvider, useData } from "@/lib/data";
+import { useData } from "@/lib/data";
 import { useBell } from "@/lib/notifications";
 import { PunchProvider } from "@/lib/punch";
 import { brand, useTheme, useThemeMode } from "@/theme";
@@ -96,8 +96,8 @@ function Header({ title }: { title: string }) {
 }
 
 const KIND = {
-  template: { bg: "rgba(66,133,244,.14)", fg: "#3b7ddd", icon: "file" },
-  request: { bg: "rgba(214,158,46,.17)", fg: "#b9811a", icon: "clock" },
+  template: { bg: "rgba(66,133,244,.14)", fg: "#014D3D", icon: "file" },
+  request: { bg: "rgba(214,158,46,.17)", fg: "#231F20", icon: "clock" },
   ok: { bg: "rgba(41,179,94,.17)", fg: "#1F8D49", icon: "checkCircle" },
   no: { bg: "rgba(181,74,74,.15)", fg: "#B54A4A", icon: "xCircle" },
 } as const;
@@ -203,16 +203,14 @@ function BioAsk() {
 
 export default function TabsLayout() {
   return (
-    <DataProvider>
-      <PunchProvider>
-        <BioAsk />
-        <Tabs tabBar={(p) => <BottomNav {...(p as unknown as BottomTabBarProps)} />} screenOptions={({ route }) => ({
-          header: () => <Header title={TABS.find((x) => x.name === route.name)?.title ?? ""} />,
-        })}>
-          {TABS.map((x) => <Tabs.Screen key={x.name} name={x.name} options={{ title: x.title }} />)}
-        </Tabs>
-      </PunchProvider>
-    </DataProvider>
+    <PunchProvider>
+      <BioAsk />
+      <Tabs tabBar={(p) => <BottomNav {...(p as unknown as BottomTabBarProps)} />} screenOptions={({ route }) => ({
+        header: () => <Header title={TABS.find((x) => x.name === route.name)?.title ?? ""} />,
+      })}>
+        {TABS.map((x) => <Tabs.Screen key={x.name} name={x.name} options={{ title: x.title }} />)}
+      </Tabs>
+    </PunchProvider>
   );
 }
 

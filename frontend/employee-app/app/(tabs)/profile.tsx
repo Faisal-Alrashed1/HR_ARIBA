@@ -5,7 +5,6 @@ import { Pressable, View } from "react-native";
 import { router } from "expo-router";
 import { api } from "@/lib/api";
 import { openDocument } from "@/lib/open-doc";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { PasswordSheet } from "@/components/password-sheet";
 import { dmy, LocationsCard, sar } from "@/components/shared";
 import { Btn, Card, CardTitle, InfoBox, Page, PayRow, T, useToast } from "@/components/ui";
@@ -27,24 +26,17 @@ export default function Profile() {
   const s = e?.salary;
   return (
     <Page onRefresh={refresh}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 14, marginBottom: 12, overflow: "hidden", borderWidth: 1, borderColor: "#29B35E",
+      {/* the hero fills its card (a solid brand colour, not an SVG that may not stretch); long names wrap */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 14, marginBottom: 12, overflow: "hidden",
+        backgroundColor: t.dark ? "#013D31" : "#014D3D",
         shadowColor: t.dark ? "#000" : "#014D3D", shadowOpacity: t.dark ? 0.2 : 0.16, shadowRadius: 15, shadowOffset: { width: 0, height: 12 }, elevation: 3 }}>
-        <Svg style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} width="100%" height="100%">
-          <Defs>
-            <LinearGradient id="ph" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor={t.dark ? "#013D31" : "#014D3D"} />
-              <Stop offset="1" stopColor="#075444" />
-            </LinearGradient>
-          </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#ph)" />
-        </Svg>
-        <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: t.gr, alignItems: "center", justifyContent: "center" }}>
-          <T size={30} weight={800} color="#fff">{e?.name_ar?.charAt(0) ?? ""}</T>
+        <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "rgba(255,255,255,.16)", alignItems: "center", justifyContent: "center" }}>
+          <T size={28} weight={800} color="#fff">{e?.name_ar?.charAt(0) ?? ""}</T>
         </View>
-        <View style={{ flex: 1 }}>
-          <T size={17} weight={800} color="#fff">{e?.name_ar ?? ""}</T>
-          {e?.name_en ? <T size={11} color="#D0D9D5">{e.name_en}</T> : null}
-          {e?.job_title ? <T size={12} weight={700} color="#fff" style={{ marginTop: 6 }}>{e.job_title}</T> : null}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <T size={16} weight={800} color="#fff" numberOfLines={2} style={{ flexShrink: 1, lineHeight: 24 }}>{e?.name_ar ?? ""}</T>
+          {e?.name_en ? <T size={11} color="#D0D9D5" numberOfLines={1} style={{ flexShrink: 1, marginTop: 2 }}>{e.name_en}</T> : null}
+          {e?.job_title ? <T size={12} weight={700} color="#E4E4BC" numberOfLines={1} style={{ marginTop: 6 }}>{e.job_title}</T> : null}
         </View>
       </View>
 

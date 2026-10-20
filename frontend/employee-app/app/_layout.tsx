@@ -3,6 +3,7 @@ import { Redirect, Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Platform } from "react-native";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { DataProvider } from "@/lib/data";
 import { NotificationsProvider } from "@/lib/notifications";
 import { Loading, ToastProvider } from "@/components/ui";
 import { fonts, ThemeProvider, useTheme } from "@/theme";
@@ -42,7 +43,9 @@ export default function RootLayout() {
       <AuthProvider>
         <NotificationsProvider>
           <ToastProvider>
-            <Gate />
+            <DataProvider>
+              <Gate />
+            </DataProvider>
           </ToastProvider>
         </NotificationsProvider>
       </AuthProvider>

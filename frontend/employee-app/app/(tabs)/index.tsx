@@ -87,7 +87,7 @@ function Chip({ text, tone, icon }: { text: string; tone?: "ok" | "bad"; icon: "
   const color = tone === "bad" ? (t.dark ? "#F07A7A" : "#8f3636") : t.dark ? "#E4E4BC" : "#014D3D";
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 11, backgroundColor: bg, borderWidth: 1, borderColor: border }}>
-      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: tone === "ok" ? "#29B35E" : tone === "bad" ? "#d96b6b" : "#c9a24a" }} />
+      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: tone === "ok" ? "#29B35E" : tone === "bad" ? "#d96b6b" : "#E4E4BC" }} />
       <Icon name={icon} size={13} color={color} stroke={2} />
       <T size={11.5} weight={700} color={color}>{text}</T>
     </View>

@@ -70,7 +70,7 @@ export default function Dashboard() {
           <div data-ariba-kpi="payroll" style={{ background: 'var(--c2)', borderRadius: 18, padding: '24px 20px', textAlign: 'center', border: '2px solid var(--ariba-dark,#014D3D)', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 140 }}>
             <i className="ti ti-cash ariba-kpi-icon" aria-hidden="true" style={KPI_ICON} />
             <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 8 }}>{h ? 'MONTHLY PAYROLL' : 'إجمالي الرواتب'}</div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--tx)', lineHeight: 1.2, marginBottom: 6 }}>{Math.round(m.totSal).toLocaleString('ar-SA')}</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--tx)', lineHeight: 1.2, marginBottom: 6 }}>{Math.round(m.totSal).toLocaleString('en-US')}</div>
             <div style={{ fontSize: 12, color: 'var(--mu)' }}>ريال سعودي / شهرياً</div>
           </div>
           <div data-ariba-kpi="gender" style={{ background: 'var(--c2)', borderRadius: 18, padding: '24px 20px', border: '2px solid var(--ariba-dark,#014D3D)', minHeight: 140 }}>

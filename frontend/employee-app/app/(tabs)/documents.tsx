@@ -65,12 +65,13 @@ function Doc({ x, onDone, state, owner, name, needSig }: { x: Letter; onDone: ()
       <Btn kind="ghost" title="عرض المستند" icon={<Icon name="eye" size={16} color={t.tx} />}
         onPress={() => router.push({ pathname: "/letter/[id]", params: { id: x.id, title: x.title } })} />
       {state?.stage === "manager" ? <T size={12} style={{ padding: 8, borderRadius: 8, backgroundColor: "rgba(245,158,11,.15)", marginTop: 6 }}>⏳ وقّعت — بانتظار توقيع مديرك المباشر قبل أن يذهب للموارد البشرية</T> : null}
+      {x.status === "pending" && x.stage === "hr" ? <T size={12} style={{ padding: 8, borderRadius: 8, backgroundColor: "rgba(1,77,61,.10)", marginTop: 6 }}>🕓 وافقت — بانتظار اعتماد الموارد البشرية</T> : null}
       {state?.stage === "rejected" ? <T size={12} style={{ padding: 8, borderRadius: 8, backgroundColor: "rgba(229,72,77,.12)", marginTop: 6 }}>❌ رفض المدير التوقيع: {state.reject_reason ?? ""}</T> : null}
-      {x.status === "pending" && !state ? (
+      {x.status === "pending" && (x.stage ?? "employee") === "employee" && !state ? (
         <>
           <Btn title="✍️ موافق مع التوقيع" onPress={signApprove} busy={busy} style={{ backgroundColor: "#014D3D" }} />
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <Btn title="موافقة بدون توقيع" icon={<Icon name="check" size={16} color="#fff" />} onPress={() => respond("approved")} busy={busy} style={{ flex: 1, backgroundColor: "#12b76a" }} kind="success" />
+            <Btn title="موافقة بدون توقيع" icon={<Icon name="check" size={16} color="#fff" />} onPress={() => respond("approved")} busy={busy} style={{ flex: 1, backgroundColor: "#28B35D" }} kind="success" />
             <Btn title="رفض" icon={<Icon name="x" size={16} color="#fff" />} onPress={() => setRejecting(true)} style={{ flex: 1, backgroundColor: t.rd }} kind="danger" />
           </View>
           {rejecting ? (

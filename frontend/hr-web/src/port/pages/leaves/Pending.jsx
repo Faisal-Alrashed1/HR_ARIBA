@@ -54,6 +54,7 @@ export default function Pending({ onCount }) {
             const detail = r.request_type === 'iban_change' ? `IBAN: ${p.iban || ''} | ${p.bank || ''} | حساب ${p.account_no || ''}${p.old_iban ? ' (السابق: ' + p.old_iban + ')' : ''}`
               : r.request_type === 'profile_edit' ? Object.keys(p.changes || {}).map((k) => `${k}: ${(p.old || {})[k] || '—'} ← ${p.changes[k]}`).join(' | ')
               : r.request_type === 'document' ? (p.doc_label || '')
+              : String(r.request_type || '').startsWith('template:') ? (h ? 'Accepted by the employee — open the signed copy below' : 'وافق عليه الموظف — المستند الموقّع في المرفقات')
               : p.from ? `${p.from} ← ${p.to} | ${p.days || 0} ${h ? 'days' : 'يوم'}` : `${p.date || ''}${p.time ? ' ' + p.time : ''}${p.hours ? ' | ' + p.hours + (h ? ' h' : ' ساعة') : ''}${p.amount ? ' | ' + Number(p.amount).toLocaleString('en-US') + ' SAR' : ''}`;
             const st = STAGE[r.current_stage] || ['Completed', 'مكتمل'];
             const lt = LVL[r.request_type];
@@ -61,7 +62,7 @@ export default function Pending({ onCount }) {
               <div key={r.id} style={{ padding: '12px 14px', borderBottom: '1px solid rgba(36,48,68,.5)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 260 }}>
-                    <div style={{ fontWeight: 800, fontSize: 13 }}>{nm} <span className="b ba">{lt ? (h ? lt.en : lt.ar) : (r.request_type === 'forgot_punch' ? (h ? 'Forgot punch' : 'نسيان بصمة') : r.request_type)}</span></div>
+                    <div style={{ fontWeight: 800, fontSize: 13 }}>{nm} <span className="b ba">{lt ? (h ? lt.en : lt.ar) : (r.request_type === 'forgot_punch' ? (h ? 'Forgot punch' : 'نسيان بصمة') : String(r.request_type || '').startsWith('template:') ? '📄 ' + (p.title || (h ? 'Document' : 'مستند')) : r.request_type)}</span></div>
                     <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4 }}>{detail}</div>
                     {p.from && <IntNote eid={r.employee_id} type={r.request_type} from={p.from} to={p.to || p.from} />}
                     {r.request_type === 'forgot_punch' ? (() => { const KIND = { in: h ? 'Check-in' : 'دخول', out: h ? 'Check-out' : 'خروج', both: h ? 'Check-in & out' : 'دخول وخروج' }; const f5 = (t) => String(t || '').slice(0, 5); return (

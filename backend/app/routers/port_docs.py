@@ -95,23 +95,11 @@ def employee_sign(request_id: uuid.UUID, body: dict[str, Any], request: Request,
         pc.notify(db, manager, request_id, "مستند بانتظار توقيعك كمدير", f"وقّعه {actor.get('name_ar')}: {title}", "manager", "template")
         nxt = "manager"
     else:
-        _ack(db, actor, req, "approved", None)
+        pc.letter_to_hr(db, req, actor.get("account_id"), "employee", "وقّع الموظف")
         nxt = "hr"
     c._write_audit(db, actor, request, "letters", "employee_sign", "workflow_request", request_id, details={"next": nxt})
     db.commit()
     return {"next": nxt, "document_id": str(doc_id)}
-
-
-def _ack(db: Session, actor: dict[str, Any], req: dict[str, Any], action: str, reason: str | None) -> None:
-    """The employee's answer to a form (their ariba_employee_ack_template) — approved completes it; HR is told."""
-    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:id,:aid,'employee',:a,:c)"),
-               {"id": req["id"], "aid": actor.get("account_id"), "a": action, "c": reason})
-    db.execute(text("UPDATE public.workflow_requests SET current_stage=:s,completed_at=now(),updated_at=now() WHERE id=:id"),
-               {"s": "completed" if action == "approved" else "rejected", "id": req["id"]})
-    title = (req.get("payload") or {}).get("title") or ""
-    name = (c._row(db, "SELECT name_ar FROM public.employee_directory WHERE employee_id=:e", e=req["employee_id"]) or {}).get("name_ar")
-    for h in pc.hr_people(db):
-        pc.notify(db, h, req["id"], ("✅ وافق" if action == "approved" else "❌ رفض") + f" {name} على مستند", title, "hr", "template")
 
 
 @router.get("/me/sign/states")
@@ -149,7 +137,7 @@ def manager_sign(request_id: uuid.UUID, body: dict[str, Any], request: Request, 
         db.execute(text("UPDATE public.ariba_documents SET file_data=:d WHERE id=:i"), {"d": signed, "i": s["document_id"]})
         db.execute(text("UPDATE public.ariba_doc_signing SET stage='hr',mgr_signed_at=now(),updated_at=now() WHERE request_id=:id"), {"id": request_id})
         if req and req["status"] == "pending":
-            _ack(db, {"account_id": None}, req, "approved", "وقّعه المدير المباشر")
+            pc.letter_to_hr(db, req, actor.get("account_id"), "manager", "وقّعه المدير المباشر")
         pc.notify(db, s["employee_id"], request_id, "وقّع مديرك المستند", "أُرسل المستند للموارد البشرية", "employee", "template")
     else:
         raise ApiError(422, "invalid_action", "Action must be approved or rejected")

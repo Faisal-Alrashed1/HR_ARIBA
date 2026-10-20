@@ -1779,7 +1779,7 @@ def mark_notifications_read(body: dict[str, Any] | None = None, actor: dict[str,
 
 @router.get("/me/letters")
 def my_letters(actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    return _rows(db, """SELECT r.id,r.request_type AS type,r.payload->>'title' AS title,r.status,
+    return _rows(db, """SELECT r.id,r.request_type AS type,r.payload->>'title' AS title,r.status,r.current_stage AS stage,
         (SELECT a.comment FROM public.workflow_actions a WHERE a.request_id=r.id AND a.action='rejected' ORDER BY a.created_at DESC LIMIT 1) AS rejection_reason,
         r.created_at,r.completed_at AS responded_at FROM public.workflow_requests r
         WHERE r.employee_id=:eid AND r.request_type LIKE 'template:%' ORDER BY r.created_at DESC""", eid=actor.get("employee_id"))
@@ -1793,19 +1793,26 @@ def respond_letter(letter_id: uuid.UUID, body: dict[str, Any], request: Request,
     action = body.get("action")
     if action not in {"approved", "rejected"} or (action == "rejected" and len(str(body.get("reason") or "").strip()) < 3):
         raise ApiError(422, "invalid_request", "Invalid letter response")
-    status = "approved" if action == "approved" else "rejected"
-    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:id,:aid,'employee',:action,:reason)"), {"id": letter_id, "aid": actor["account_id"], "action": action, "reason": body.get("reason")})
-    db.execute(text("UPDATE public.workflow_requests SET current_stage=:stage,completed_at=now(),updated_at=now() WHERE id=:id"), {"stage": "completed" if status == "approved" else "rejected", "id": letter_id})
+    if action == "approved":  # accepted without a signature: waits for HR's approval like a signed one
+        pc.letter_to_hr(db, row, actor["account_id"], "employee", body.get("reason"))
+    else:
+        db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:id,:aid,'employee',:action,:reason)"), {"id": letter_id, "aid": actor["account_id"], "action": action, "reason": body.get("reason")})
+        db.execute(text("UPDATE public.workflow_requests SET current_stage='rejected',completed_at=now(),updated_at=now() WHERE id=:id"), {"id": letter_id})
+        name = (_row(db, "SELECT name_ar FROM public.employee_directory WHERE employee_id=:e", e=row["employee_id"]) or {}).get("name_ar") or ""
+        for h in pc.hr_people(db):
+            pc.notify(db, h, letter_id, f"❌ اعترض {name} على مستند", str(body.get("reason") or ""), "hr", "template")
     _write_audit(db, actor, request, "letters", "respond", "workflow_request", letter_id, details={"action": action})
     db.commit()
-    return _row(db, """SELECT r.id,r.request_type AS type,r.payload->>'title' AS title,r.status,
+    return _row(db, """SELECT r.id,r.request_type AS type,r.payload->>'title' AS title,r.status,r.current_stage AS stage,
         (SELECT a.comment FROM public.workflow_actions a WHERE a.request_id=r.id AND a.action='rejected' ORDER BY a.created_at DESC LIMIT 1) AS rejection_reason,
         r.created_at,r.completed_at AS responded_at FROM public.workflow_requests r WHERE r.id=:id""", id=letter_id)
 
 
 @router.get("/letters/{letter_id}/html", response_class=HTMLResponse)
 def letter_html(letter_id: uuid.UUID, actor: dict[str, Any] = Depends(current_actor), db: Session = Depends(get_db)):
-    row = _row(db, "SELECT d.file_data,d.mime_type,d.file_name FROM public.ariba_documents d JOIN public.workflow_requests r ON d.request_id=r.id WHERE r.id=:id AND (r.employee_id=:eid OR :role=ANY(:roles)) LIMIT 1", id=letter_id, eid=actor.get("employee_id"), role=actor["role"], roles=list(HR_READ_ROLES))
+    row = _row(db, """SELECT d.file_data,d.mime_type,d.file_name FROM public.ariba_documents d JOIN public.workflow_requests r ON d.request_id=r.id
+        WHERE r.id=:id AND (r.employee_id=:eid OR :role=ANY(:roles)) ORDER BY (d.document_type='signed_document') DESC, d.created_at DESC LIMIT 1""",
+               id=letter_id, eid=actor.get("employee_id"), role=actor["role"], roles=list(HR_READ_ROLES))
     if not row:
         raise ApiError(404, "not_found", "Letter not found")
     return HTMLResponse(bytes(row["file_data"]).decode("utf-8", errors="replace"))

@@ -98,6 +98,8 @@ def stages_for(db: Session, req_type: str, has_manager: bool) -> list[str]:
     HR-final ones)."""
     if req_type == "forgot_punch":
         return ["hr"]
+    if req_type.startswith("template:"):  # a form the employee signed / accepted: HR's approval closes it
+        return ["hr"]
     final = wf_config(db)["final_by_type"].get(req_type, "ceo")
     return (["manager"] if has_manager and req_type not in HR_DIRECT else []) + ["hr"] + (["ceo"] if final == "ceo" else [])
 
@@ -157,3 +159,15 @@ def hr_people(db: Session) -> list[str]:
 
 def new_id() -> uuid.UUID:
     return uuid.uuid4()
+
+
+def letter_to_hr(db: Session, req: dict[str, Any], account_id: Any, stage: str, comment: str | None) -> None:
+    """A form the employee accepted (signed or not, and signed by the direct manager when asked) waits for HR: it shows
+    in HR's pending requests, and HR's approval completes it (all requests, forms archive)."""
+    db.execute(text("INSERT INTO public.workflow_actions(request_id,actor_account_id,stage,action,comment) VALUES(:r,:a,:s,'approved',:c)"),
+               {"r": req["id"], "a": account_id, "s": stage, "c": comment})
+    db.execute(text("UPDATE public.workflow_requests SET current_stage='hr',updated_at=now() WHERE id=:r"), {"r": req["id"]})
+    title = (req.get("payload") or {}).get("title") or ""
+    name = db.execute(text("SELECT name_ar FROM public.employee_directory WHERE employee_id=:e"), {"e": req["employee_id"]}).scalar()
+    for h in hr_people(db):
+        notify(db, h, req["id"], f"📄 وافق {name or ''} على مستند — بانتظار اعتمادك", title, "hr", "template")

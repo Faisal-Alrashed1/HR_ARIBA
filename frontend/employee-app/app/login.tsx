@@ -106,7 +106,7 @@ export default function Login() {
             <T size={11} color={t.mu}>نسيان هذا الجهاز (حذف البيانات المحفوظة)</T>
           </Pressable>
         ) : null}
-        {msg ? <T size={12} center color={msg.good ? "#16834a" : "#9a6700"} style={{ marginTop: 8 }}>{msg.t}</T> : null}
+        {msg ? <T size={12} center color={msg.good ? t.bl : t.am} style={{ marginTop: 8 }}>{msg.t}</T> : null}
       </View>
       {forgot ? <ForgotSheet onClose={() => setForgot(false)} /> : null}
     </KeyboardAvoidingView>
@@ -115,6 +115,7 @@ export default function Login() {
 
 /** Their ForgotDialog: a temporary password to the e-mail on my record (the old password works until it is used). */
 function ForgotSheet({ onClose }: { onClose: () => void }) {
+  const t = useTheme();
   const [mode, setMode] = useState<"user" | "iq">("user");
   const [v, setV] = useState("");
   const [busy, setBusy] = useState(false);
@@ -147,7 +148,7 @@ function ForgotSheet({ onClose }: { onClose: () => void }) {
       <Pressable onPress={() => { setMode(mode === "user" ? "iq" : "user"); setMsg(null); }} style={{ marginVertical: 10 }}>
         <T size={12} color="#29B35E">{mode === "user" ? "نسيت اسم المستخدم؟ استخدم رقم الإقامة" : "استخدم اسم المستخدم"}</T>
       </Pressable>
-      {msg ? <T size={12} color={msg.ok ? "#15803d" : "#b45309"} style={{ marginBottom: 10 }}>{msg.t}</T> : null}
+      {msg ? <T size={12} color={msg.ok ? t.bl : t.am} style={{ marginBottom: 10 }}>{msg.t}</T> : null}
       <View style={{ flexDirection: "row", gap: 8 }}>
         <Btn kind="ghost" title="إغلاق" onPress={onClose} style={{ flex: 1 }} />
         {!done ? <Btn title="إرسال" onPress={go} busy={busy} style={{ flex: 1 }} /> : null}

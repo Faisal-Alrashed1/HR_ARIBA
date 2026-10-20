@@ -6,3 +6,31 @@ html[data-ariba-theme="dark"] #KR .ariba-kpi-icon,html[data-ariba-theme="dark"] 
 html[data-ariba-theme="dark"] .ariba-gender-ic.male,html[data-ariba-theme="dark"] .ariba-gender-ic.female{color:var(--ariba-bright,#29B35E)}
 /* Every KPI tile has the dark green border (1d2bbed); legacy-base.css still carries the old grey payroll border. */
 html[data-ariba-theme] #KR#KR [data-ariba-kpi]{border-color:var(--ariba-dark,#014D3D)!important}
+
+/* Layering: the sidebar sits above the page but below every window that opens over it (modals .mw 200, the bell,
+   toasts, the assistant). It was at 2147483000, so the part of a modal on the sidebar's side was hidden under it. */
+#SB#SB,.app .sb{z-index:100!important}
+#SBX_BD#SBX_BD{z-index:99!important}
+html[dir] body #SBX_BTN#SBX_BTN{z-index:101!important}
+.mw{z-index:2000}
+
+/* Every input is width:100% in their base CSS — radios and checkboxes too, which squeezed the text next to them
+   (Settings › country system cards). They keep their own size; the text beside them takes the rest. */
+input[type="radio"],input[type="checkbox"]{width:auto;flex:none}
+.cn-opt>div{flex:1;min-width:0}
+
+/* The ARIBA palette (company identity): primary dark #014D3D, primary light #28B35D, secondary dark #231F20,
+   secondary light #E4E4BC; red only for errors. Inline colours of their screens are mapped in next/palette.js;
+   their CSS classes below. --ar-warm = a warning: charcoal by day, beige at night. */
+:root{--ar-p:#014D3D;--ar-a:#28B35D;--ar-s:#231F20;--ar-l:#E4E4BC;--ar-warm:#231F20;--ar-acc:#014D3D}
+html[data-ariba-theme="dark"]{--ar-warm:#E4E4BC;--ar-acc:#28B35D}
+.bg,.alg,.tok{background:rgba(40,179,93,.15);color:var(--ar-acc)}
+.bp,.bc,.alb,.tin{background:rgba(1,77,61,.12);color:var(--ar-acc)}
+html[data-ariba-theme="dark"] .bp,html[data-ariba-theme="dark"] .bc,html[data-ariba-theme="dark"] .alb,html[data-ariba-theme="dark"] .tin{background:rgba(40,179,93,.12)}
+.ba,.ala{background:rgba(228,228,188,.35);color:var(--ar-warm)}
+html[data-ariba-theme="dark"] .ba,html[data-ariba-theme="dark"] .ala{background:rgba(228,228,188,.14)}
+.alb,.alg,.ala{border-color:currentColor}
+html[data-ariba-theme] #a9Panel .a9-ic.template{background:rgba(1,77,61,.12);color:var(--ar-acc)!important}
+html[data-ariba-theme] #a9Panel .a9-ic.request{background:rgba(228,228,188,.3);color:var(--ar-warm)!important}
+html[data-ariba-theme] #a9Panel .a9-ic.ok{background:rgba(40,179,93,.15);color:var(--ar-a)!important}
+.ti-emo{color:var(--ar-acc)}

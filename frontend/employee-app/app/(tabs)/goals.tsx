@@ -37,7 +37,7 @@ export default function Goals() {
                   <T size={11} color={t.mu}>{`المطلوب ${x.target_value ?? "—"} ${x.unit ?? ""} · المنجز ${x.actual_value ?? 0}`}</T>
                   {p != null ? (
                     <View style={{ height: 6, backgroundColor: "rgba(120,140,160,.25)", borderRadius: 4, overflow: "hidden", marginTop: 4 }}>
-                      <View style={{ width: `${p}%`, height: "100%", backgroundColor: p >= 90 ? "#16a34a" : p >= 60 ? "#d99a00" : "#dc2626" }} />
+                      <View style={{ width: `${p}%`, height: "100%", backgroundColor: p >= 90 ? "#28B35D" : p >= 60 ? t.am : t.rd }} />
                     </View>
                   ) : null}
                 </View>); })}

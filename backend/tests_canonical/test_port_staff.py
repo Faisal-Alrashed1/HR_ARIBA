@@ -120,3 +120,41 @@ def test_bell_and_attendance_settings(api):
                    headers=h(api, "hr.test")).status_code == 200
     assert api.put(f"{V1}/staff/flexible-hours", json={"enabled": True, "shift_hours": 8, "window_start": "18:00", "window_end": "07:00"},
                    headers=h(api, "hr.test")).status_code == 422
+
+
+def test_form_flow_sign_then_hr_approves(api, port_engine):
+    """HR sends a form → the employee signs it (or accepts it without a signature) → it waits in HR's pending
+    requests → HR approves → it is in all requests and the forms archive as approved. An objection closes it."""
+    html = base64.b64encode("<p>خطاب تعريف <span data-sig=\"employee\">________________</span></p>".encode()).decode()
+    send = lambda eid, title: api.post(f"{V1}/staff/templates", json={"employee_id": eid, "template_type": "intro", "title": title, "base64": html},
+                                       headers=h(api, "hr.test")).json()["request_id"]
+    rid = send("63", "خطاب تعريف")
+    mine = api.get(f"{V1}/me/letters", headers=h(api, "emp63.test")).json()
+    assert next(x for x in mine if x["id"] == rid)["stage"] == "employee"
+    assert all(x["request"]["id"] != rid for x in api.get(f"{V1}/staff/queue", headers=h(api, "hr.test")).json()["queue"])  # not HR's yet
+
+    signed = base64.b64encode("<p>خطاب تعريف ✍️</p>".encode()).decode()
+    r = api.post(f"{V1}/me/letters/{rid}/sign", json={"document_id": None, "template_type": "intro", "signed_base64": signed}, headers=h(api, "emp63.test"))
+    assert r.status_code == 200 and r.json()["next"] == "hr"
+    assert next(x for x in api.get(f"{V1}/me/letters", headers=h(api, "emp63.test")).json() if x["id"] == rid)["stage"] == "hr"
+    item = next(x for x in api.get(f"{V1}/staff/queue", headers=h(api, "hr.test")).json()["queue"] if x["request"]["id"] == rid)
+    assert any(a["document_type"] == "signed_document" for a in item["attachments"])
+    assert "✍️" in api.get(f"{V1}/letters/{rid}/html", headers=h(api, "hr.test")).text  # HR opens the signed copy
+    assert sql(port_engine, f"SELECT count(*) AS n FROM workflow_notifications WHERE request_id='{rid}' AND stage='hr'")[0]["n"] >= 1
+    st = next(x for x in api.get(f"{V1}/staff/templates", headers=h(api, "hr.test")).json() if x["id"] == rid)
+    assert (st["status"], st["stage"]) == ("pending", "hr")
+
+    ok = api.post(f"{V1}/requests/{rid}/override", json={"reason": "اعتماد"}, headers=h(api, "hr.test"))
+    assert ok.status_code == 200 and ok.json()["status"] == "approved"  # HR closes a form: no CEO stage
+    assert any(x["request"]["id"] == rid for x in api.get(f"{V1}/staff/requests", headers=h(api, "hr.test")).json()["requests"])
+    assert next(x for x in api.get(f"{V1}/staff/templates", headers=h(api, "hr.test")).json() if x["id"] == rid)["status"] == "approved"
+
+    rid2 = send("72", "شهادة راتب")  # accepted without a signature: the same way through HR
+    a = api.post(f"{V1}/me/letters/{rid2}/respond", json={"action": "approved"}, headers=h(api, "emp72.test"))
+    assert a.status_code == 200 and (a.json()["status"], a.json()["stage"]) == ("pending", "hr")
+    assert any(x["request"]["id"] == rid2 for x in api.get(f"{V1}/staff/queue", headers=h(api, "hr.test")).json()["queue"])
+
+    rid3 = send("72", "إخلاء طرف")  # an objection closes it and tells HR
+    o = api.post(f"{V1}/me/letters/{rid3}/respond", json={"action": "rejected", "reason": "البيانات غير صحيحة"}, headers=h(api, "emp72.test"))
+    assert o.status_code == 200 and o.json()["status"] == "rejected" and o.json()["rejection_reason"] == "البيانات غير صحيحة"
+    assert sql(port_engine, f"SELECT count(*) AS n FROM workflow_notifications WHERE request_id='{rid3}' AND stage='hr'")[0]["n"] >= 1

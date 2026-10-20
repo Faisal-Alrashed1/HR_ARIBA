@@ -2,6 +2,7 @@
 // يعمل على مستوى jsx-runtime فلا يحتاج تعديل كل ملف، ويغطي النصوص الديناميكية والتنبيهات أيضاً.
 import * as R from 'react/jsx-runtime';
 import * as D from 'react/jsx-dev-runtime';
+import { brandStyle } from '../next/palette.js';
 
 const G = (icon, keys) => keys.map((k) => [k, icon]);
 const MAP = Object.fromEntries([
@@ -40,6 +41,7 @@ function conv(ch, plain) {
 }
 function fix(type, props) {
   if (!props || typeof type === 'symbol' && type !== R.Fragment) return props;
+  if (props.style && !('data-keep-color' in props)) { const st = brandStyle(props.style); if (st !== props.style) props = { ...props, style: st }; } // ADAPTED: the ARIBA palette (next/palette.js)
   const c = props.children; if (c == null || typeof c === 'object' && !Array.isArray(c)) return props;
   const n = conv(c, typeof type === 'string' && PLAIN.has(type)); return n === c ? props : { ...props, children: n };
 }

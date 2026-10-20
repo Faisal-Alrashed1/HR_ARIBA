@@ -38,10 +38,14 @@ byte-for-byte their code; ESLint skips it (they lint it with oxlint) except the 
 ## Their build setup
 | File | Change |
 |---|---|
-| `lib/ico-runtime.js` | Their `vite.config.js` makes this file the JSX runtime (every emoji → a Tabler icon). Here `next.config.ts` adds the same for files under `src/port` only (`next/ico/ico-loader.cjs` + `next/ico/jsx-*runtime.js`). Two lines changed: React is imported as `react/jsx-runtime`, and `jsxDEV` is added for dev mode. |
+| `lib/ico-runtime.js` | Their `vite.config.js` makes this file the JSX runtime (every emoji → a Tabler icon). Here `next.config.ts` adds the same for files under `src/port` only (`next/ico/ico-loader.cjs` + `next/ico/jsx-*runtime.js`). Changed: React is imported as `react/jsx-runtime`, `jsxDEV` is added for dev mode, and inline styles pass through `next/palette.js` (below). |
 
 ## Our look on their screens (owner's request)
 | File | Change |
 |---|---|
 | `pages/Dashboard.jsx`, `styles/ariba-ours.css` | Our dashboard (commits 673ddb1, 9a345ee, 8ee52fc, 1d2bbed): dark green border on every KPI tile, a line icon on each tile, payroll figure in the text colour (not purple), the male/female silhouettes (`components/hr/gender-icons.tsx`) in one colour, gradient department bars, chart colours as hex (a canvas cannot read `var(--…)`, they drew black). |
 | `components/Layout.jsx` | The ARIBA logo (`/brand/ariba-logo.png`) in the sidebar when none is uploaded in Settings. |
+| `next/palette.js`, `styles/ariba-ours.css`, `pages/settings/BrandCard.jsx` (`data-keep-color` on the swatches) | The company palette (owner, 2026-10-20): primary dark `#014D3D`, primary light `#28B35D`, secondary dark `#231F20`, secondary light `#E4E4BC`; red for errors only. Off-brand inline colours (blue / purple / teal / orange / brown) map to the nearest of the four; the badge / alert / toast classes too. The colour pickers keep their real colours. |
+| `next/latn.js` (loaded by `next/Shell.jsx`, `next/page.jsx`) | Every number and date in English digits whatever locale a screen passes (`ar-SA`, `ar-EG` …). |
+| `styles/ariba-ours.css` | The sidebar sits below the windows that open over the page (it was at the top z-index, hiding part of modals); radios / checkboxes keep their size (their `input{width:100%}` squeezed the text beside them). |
+| `pages/leaves/Pending.jsx`, `pages/leaves/AllRequests.jsx`, `pages/forms/index.jsx` | A form the employee accepted shows as «📄 title» in HR's pending requests (with the signed copy) and in all requests; the forms archive says whether it waits for the manager's signature or HR's approval. |

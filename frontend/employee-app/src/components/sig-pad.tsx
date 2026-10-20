@@ -23,9 +23,15 @@ export function SigPad({ onChange }: { onChange: (dataUrl: string) => void }) {
   const pt = (x: number, y: number) => `${((x * W) / box.current.w).toFixed(1)},${((y * H) / box.current.h).toFixed(1)}`;
   const pan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponderCapture: () => true,
     onMoveShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponderCapture: () => true,
+    // the sheet around the pad scrolls: keep the stroke instead of handing the finger to the scroll view
+    onPanResponderTerminationRequest: () => false,
+    onShouldBlockNativeResponder: () => true,
     onPanResponderGrant: (e) => { cur.current = "M" + pt(e.nativeEvent.locationX, e.nativeEvent.locationY); setLive(cur.current); },
     onPanResponderMove: (e) => { cur.current += " L" + pt(e.nativeEvent.locationX, e.nativeEvent.locationY); setLive(cur.current); },
+    onPanResponderTerminate: () => { cur.current = ""; setLive(""); },
     onPanResponderRelease: () => {
       const done = cur.current;
       cur.current = "";
@@ -41,8 +47,9 @@ export function SigPad({ onChange }: { onChange: (dataUrl: string) => void }) {
   return (
     <View>
       <View onLayout={onLayout} {...pan.panHandlers}
-        style={{ height: 110, borderWidth: 1, borderStyle: "dashed", borderColor: "#888", borderRadius: 8, backgroundColor: "#fff" }}>
-        <Svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`}>
+        style={{ height: 160, borderWidth: 1, borderStyle: "dashed", borderColor: "#888", borderRadius: 8, backgroundColor: "#fff" }}>
+        {/* touches land on the pad, never on a stroke: locationX/Y are then relative to the pad, not to the stroke under the finger */}
+        <Svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} pointerEvents="none">
           {[...paths, live].filter(Boolean).map((d, i) => (
             <Path key={i} d={d} fill="none" stroke="#111" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
           ))}
