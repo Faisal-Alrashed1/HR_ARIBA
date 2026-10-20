@@ -1,4 +1,76 @@
-# دليل الاستخدام السريع — أريبا للموارد البشرية
+# Quick Usage Guide — Ariba HR — دليل الاستخدام السريع
+
+> English first, then the full Arabic version (same content).
+
+---
+
+# English
+
+## Quick usage guide — Ariba HR
+
+The system has two parts that talk to the same server and database, so any change in one shows up immediately in the other:
+- **HR website** (browser): https://frontend-production-f9a8a.up.railway.app
+- **Employee app** (mobile): `frontend/employee-app` — currently tested through Expo Go.
+
+> Do not write passwords in the repo or in chats. Every temporary password is changed at first login.
+
+---
+
+## Part 1: HR website
+
+1. **Login:** open the link and sign in with an HR or admin (`admin`) account — you are asked to change the password the first time.
+2. **Settings first:** Settings → work start time, late grace period, flexible hour, remote-work limit, and workplaces and departments.
+3. **Punch locations:** Attendance → Punch locations → add a location with its coordinates and workplace (the radius is saved as 1000 m).
+4. **Employees:** Employees → Add employee → details + salary + direct manager + «مواقع العمل» ("Work locations") (optional; without them the employee punches at their workplace's locations).
+5. **Employee app account:** Settings → «كلمات المرور والأمان» ("Passwords and security") → choose the employee → «إعادة تعيين كلمة المرور» ("Reset password").
+   It creates the account if it does not exist, and shows the username (employee number) and a temporary password **only once** — hand it to the employee.
+6. **Daily use:**
+   - **Attendance:** today's log and reports, and manual add/edit.
+   - **Leaves:** pending requests (approve / reject with a reason / approve on behalf / final approval), balances, public holidays.
+   - **Payroll:** calculate the month then «اعتماد» ("Approve") — after approval the payslip appears to the employee in the app.
+   - **Forms:** send a form to an employee (or several employees) and track its status (accepted / objected).
+   - Payslip, end of service, final settlement, documents, reports.
+
+---
+
+## Part 2: Employee app
+
+### Running it for testing (once, on the developer's machine)
+1. Create a free account at https://expo.dev/signup, install **Expo Go** on the phone and sign in to it with the same account.
+2. On the computer:
+   ```bash
+   cd frontend/employee-app
+   npm install
+   npx expo login
+   npx expo start --tunnel
+   ```
+3. In Expo Go: open the project from **Development servers** or scan the QR code from inside Expo Go (not from the camera).
+
+The app is connected to the deployed server by default; for a local server set `EXPO_PUBLIC_API_URL` in `.env` (see `.env.example`).
+
+### Usage
+1. **Login:** employee number + the temporary password → change it.
+2. **Attendance:** allow location access → «تسجيل الحضور» ("Check in") / «تسجيل الانصراف» ("Check out"). Outside the radius the punch is rejected and the nearest location and its distance are shown. Checked out by mistake? «رجوع للعمل» ("Back to work"). Forgot? «نسيت البصمة» ("Forgot to punch").
+3. **Leaves:** balance and upcoming holidays → choose the type (leave, short permission, salary advance, business assignment, overtime, forgotten punch) → dates in `YYYY-MM-DD` format and time `HH:MM` → submit. «طلباتي» ("My requests") shows the current stage.
+   The path: direct manager → HR → CEO (forgotten punch → HR directly, and on approval it is recorded in attendance).
+4. **Salary:** current salary + payslips of approved payrolls.
+5. **My team:** for managers — their team members and approve/reject (with a reason) their requests.
+6. **Documents:** forms sent by HR → accept or object (reason ≥ 3 characters).
+7. **🔔 Bell:** new forms, decisions on your requests, and requests awaiting your approval.
+
+---
+
+## Part 3: Quick end-to-end test from both sides
+1. HR: add a punch location with your own coordinates + employees (an employee and their manager) + an account for each.
+2. Employee (app): check-in punch → it appears on the website (Attendance).
+3. Employee: leave request → the manager approves from «فريقي» ("My team") → HR approves from «الإجازات» ("Leaves") → the notification appears to the employee.
+4. HR: send a form → the employee accepts from «مستندات» ("Documents") → the status changes on the website.
+
+---
+
+# العربي
+
+## دليل الاستخدام السريع — أريبا للموارد البشرية
 
 النظام جزءان يكلّمان نفس الخادم وقاعدة البيانات، فأي تغيير في أحدهما يظهر فوراً في الآخر:
 - **موقع HR** (متصفح): https://frontend-production-f9a8a.up.railway.app

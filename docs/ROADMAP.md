@@ -1,4 +1,47 @@
-# خطة إعادة البناء — المرجع الوحيد هو النسخة الجديدة
+# Rebuild Plan — خطة إعادة البناء
+
+> English first, then the full Arabic version (same content).
+
+---
+
+# English
+
+## Rebuild plan — the only reference is the new version
+
+## The rule
+- **Reference:** `frontend/legacy/` (the new, split-up version, with updates up to V130) + `docs/ARIBA_HR_System_Documentation.md`.
+- **Goal:** the website and the app match the HTML file **exactly**: same screens, fields, buttons, texts and formulas.
+- If an old decision in `BUSINESS_RULES.md` differs from the HTML file → **we follow the HTML** and write down the difference.
+- The existing code in `backend` and `frontend/hr-web` was built from an **older** version; it is reviewed and corrected against the new version.
+
+## How we work on each module
+1. Read the module's files in `frontend/legacy/*/js/<folder>` + its section in the documentation.
+2. Port the formula to `backend/app/services/` and write a test that compares the result with the result of **the old JS code itself** (the examples in section 4 of the documentation).
+3. Build the screen in `frontend/hr-web` (and/or `frontend/employee-app`) with the same elements as the HTML.
+4. Compare the screen with the old version side by side.
+
+## Order
+| # | Module | legacy references | Status |
+|---|---|---|---|
+| 0 | List of differences between what is built now and the new version (employees, GOSI V130, end of service, dashboard) | — | ⏳ |
+| 1 | Employees + GOSI (calcIns + V130 exemption) + contract | `js/main/06-employees`, `js/calculations/05`, `js/payroll/114-*` | 🟡 V130 exemption ✅ (2026-10-05) — remaining: review of the employee screen |
+| 2 | Locations + attendance (punch, flexible hours, lateness, V117 reports, V121 employee locations) | `js/attendance`, `js/locations` | ❌ |
+| 3 | Leaves (ledger, 10-day carry-over, entitlement) + requests and the approval workflow | `js/calculations/03,08`, `js/leaves`, `js/requests` | ❌ |
+| 4 | Payroll V119 (Excel columns) + payslip | `js/payroll/107-*`, `js/calculations/06` | ❌ |
+| 5 | End of service + final settlement + amount in words | `js/calculations/01,04,07`, `js/settlement-eos` | 🟡 End-of-service page (rEOS) ✅ — remaining: settlement calculator (leave compensation = gross ÷ 30) and amount in words |
+| 6 | Forms and letters (V70/V71, V117 salary certificate) + documents | `js/forms` | ❌ |
+| 7 | Reports + dashboard + settings and permissions | `js/reports`, `js/main/05,15,16` | 🟡 |
+| 8 | Mobile app: attendance, leaves, requests, my team, documents, notifications | `frontend/legacy/employee-portal` | 🟡 foundation ready |
+| 9 | Data migration from Supabase | — | ❌ |
+
+## Open questions
+Section 9 in `ARIBA_HR_System_Documentation.md` (35 questions for the HR officer).
+
+---
+
+# العربي
+
+## خطة إعادة البناء — المرجع الوحيد هو النسخة الجديدة
 
 ## القاعدة
 - **المرجع:** `frontend/legacy/` (النسخة الجديدة المفصولة، فيها التحديثات حتى V130) + `docs/ARIBA_HR_System_Documentation.md`.
