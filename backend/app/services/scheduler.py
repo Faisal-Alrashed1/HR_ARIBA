@@ -1,4 +1,4 @@
-"""Background jobs that replace their browser timers and Supabase cron (docs/PORT_PLAN.md section 2):
+"""Background jobs that replace their browser timers and Supabase cron (docs/17_PORT_PLAN.md section 2):
 - every hour: move requests whose manager/CEO wait ran out to HR (ariba_hr_run_escalation);
 - every 5 minutes: e-mail the new notifications (ariba-notify-dispatch) and push them to the app;
 - every minute: register new candidates automatically when HR turned it on (their CandAuto).

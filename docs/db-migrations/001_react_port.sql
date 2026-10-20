@@ -1,6 +1,6 @@
 -- =====================================================================
 -- 001_react_port.sql — the tables and columns the features ported from the HR department's React system need
--- (docs/PORT_PLAN.md section 3), on the normalized schema. Schema only: no data is changed or removed.
+-- (docs/17_PORT_PLAN.md section 3), on the normalized schema. Schema only: no data is changed or removed.
 -- One transaction; every object is created IF NOT EXISTS, so a second run changes nothing.
 -- Run with docs/db-migrations/run_on_railway.sh (backup + check first, then this file, then verify_001.sql).
 -- =====================================================================

@@ -1,4 +1,4 @@
-"""Task 3 of the React port: our backend gives their formula (docs/LOGIC_AUDIT.md section 9). The bulk comparison runs
+"""Task 3 of the React port: our backend gives their formula (docs/15_LOGIC_AUDIT.md section 9). The bulk comparison runs
 in tools/react-parity; these pin the cases each comparison-file row is about."""
 from __future__ import annotations
 

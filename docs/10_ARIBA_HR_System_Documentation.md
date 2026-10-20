@@ -106,7 +106,7 @@ ariba-portals/
       config/002-supabase-stub-and-sb-fetch.js
       main/ (12 ملف) + core-ui/ requests/ leaves/ attendance/ payroll/ forms/ locations/ employees-data/ auth-permissions/
   docs/
-    ARIBA_HR_System_Documentation.md   ← هذا المستند
+    10_ARIBA_HR_System_Documentation.md   ← هذا المستند
     hr-portal.manifest.json / employee-portal.manifest.json  ← خريطة آلية: كل ملف ↔ أسطره في الأصل
 ```
 

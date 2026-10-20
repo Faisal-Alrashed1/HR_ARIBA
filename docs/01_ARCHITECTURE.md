@@ -13,7 +13,7 @@ Browser ──HTTPS/JSON──▶ FastAPI (/api/v1) ──SQLAlchemy──▶ Po
    │                         │
    │ Next.js pages           └── files ──▶ Railway Volume (/data), streamed after a scope check
    │ proxy.ts (route mirror)
-Hosting: Railway — services `backend`, `hr-web` (frontend/hr-web), `Postgres`; the employee app (frontend/employee-app) ships to the App Store / Google Play (docs/DEPLOY_RAILWAY.md)
+Hosting: Railway — services `backend`, `hr-web` (frontend/hr-web), `Postgres`; the employee app (frontend/employee-app) ships to the App Store / Google Play (docs/07_DEPLOY_RAILWAY.md)
 ```
 
 ### Principles
@@ -73,7 +73,7 @@ Browser ──HTTPS/JSON──▶ FastAPI (/api/v1) ──SQLAlchemy──▶ Po
    │                         │
    │ Next.js pages           └── files ──▶ Railway Volume (/data), streamed after a scope check
    │ proxy.ts (route mirror)
-Hosting: Railway — services `backend`, `hr-web` (frontend/hr-web), `Postgres`; the employee app (frontend/employee-app) ships to the App Store / Google Play (docs/DEPLOY_RAILWAY.md)
+Hosting: Railway — services `backend`, `hr-web` (frontend/hr-web), `Postgres`; the employee app (frontend/employee-app) ships to the App Store / Google Play (docs/07_DEPLOY_RAILWAY.md)
 ```
 
 ### المبادئ

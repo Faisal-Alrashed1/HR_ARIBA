@@ -1,7 +1,7 @@
 // react-parity: their React formulas (reference/) vs ours (site TS + backend Python) on the same seeded cases.
 //   npm test            → prints the summary, exit 1 when any formula differs
 //   npm run report      → also writes results/report.json and results/REPORT.md
-// Decisions 1/2 of docs/PORT_PLAN.md apply: rows 113/142 are compared to their app screen, row 66 is not a formula here.
+// Decisions 1/2 of docs/17_PORT_PLAN.md apply: rows 113/142 are compared to their app screen, row 66 is not a formula here.
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';

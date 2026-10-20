@@ -1,6 +1,6 @@
 // The engines' runtime (rt) from the server settings — their lib/data.js `runtimePatchFromSettings`, fed by
 // GET /settings/runtime instead of the browser reading the database. Pages that run lib/calc formulas call
-// `useRuntime()` once; the server keeps the final figures (docs/PORT_PLAN.md decision 7).
+// `useRuntime()` once; the server keeps the final figures (docs/17_PORT_PLAN.md decision 7).
 "use client";
 
 import { useEffect, useState } from "react";

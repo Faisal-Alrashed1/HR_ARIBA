@@ -16,7 +16,7 @@ All data used in the trials is synthetic (`tools/dev-db`); there is no real data
 | Task | commit | Content |
 |---|---|---|
 | 3 | `ffc63d8` | Our formulas produce their results: payroll, end of service, final settlement, social insurance (GOSI), leave, attendance, dashboard (V142), rows 113/142. |
-| 4 | `91436f9` | Removed our logic that they do not have (🟣), with a test for each item — `docs/LOGIC_AUDIT.md` §10. |
+| 4 | `91436f9` | Removed our logic that they do not have (🟣), with a test for each item — `docs/15_LOGIC_AUDIT.md` §10. |
 | 5 | `69d5063` | Migration `docs/db-migrations/001_react_port.sql` + `verify_001.sql` + `run_on_railway.sh` (also works with `local:<db>`), and a test database built from the schema `tools/dev-db`. |
 | 6 | `8ff583c` | Server routes for all their functions (request workflow, candidates, employees, goals and evaluation, document signing, leave attachments, mail, tasks, assets, audit log and month deletion, settings and permissions, prepare/approve/reopen payroll, password recovery, WebAuthn, Push, scheduled jobs). |
 | 7 + 9 | `5deaa1c` | The website = their exact screens (`frontend/hr-web/src/port`) on top of our server, and `/apply` is the public application form. |
@@ -126,7 +126,7 @@ WebAuthn (options and rejection), brand colors from a website (internal addresse
 | المهمة | commit | المحتوى |
 |---|---|---|
 | 3 | `ffc63d8` | معادلاتنا تعطي نتائجهم: المسيّر، نهاية الخدمة، المخالصة، التأمينات، الإجازات، الحضور، لوحة التحكم (V142)، الصفان 113/142. |
-| 4 | `91436f9` | حذف منطقنا الذي ليس عندهم (🟣) مع اختبار لكل بند — `docs/LOGIC_AUDIT.md` §10. |
+| 4 | `91436f9` | حذف منطقنا الذي ليس عندهم (🟣) مع اختبار لكل بند — `docs/15_LOGIC_AUDIT.md` §10. |
 | 5 | `69d5063` | ترحيل `docs/db-migrations/001_react_port.sql` + `verify_001.sql` + `run_on_railway.sh` (يعمل أيضاً `local:<db>`)، وقاعدة اختبار من السكيما `tools/dev-db`. |
 | 6 | `8ff583c` | مسارات الخادم لكل دوالهم (سير الطلبات، المرشحون، الموظفون، المستهدفات والتقييم، توقيع المستندات، مرفقات الإجازات، البريد، المهام، الأصول، سجل التعديلات وحذف شهر، الإعدادات والصلاحيات، تجهيز/اعتماد/فتح المسيّر، استرجاع كلمة المرور، WebAuthn، Push، المهام المجدولة). |
 | 7 + 9 | `5deaa1c` | الموقع = شاشاتهم نفسها (`frontend/hr-web/src/port`) فوق خادمنا، و`/apply` نموذج التقديم العام. |

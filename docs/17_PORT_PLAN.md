@@ -119,7 +119,7 @@
 | P7a–h | Website: finance, employees and candidates, leaves and team, targets, reports, settings, audit log, assistant | Local browsing + screenshots |
 | P8 | The app: all screens | iOS simulator + screenshots |
 | P9 | Public application form `/apply` | pytest + browsing |
-| P10 | Full verification `docs/PORT_VERIFICATION.md` | All checks |
+| P10 | Full verification `docs/19_PORT_VERIFICATION.md` | All checks |
 
 ### 8. Screens: theirs ← ours
 #### 8.1 HR program (ARIBA_HR_React/src)
@@ -638,7 +638,7 @@ Exceptions: row 66 and rows 113 and 142 per decisions 1 and 2. Totals: 🟢 81 �
 | P7a–h | الموقع: المالية، الموظفون والمرشحون، الإجازات والفريق، المستهدفات، التقارير، الإعدادات، السجل، المساعد | تصفح محلي + لقطات |
 | P8 | التطبيق: كل الشاشات | محاكي iOS + لقطات |
 | P9 | نموذج التقديم العام `/apply` | pytest + تصفح |
-| P10 | التحقق الكامل `docs/PORT_VERIFICATION.md` | كل الفحوصات |
+| P10 | التحقق الكامل `docs/19_PORT_VERIFICATION.md` | كل الفحوصات |
 
 ### 8. الشاشات: عندهم ← عندنا
 #### 8.1 برنامج الموارد (ARIBA_HR_React/src)

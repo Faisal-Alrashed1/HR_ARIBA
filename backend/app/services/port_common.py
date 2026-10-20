@@ -1,4 +1,4 @@
-"""Shared rules of the features ported from the React system (docs/PORT_PLAN.md section 2).
+"""Shared rules of the features ported from the React system (docs/17_PORT_PLAN.md section 2).
 
 - Permissions: their `ariba_can(role, modules, need)` over ariba_role_perms (admin and chairman always full).
 - Workflow configuration (sql/10 `ariba_hr_get_wf_config`): manager/CEO wait days, salary-advance cap, extra HR

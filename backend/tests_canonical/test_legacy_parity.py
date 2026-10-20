@@ -63,7 +63,7 @@ def test_gosi_exemption_matches_legacy_kind_of():
 
 def test_reactivation_on_save_is_theirs_not_the_legacy_auto_end():
     """Legacy V101 brought back only automatic ends; their EmpForm.jsx brings back any terminated employee whose fixed
-    contract has not expired (row 66, decision 2 — docs/LOGIC_AUDIT.md section 10)."""
+    contract has not expired (row 66, decision 2 — docs/15_LOGIC_AUDIT.md section 10)."""
     future = (date.today() + timedelta(days=200)).isoformat()
     resigned = {"isTerminated": True, "terminationReason": "استقالة", "lastDay": "2026-01-31", "contractEnd": future, "contractNature": "fixed"}
     assert c._reactivate_on_save(resigned, True) and resigned["isTerminated"] is False and resigned["lastDay"] == ""
@@ -316,7 +316,7 @@ def test_late_and_early_minutes_match_legacy(db, cs):
     assert not bad, f"{len(bad)} differ, e.g. {bad[:5]}"
 
 
-@pytest.mark.skip(reason="Superseded (docs/PORT_PLAN.md decision 4): the app balance is now their React engine's current balance; checked by tools/react-parity leave suites")
+@pytest.mark.skip(reason="Superseded (docs/17_PORT_PLAN.md decision 4): the app balance is now their React engine's current balance; checked by tools/react-parity leave suites")
 def test_app_leave_balance_matches_legacy_leave_calc(db):
     """Employee-app balance (current / carried over / year end) vs ariba_leave_calc, on employees shaped like the imported
     data: every closed year has its imported override, the current year is imported (asOf snapshot), partly imported or
@@ -663,7 +663,7 @@ def test_resignation_tiers_follow_article_85():
 
 
 def test_no_law_note_on_pending_leave():
-    """Notes E/F were ours only and are removed (row 153 — docs/LOGIC_AUDIT.md section 10)."""
+    """Notes E/F were ours only and are removed (row 153 — docs/15_LOGIC_AUDIT.md section 10)."""
     assert not hasattr(c, "_law_note")
 
 

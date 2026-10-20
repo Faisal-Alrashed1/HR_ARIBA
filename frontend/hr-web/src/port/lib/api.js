@@ -1,5 +1,5 @@
 // ADAPTED (transport only): their screens call Supabase RPCs by name; here each name goes to the matching route of
-// our FastAPI server (docs/PORT_PLAN.md section 9), with the arguments and the result in the shape the screen expects.
+// our FastAPI server (docs/17_PORT_PLAN.md section 9), with the arguments and the result in the shape the screen expects.
 // The server checks the session and the permission matrix on every call.
 import { request, ApiError as OurError } from '@/lib/api';
 import { saveSession } from '@/lib/session';

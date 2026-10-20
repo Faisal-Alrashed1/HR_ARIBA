@@ -35,7 +35,7 @@ and login. The temporary password is written to `backend/.env.test.local` (or pr
 
 ### First admin
 Locally: the seeds CLI above. On Railway: `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD`
-(see DEPLOY_RAILWAY.md).
+(see 07_DEPLOY_RAILWAY.md).
 
 ---
 
@@ -70,4 +70,4 @@ Locally: the seeds CLI above. On Railway: `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRA
 
 ### أول مدير عام
 محليًا: واجهة سطر أوامر البذور أعلاه. على Railway: `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD`
-(انظر DEPLOY_RAILWAY.md).
+(انظر 07_DEPLOY_RAILWAY.md).

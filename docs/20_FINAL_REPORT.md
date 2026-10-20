@@ -198,7 +198,7 @@
 
 #### 4.9 — 18 October: Porting the HR Department's React System (Tasks 0–11)
 - Full details in §8. Commit summary:
-  - `14b7983` Task 1: the plan `PORT_PLAN.md` (188 rows, all screens and functions).
+  - `14b7983` Task 1: the plan `17_PORT_PLAN.md` (188 rows, all screens and functions).
   - `2c5f71b` Task 2: the `tools/react-parity` tool and the baseline (81,615 cases).
   - `8db0266` part of Task 3: their leave engine, the automatic social insurance table, the Egypt layer, copying their formulas.
   - `abdcf3d` cloud session handoff: a read-only reference copy of their system + context files + the database schema without data.
@@ -208,7 +208,7 @@
   - `8ff583c` **Task 6:** server routes for all their features + integration tests.
   - `5deaa1c` **Tasks 7 and 9:** the website with their screens + the public application page `/apply`.
   - `3fb1487` **Task 8:** employee app features (type check only).
-  - `339ccf9` the verification report `PORT_VERIFICATION.md`.
+  - `339ccf9` the verification report `19_PORT_VERIFICATION.md`.
   - `837cbeb` **Task 10:** a full scenario on a synthetic database: 50/50.
 
 #### 4.10 — 18 October Evening: Migration, Merge, and Deployment
@@ -491,7 +491,7 @@
 | Task | What was done |
 |---|---|
 | 0 | Reading the references (`task0_reading_notes.md`) |
-| 1 | The plan `PORT_PLAN.md` (`14b7983`) |
+| 1 | The plan `17_PORT_PLAN.md` (`14b7983`) |
 | 2 | The `tools/react-parity` tool (`2c5f71b`): baseline of 21 groups, 81,615 cases, 29,391 with differences |
 | 3 | Our formulas = their results (`8db0266`, `ffc63d8`): 0 differences, 111/111 rows; pytest +7 |
 | 4 | Removing 🟣 (`91436f9`): rows 66, 70/82, 72, 100, 114, 137, 153, 188, and corrections A–K; tests `test_port_removed.py` |
@@ -841,10 +841,10 @@ Forms.
 |---|---|---|
 | Approval stages | `BUSINESS_RULES`: permission, overtime, and business-trip requests stop at HR | Their system's logic: [manager] → HR → [executive per `final_by_type`] |
 | End-of-service years and base | Days ÷ 365, basic + housing, one third from 2 to 5 | 365.25 on the page, K via DATEDIF in payroll and settlement, exactly 5 = two thirds |
-| Login lockout | `SECURITY.md`: 5 per user and 20 per IP within 5 minutes | Cancelled (row 188) |
+| Login lockout | `03_SECURITY.md`: 5 per user and 20 per IP within 5 minutes | Cancelled (row 188) |
 | Session duration | 60-minute token + 7-day refresh | One hour renewed up to 24 hours + idle 5+3 minutes |
 | Contract end | Joining + months without −1 day | `addMonthsSafe` minus one day |
-| Schema | `DATABASE.md`: Alembic model with 25 tables | The unified schema (`employee_directory` …) + migration 001 |
+| Schema | `02_DATABASE.md`: Alembic model with 25 tables | The unified schema (`employee_directory` …) + migration 001 |
 | Files | Railway disk | Inside the database (`ariba_documents`) |
 | Port status in `PORT_VERIFICATION` | "Not merged and not deployed" | Merged and deployed on 18 October after the migration |
 
@@ -1071,7 +1071,7 @@ Forms.
 
 #### 4.9 — 18 أكتوبر: نقل نظام React الخاص بقسم الموارد البشرية (المهام 0–11)
 - التفاصيل الكاملة في §8. ملخص commits:
-  - `14b7983` المهمة 1: الخطة `PORT_PLAN.md` (188 صف، كل الشاشات والدوال).
+  - `14b7983` المهمة 1: الخطة `17_PORT_PLAN.md` (188 صف، كل الشاشات والدوال).
   - `2c5f71b` المهمة 2: أداة `tools/react-parity` وخط الأساس (81,615 حالة).
   - `8db0266` جزء من المهمة 3: محرك إجازاتهم، جدول التأمينات التلقائي، طبقة مصر، نسخ معادلاتهم.
   - `abdcf3d` تسليم الجلسة السحابية: نسخة مرجعية للقراءة فقط من نظامهم + ملفات السياق + مخطط القاعدة بدون بيانات.
@@ -1081,7 +1081,7 @@ Forms.
   - `8ff583c` **المهمة 6:** مسارات الخادم لكل ميزاتهم + اختبارات تكامل.
   - `5deaa1c` **المهمتان 7 و9:** الموقع بشاشاتهم + صفحة التقديم العامة `/apply`.
   - `3fb1487` **المهمة 8:** ميزات تطبيق الموظف (فحص الأنواع فقط).
-  - `339ccf9` تقرير التحقق `PORT_VERIFICATION.md`.
+  - `339ccf9` تقرير التحقق `19_PORT_VERIFICATION.md`.
   - `837cbeb` **المهمة 10:** سيناريو كامل على قاعدة اصطناعية: 50/50.
 
 #### 4.10 — 18 أكتوبر مساءً: الترحيل والدمج والنشر
@@ -1364,7 +1364,7 @@ Forms.
 | المهمة | ما تم |
 |---|---|
 | 0 | قراءة المراجع (`task0_reading_notes.md`) |
-| 1 | الخطة `PORT_PLAN.md` (`14b7983`) |
+| 1 | الخطة `17_PORT_PLAN.md` (`14b7983`) |
 | 2 | أداة `tools/react-parity` (`2c5f71b`): خط الأساس 21 مجموعة، 81,615 حالة، 29,391 فيها فرق |
 | 3 | معادلاتنا = نتائجهم (`8db0266`، `ffc63d8`): 0 فرق، 111/111 صفاً؛ pytest +7 |
 | 4 | حذف 🟣 (`91436f9`): الصفوف 66، 70/82، 72، 100، 114، 137، 153، 188، وتصحيحات A–K؛ اختبارات `test_port_removed.py` |
@@ -1714,10 +1714,10 @@ Forms.
 |---|---|---|
 | مراحل الموافقة | `BUSINESS_RULES`: الاستئذان والإضافي والمهمة تقف عند HR | منطق نظامهم: [مدير] ← HR ← [تنفيذي حسب `final_by_type`] |
 | سنوات وأساس نهاية الخدمة | الأيام ÷ 365، أساسي + سكن، الثلث من 2 إلى 5 | 365.25 في الصفحة، K بـ DATEDIF في المسيّر والمخالصة، بالضبط 5 = الثلثان |
-| قفل الدخول | `SECURITY.md`: 5 لكل مستخدم و20 لكل IP خلال 5 دقائق | أُلغي (الصف 188) |
+| قفل الدخول | `03_SECURITY.md`: 5 لكل مستخدم و20 لكل IP خلال 5 دقائق | أُلغي (الصف 188) |
 | مدة الجلسة | رمز 60 دقيقة + تجديد 7 أيام | ساعة تتجدد حتى 24 ساعة + خمول 5+3 دقائق |
 | نهاية العقد | انضمام + أشهر بدون −1 يوم | `addMonthsSafe` ناقص يوم |
-| المخطط | `DATABASE.md`: نموذج Alembic بـ 25 جدولاً | المخطط الموحّد (`employee_directory` …) + ترحيل 001 |
+| المخطط | `02_DATABASE.md`: نموذج Alembic بـ 25 جدولاً | المخطط الموحّد (`employee_directory` …) + ترحيل 001 |
 | الملفات | قرص Railway | داخل القاعدة (`ariba_documents`) |
 | حالة النقل في `PORT_VERIFICATION` | «لم يُدمج ولم يُنشر» | دُمج ونُشر 18 أكتوبر بعد الترحيل |
 

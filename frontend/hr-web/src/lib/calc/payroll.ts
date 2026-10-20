@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Payroll table: their rows layer (payroll-rows.ts = ARIBA_HR_React/src/engines/payrollRows.js, verbatim) over PAYX,
 // fed from the backend salary-basis rows converted back to the stored employee record (`toLegacy`). Rows 32–44 of the
-// comparison file (docs/LOGIC_AUDIT.md section 9). The GOSI rates come from the runtime (`rt.insRules`, set from the
+// comparison file (docs/15_LOGIC_AUDIT.md section 9). The GOSI rates come from the runtime (`rt.insRules`, set from the
 // server settings by lib/calc/setup.ts), as in their system.
 import type { SalaryBasisRow } from "../salary";
 import * as R from "./payroll-rows";

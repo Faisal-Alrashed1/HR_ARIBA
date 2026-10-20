@@ -1,5 +1,5 @@
 """Team availability, tasks and meetings — the six RPCs missing from their delivery (ariba_team_availability,
-ariba_my_tasks, ariba_send_task, ariba_task_update), built from what pages/team/index.jsx expects (docs/PORT_PLAN.md
+ariba_my_tasks, ariba_send_task, ariba_task_update), built from what pages/team/index.jsx expects (docs/17_PORT_PLAN.md
 section 5, items 1–2). The screen merges consecutive leaves and computes "leave soon" (14 days) itself."""
 from __future__ import annotations
 

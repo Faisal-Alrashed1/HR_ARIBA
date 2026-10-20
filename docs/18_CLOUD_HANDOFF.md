@@ -9,7 +9,7 @@
 ## Handoff to the Cloud Session — Porting the React System (2026-10-18)
 
 Read in order: `docs/port-context/PORT_PROMPT_AR.md` (the full prompt: rules, decisions and Tasks 1–11),
-`docs/PORT_PLAN.md` (the plan: 188 rows, screens, functions, tables, phases), `docs/port-context/ARIBA_MASTER_CONTEXT.md`,
+`docs/17_PORT_PLAN.md` (the plan: 188 rows, screens, functions, tables, phases), `docs/port-context/ARIBA_MASTER_CONTEXT.md`,
 `docs/port-context/task0_reading_notes.md`, `tools/react-parity/README.md`.
 
 ### Where the materials are in the repo (instead of the desktop paths in the prompt)
@@ -21,7 +21,7 @@ Read in order: `docs/port-context/PORT_PROMPT_AR.md` (the full prompt: rules, de
 | The `ariba_after2` database | There is no data in the cloud. Schema only: `docs/db-schema/current_schema.sql` (create a local Postgres database from it and add test data) |
 
 ### What was done
-- Task 1: `docs/PORT_PLAN.md`.
+- Task 1: `docs/17_PORT_PLAN.md`.
 - Task 2: `tools/react-parity` (`cd tools/react-parity && npm test`; needs `frontend/hr-web/node_modules` and `backend/.venv`).
 - Task 3 (partially, commit `8db0266`): the server matches theirs in the leave engine (`services/leave.py`, the three methods),
   the automatic social-insurance table and calcIns (`services/gosi.py`), the Egypt layer (`services/country.py`), and stored employee figures.
@@ -35,7 +35,7 @@ Read in order: `docs/port-context/PORT_PROMPT_AR.md` (the full prompt: rules, de
    from the settings (insurance_rules, leave_carry, leave_accrual_method, attendance_schedule, country_system), and the V142
    alert rows in `_dashboard_alerts`, salaries by work entity, absentees, daysLeft with round, rows 113/142,
    and the payroll-page bugs the tool uncovered (insSystem new/exempt). The goal: `npm test` in react-parity = zero differences.
-   Add the needed fields to `salary_basis` (is_hourly…). Update pytest, tools/legacy-parity and docs/LOGIC_AUDIT.md.
+   Add the needed fields to `salary_basis` (is_hourly…). Update pytest, tools/legacy-parity and docs/15_LOGIC_AUDIT.md.
 2. Tasks 4, 5 (a migration in `docs/db-migrations/` with a script like run_on_railway.sh — try it on a database built from the schema), 6, 7, 9.
 3. Task 8 (Expo) and Task 10 (simulator, production copy, running their version) need the project owner's machine: write the code and tsc only.
 
@@ -51,7 +51,7 @@ Read in order: `docs/port-context/PORT_PROMPT_AR.md` (the full prompt: rules, de
 ## تسليم للجلسة السحابية — نقل نظام React (2026-10-18)
 
 اقرأ بالترتيب: `docs/port-context/PORT_PROMPT_AR.md` (البرومبت الكامل: القواعد والقرارات والمهام 1–11)،
-`docs/PORT_PLAN.md` (الخطة: 188 صفاً، الشاشات، الدوال، الجداول، المراحل)، `docs/port-context/ARIBA_MASTER_CONTEXT.md`،
+`docs/17_PORT_PLAN.md` (الخطة: 188 صفاً، الشاشات، الدوال، الجداول، المراحل)، `docs/port-context/ARIBA_MASTER_CONTEXT.md`،
 `docs/port-context/task0_reading_notes.md`، `tools/react-parity/README.md`.
 
 ### أين المواد في الريبو (بدل مسارات سطح المكتب في البرومبت)
@@ -63,7 +63,7 @@ Read in order: `docs/port-context/PORT_PROMPT_AR.md` (the full prompt: rules, de
 | قاعدة `ariba_after2` | لا توجد بيانات في السحابة. السكيما فقط: `docs/db-schema/current_schema.sql` (أنشئ قاعدة Postgres محلية منها وأضف بيانات تجربة) |
 
 ### ما تم
-- المهمة 1: `docs/PORT_PLAN.md`.
+- المهمة 1: `docs/17_PORT_PLAN.md`.
 - المهمة 2: `tools/react-parity` (`cd tools/react-parity && npm test`؛ يحتاج `frontend/hr-web/node_modules` و`backend/.venv`).
 - المهمة 3 (جزئياً، commit `8db0266`): الخادم مطابق لهم في محرك الإجازات (`services/leave.py`، الطرق الثلاث)،
   وجدول التأمينات التلقائي وcalcIns (`services/gosi.py`)، وطبقة مصر (`services/country.py`)، وأرقام الموظف المحفوظة.
@@ -77,7 +77,7 @@ Read in order: `docs/port-context/PORT_PROMPT_AR.md` (the full prompt: rules, de
    من الإعدادات (insurance_rules، leave_carry، leave_accrual_method، attendance_schedule، country_system)، وصفوف
    التنبيهات V142 في `_dashboard_alerts`، والرواتب حسب جهة العمل، والغائبين، وdaysLeft بـ round، والصفان 113/142،
    وأخطاء صفحة المسيّر التي كشفتها الأداة (insSystem new/exempt). الهدف: `npm test` في react-parity = صفر فرق.
-   أضف `salary_basis` الحقول اللازمة (is_hourly…). حدّث pytest وtools/legacy-parity وdocs/LOGIC_AUDIT.md.
+   أضف `salary_basis` الحقول اللازمة (is_hourly…). حدّث pytest وtools/legacy-parity وdocs/15_LOGIC_AUDIT.md.
 2. المهام 4، 5 (ترحيل في `docs/db-migrations/` مع سكربت مثل run_on_railway.sh — جرّبه على قاعدة من السكيما)، 6، 7، 9.
 3. المهمة 8 (Expo) والمهمة 10 (المحاكي، نسخة الإنتاج، تشغيل نسختهم) تحتاج جهاز صاحب المشروع: اكتب الكود والـ tsc فقط.
 

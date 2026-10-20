@@ -15,7 +15,7 @@ const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647
 const pick = (a) => a[Math.floor(rnd() * a.length)];
 const near = (a, b) => (typeof a === "number" && typeof b === "number" ? (Number.isNaN(a) && Number.isNaN(b)) || Math.abs(a - b) <= 1e-6 : JSON.stringify(a) === JSON.stringify(b));
 
-// Since the React port (docs/LOGIC_AUDIT.md section 9) our formulas are theirs, and their React kept the legacy HTML's
+// Since the React port (docs/15_LOGIC_AUDIT.md section 9) our formulas are theirs, and their React kept the legacy HTML's
 // formulas for everything compared here, so the legacy side runs unpatched: the labour-law corrections A–K are gone.
 // Their React only *adds* the Egypt items (TAX, MF, ARB in PAYX), which the legacy HTML does not return.
 const CORRECTIONS = [];

@@ -1,6 +1,6 @@
 // End-of-service page by article — their formula (ARIBA_HR_React/src/pages/finance/Eos.jsx `eosByLaw`, copied in
 // eos-react.ts). Rows 67–77 of the comparison file: art. 85/75 at exactly 5 years = two thirds (`yrs < 5`), no art. 87,
-// art. 77 always the indefinite-contract compensation (docs/LOGIC_AUDIT.md section 9).
+// art. 77 always the indefinite-contract compensation (docs/15_LOGIC_AUDIT.md section 9).
 import { eosByLaw, LAWS } from "./eos-react";
 
 export type EosLaw = "m84" | "m74" | "m85" | "m75" | "m77" | "m80" | "m74r" | "m74d";

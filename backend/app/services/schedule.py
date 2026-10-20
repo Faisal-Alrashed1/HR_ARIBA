@@ -1,5 +1,5 @@
 """Work schedule (official + Ramadan) — port of their lib/schedule.js (rows 125–126), and the Ramadan flexible hours
-of the missing `ariba_hr_set_ramadan_flex` (docs/PORT_PLAN.md section 5, item 3). Ramadan = the manual dates when both
+of the missing `ariba_hr_set_ramadan_flex` (docs/17_PORT_PLAN.md section 5, item 3). Ramadan = the manual dates when both
 are set, else month 9 of the Umm al-Qura calendar (what their browser's Intl `islamic-umalqura` calendar gives)."""
 from __future__ import annotations
 

@@ -1,6 +1,6 @@
 // Settlement calculator — their `settle` (ARIBA_HR_React/src/pages/finance/EosCalc.jsx, copied in settle-react.ts),
 // rows 78–94 of the comparison file: no art. 87, art. 77 the same for every contract, the inputs are not truncated,
-// and Egypt (rt.country === "EG") uses its own resignation factor, art. 77 months and leave (docs/LOGIC_AUDIT.md section 9).
+// and Egypt (rt.country === "EG") uses its own resignation factor, art. 77 months and leave (docs/15_LOGIC_AUDIT.md section 9).
 import { settle } from "./settle-react";
 
 export type SettlementReason = "m84" | "m74" | "m85" | "m75" | "m77" | "m80" | "m53" | "m74r" | "m74d";

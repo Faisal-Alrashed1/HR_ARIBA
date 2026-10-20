@@ -16,7 +16,7 @@ byte-for-byte their code; ESLint skips it (they lint it with oxlint) except the 
 ## Transport (Supabase → our server)
 | File | Change |
 |---|---|
-| `lib/api.js` | `rpc(name, args)` maps each of their RPC names to our REST route (docs/PORT_PLAN.md §9) and returns their shape; `functionCall` maps their 4 edge functions; error codes their screens compare (`PAYROLL_NOT_PREPARED` …) stay the message. |
+| `lib/api.js` | `rpc(name, args)` maps each of their RPC names to our REST route (docs/17_PORT_PLAN.md §9) and returns their shape; `functionCall` maps their 4 edge functions; error codes their screens compare (`PAYROLL_NOT_PREPARED` …) stay the message. |
 | `lib/auth.js` | Same exports; signs in with `/auth/login` / `/auth/refresh` / `/auth/logout`, tokens in our first-party cookies, role + permission matrix from `GET /me/perms`. |
 | `lib/config.js` | No Supabase URL/key. |
 | `lib/vault.js` | Fingerprint / Face ID is a WebAuthn passkey on our server (`/auth/webauthn/*`); the browser keeps only the username. |
@@ -24,7 +24,7 @@ byte-for-byte their code; ESLint skips it (they lint it with oxlint) except the 
 | `pages/candidates/index.jsx` | The public link points to our `/apply`. |
 | `components/AiAssistant.jsx`, `HrBell.jsx`, `Layout.jsx`, `pages/employees/*.jsx`, `pages/finance/SalCalc.jsx`, `pages/candidates/index.jsx` | `import … from 'react-router-dom'` → `router.jsx` (one line). |
 
-## Moved to the server (approved decisions, docs/PORT_PLAN.md §1)
+## Moved to the server (approved decisions, docs/17_PORT_PLAN.md §1)
 | File | Change |
 |---|---|
 | `lib/audit.js` | No browser queue: the server writes every audit entry (employee field diffs, payroll edits, settings …) — decision 9. |

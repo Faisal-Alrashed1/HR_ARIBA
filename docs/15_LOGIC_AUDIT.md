@@ -19,7 +19,7 @@
 - ✅ The app balance matches `ariba_leave_calc`: year end deducts approved leave after the snapshot, and "الحالي" ("current") deducts leave that has started in full (23/23 real, and 60 test employees on 4 dates). The balances page on the website stays on the HTML logic.
   - The "current" difference of 103/107 on the website came from the checking tool (linking the leave to a different id), not from the logic.
 - ✅ ❌10 Notify HR of every new request, and notify an employee without a manager that their request went to HR.
-- ✅ The checks became permanent tests: `backend/tests_canonical/test_legacy_parity.py` and `tools/legacy-parity` (details in `PROJECT_GUIDE.md` section 9).
+- ✅ The checks became permanent tests: `backend/tests_canonical/test_legacy_parity.py` and `tools/legacy-parity` (details in `16_PROJECT_GUIDE.md` section 9).
 - ✅ ❌9 Approval stages: all types manager ← HR ← CEO like the old system, and notification texts like it (compared step by step with `ariba_workflow_action`).
 - ✅ ❌11 Balance check: **kept** by the project owner's decision (intentionally different from the old system).
 - ✅ Notes A–J (implementation decision: we correct per the law, and the corrections are documented in `tools/legacy-parity/run.js` → `CORRECTIONS`):
@@ -198,7 +198,7 @@ These were read or checked earlier, but without an automated number-by-number co
 - ✅ رصيد التطبيق مطابق لـ `ariba_leave_calc`: نهاية السنة تخصم الإجازة المعتمدة بعد اللقطة، و«الحالي» يخصم الإجازة اللي بدأت كاملة (23/23 حقيقي، و60 موظف تجريبي على 4 تواريخ). صفحة الأرصدة في الموقع باقية على منطق الـ HTML.
   - فرق «الحالي» 103/107 في الموقع كان من أداة الفحص (ربط الإجازة بـ id مختلف)، مو من المنطق.
 - ✅ ❌10 إشعار HR بكل طلب جديد، وإشعار الموظف بدون مدير إن طلبه راح لـ HR.
-- ✅ الفحوصات صارت اختبارات دائمة: `backend/tests_canonical/test_legacy_parity.py` و `tools/legacy-parity` (التفاصيل في `PROJECT_GUIDE.md` القسم 9).
+- ✅ الفحوصات صارت اختبارات دائمة: `backend/tests_canonical/test_legacy_parity.py` و `tools/legacy-parity` (التفاصيل في `16_PROJECT_GUIDE.md` القسم 9).
 - ✅ ❌9 مراحل الموافقة: كل الأنواع مدير ← HR ← رئيس تنفيذي مثل القديم، ونصوص الإشعارات مثله (مقارنة خطوة بخطوة مع `ariba_workflow_action`).
 - ✅ ❌11 التحقق من الرصيد: **باقي** بقرار صاحب المشروع (مختلف عن القديم عمداً).
 - ✅ الملاحظات A–J (قرار التنفيذ: نصحّح حسب النظام، والتصحيحات موثّقة في `tools/legacy-parity/run.js` → `CORRECTIONS`):

@@ -1,6 +1,6 @@
 """Task 4 of the React port: every rule only we had (🟣 in the comparison file) is gone and the behaviour is theirs.
 The site-side items (A/B/C/D/G/J in the EOS page, settlement and PAYX) are proven by tools/legacy-parity
-("تصحيحات نظام العمل (أُلغيت)") and tools/react-parity; docs/LOGIC_AUDIT.md section 10 lists each item."""
+("تصحيحات نظام العمل (أُلغيت)") and tools/react-parity; docs/15_LOGIC_AUDIT.md section 10 lists each item."""
 from __future__ import annotations
 
 import uuid

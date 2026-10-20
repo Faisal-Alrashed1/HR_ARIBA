@@ -1,4 +1,4 @@
-"""Request workflow of their sql/10 (docs/PORT_PLAN.md section 9): the new request types (unpaid leave, salary advance,
+"""Request workflow of their sql/10 (docs/17_PORT_PLAN.md section 9): the new request types (unpaid leave, salary advance,
 IBAN change, profile edit, document upload) with attachments, submitting on behalf of a team member, HR rejection
 with a reason and return to the manager, escalation after the configured wait, the workflow settings, the direct
 manager's permissions and the employee's delegation. The approval steps themselves stay in canonical.py (_advance,

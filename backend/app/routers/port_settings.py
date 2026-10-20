@@ -1,4 +1,4 @@
-"""Settings ported from their React system (docs/PORT_PLAN.md section 2): the runtime settings their engines read, the
+"""Settings ported from their React system (docs/17_PORT_PLAN.md section 2): the runtime settings their engines read, the
 key/value settings (ariba_hr_get_setting / _set_setting), the permissions matrix, roles, the accounts still on a default
 password, the public brand, password recovery and reading the brand colours from a company website."""
 from __future__ import annotations

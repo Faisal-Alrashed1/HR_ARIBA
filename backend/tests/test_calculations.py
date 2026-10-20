@@ -1,4 +1,4 @@
-"""Hand-computed expected values for GOSI and end of service (see docs/BUSINESS_RULES.md)."""
+"""Hand-computed expected values for GOSI and end of service (see docs/04_BUSINESS_RULES.md)."""
 
 from datetime import date
 from decimal import Decimal as D

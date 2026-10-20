@@ -19,7 +19,7 @@
 - Railway: a new database `Postgres-Q6OM` holding our colleague's data (106 employees, 110 accounts). The server `DATABASE_URL=${{Postgres-Q6OM.DATABASE_URL}}`, `RUN_MIGRATIONS_ON_STARTUP=false`. The old `Postgres` database was not touched (to roll back: point the variable back to it and deploy `1ea0d8a`), and a pg_dump copy of it is in `~/Desktop/HR/backups/`.
 - Loading data into an empty database: `CANONICAL_TARGET_URL=... python tools/load_canonical.py supabase_canonical.sql` (the file is outside the repo — it contains real data).
 - Sign-in uses the old system's accounts (bcrypt). The `admin` account from our old database does not exist in the new database.
-- Not supported yet: dependents, adding/deleting departments and work entities. Details in `docs/INTEGRATION_AUDIT.md`.
+- Not supported yet: dependents, adding/deleting departments and work entities. Details in `docs/14_INTEGRATION_AUDIT.md`.
 
 ### 1. Goal
 Rebuild ARIBA's HR system so that it **matches 100%** the old version (the split HTML files up to update V130) in screens, fields, texts and formulas, but on modern technology:
@@ -69,9 +69,9 @@ HR_ARIBA/
 │   ├── employee-app/  (app/(tabs), app/login.tsx, app/change-password.tsx, src/lib/api.ts, src/lib/auth.tsx, src/theme.ts)
 │   └── legacy/{hr-portal,employee-portal}/{index.html,css/,js/}
 └── docs/
-    ├── ARIBA_HR_System_Documentation.md  ← the specification (section 4 = all formulas with numeric examples, section 9 = 35 open questions)
-    ├── ROADMAP.md, ARCHITECTURE.md, BUSINESS_RULES.md, DATABASE.md, DEPLOY_RAILWAY.md, SECURITY.md
-    └── HANDOFF.md (this file)
+    ├── 10_ARIBA_HR_System_Documentation.md  ← the specification (section 4 = all formulas with numeric examples, section 9 = 35 open questions)
+    ├── 11_ROADMAP.md, 01_ARCHITECTURE.md, 04_BUSINESS_RULES.md, 02_DATABASE.md, 07_DEPLOY_RAILWAY.md, 03_SECURITY.md
+    └── 13_HANDOFF.md (this file)
 ```
 
 ---
@@ -81,7 +81,7 @@ HR_ARIBA/
 #### 5.1 Splitting the old HTML files (complete)
 - Each HTML file was split into `index.html` + `css/` + `js/` (HR: 27 CSS + 141 JS, employee: 14 CSS + 47 JS), and the formulas are in `js/calculations/`.
 - Verification: reassembling = the original file character for character; a Playwright run comparing 13 pages (look + variables + formulas) = identical.
-- Full documentation: `docs/ARIBA_HR_System_Documentation.md`.
+- Full documentation: `docs/10_ARIBA_HR_System_Documentation.md`.
 
 #### 5.2 The repository and deployment
 - The repository was reset (after saving `archive/before-reset`), then the server and website were restored from the archive and the Expo app was built, and the split files were moved to `frontend/legacy`.
@@ -211,7 +211,7 @@ git config http.postBuffer 524288000
 - Railway: قاعدة جديدة `Postgres-Q6OM` فيها بيانات زميلنا (106 موظف، 110 حساب). الخادم `DATABASE_URL=${{Postgres-Q6OM.DATABASE_URL}}`, `RUN_MIGRATIONS_ON_STARTUP=false`. القاعدة القديمة `Postgres` لم تُلمس (للرجوع: أرجع المتغير لها وانشر `1ea0d8a`)، ونسخة pg_dump منها في `~/Desktop/HR/backups/`.
 - تحميل البيانات لقاعدة فاضية: `CANONICAL_TARGET_URL=... python tools/load_canonical.py supabase_canonical.sql` (الملف خارج الريبو — فيه بيانات حقيقية).
 - الدخول بحسابات النظام القديم (bcrypt). حساب `admin` الخاص بقاعدتنا القديمة غير موجود في القاعدة الجديدة.
-- غير مدعوم بعد: المرافقين، إضافة/حذف الأقسام وجهات العمل. التفاصيل في `docs/INTEGRATION_AUDIT.md`.
+- غير مدعوم بعد: المرافقين، إضافة/حذف الأقسام وجهات العمل. التفاصيل في `docs/14_INTEGRATION_AUDIT.md`.
 
 ### 1. الهدف
 إعادة بناء نظام الموارد البشرية لشركة أريبا بحيث **يطابق 100%** النسخة القديمة (ملفات HTML المفصولة حتى التحديث V130) في الشاشات والحقول والنصوص والمعادلات، لكن على تقنيات حديثة:
@@ -261,9 +261,9 @@ HR_ARIBA/
 │   ├── employee-app/  (app/(tabs), app/login.tsx, app/change-password.tsx, src/lib/api.ts, src/lib/auth.tsx, src/theme.ts)
 │   └── legacy/{hr-portal,employee-portal}/{index.html,css/,js/}
 └── docs/
-    ├── ARIBA_HR_System_Documentation.md  ← المواصفات (القسم 4 = كل المعادلات بأمثلة رقمية، القسم 9 = 35 سؤال مفتوح)
-    ├── ROADMAP.md, ARCHITECTURE.md, BUSINESS_RULES.md, DATABASE.md, DEPLOY_RAILWAY.md, SECURITY.md
-    └── HANDOFF.md (هذا الملف)
+    ├── 10_ARIBA_HR_System_Documentation.md  ← المواصفات (القسم 4 = كل المعادلات بأمثلة رقمية، القسم 9 = 35 سؤال مفتوح)
+    ├── 11_ROADMAP.md, 01_ARCHITECTURE.md, 04_BUSINESS_RULES.md, 02_DATABASE.md, 07_DEPLOY_RAILWAY.md, 03_SECURITY.md
+    └── 13_HANDOFF.md (هذا الملف)
 ```
 
 ---
@@ -273,7 +273,7 @@ HR_ARIBA/
 #### 5.1 فصل ملفات HTML القديمة (مكتمل)
 - كل ملف HTML قُسّم إلى `index.html` + `css/` + `js/` (HR: 27 CSS + 141 JS، الموظف: 14 CSS + 47 JS)، والمعادلات في `js/calculations/`.
 - التحقق: إعادة التركيب = الملف الأصلي حرف بحرف؛ تشغيل Playwright مقارنة 13 صفحة (شكل + متغيرات + معادلات) = متطابق.
-- التوثيق الكامل: `docs/ARIBA_HR_System_Documentation.md`.
+- التوثيق الكامل: `docs/10_ARIBA_HR_System_Documentation.md`.
 
 #### 5.2 المستودع والنشر
 - صُفّر المستودع (بعد حفظ `archive/before-reset`)، ثم أُعيد الخادم والموقع من الأرشيف وبُني تطبيق Expo، ونُقلت الملفات المفصولة إلى `frontend/legacy`.

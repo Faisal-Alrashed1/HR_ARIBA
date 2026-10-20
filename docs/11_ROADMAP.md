@@ -9,9 +9,9 @@
 ## Rebuild plan — the only reference is the new version
 
 ## The rule
-- **Reference:** `frontend/legacy/` (the new, split-up version, with updates up to V130) + `docs/ARIBA_HR_System_Documentation.md`.
+- **Reference:** `frontend/legacy/` (the new, split-up version, with updates up to V130) + `docs/10_ARIBA_HR_System_Documentation.md`.
 - **Goal:** the website and the app match the HTML file **exactly**: same screens, fields, buttons, texts and formulas.
-- If an old decision in `BUSINESS_RULES.md` differs from the HTML file → **we follow the HTML** and write down the difference.
+- If an old decision in `04_BUSINESS_RULES.md` differs from the HTML file → **we follow the HTML** and write down the difference.
 - The existing code in `backend` and `frontend/hr-web` was built from an **older** version; it is reviewed and corrected against the new version.
 
 ## How we work on each module
@@ -35,7 +35,7 @@
 | 9 | Data migration from Supabase | — | ❌ |
 
 ## Open questions
-Section 9 in `ARIBA_HR_System_Documentation.md` (35 questions for the HR officer).
+Section 9 in `10_ARIBA_HR_System_Documentation.md` (35 questions for the HR officer).
 
 ---
 
@@ -44,9 +44,9 @@ Section 9 in `ARIBA_HR_System_Documentation.md` (35 questions for the HR officer
 ## خطة إعادة البناء — المرجع الوحيد هو النسخة الجديدة
 
 ## القاعدة
-- **المرجع:** `frontend/legacy/` (النسخة الجديدة المفصولة، فيها التحديثات حتى V130) + `docs/ARIBA_HR_System_Documentation.md`.
+- **المرجع:** `frontend/legacy/` (النسخة الجديدة المفصولة، فيها التحديثات حتى V130) + `docs/10_ARIBA_HR_System_Documentation.md`.
 - **الهدف:** الموقع والتطبيق يطابقون ملف HTML **بالضبط**: نفس الشاشات، الحقول، الأزرار، النصوص، والمعادلات.
-- إذا اختلف قرار قديم في `BUSINESS_RULES.md` عن ملف HTML ← **نتبع HTML** ونكتب الفرق.
+- إذا اختلف قرار قديم في `04_BUSINESS_RULES.md` عن ملف HTML ← **نتبع HTML** ونكتب الفرق.
 - الكود الموجود في `backend` و`frontend/hr-web` انبنى من نسخة **أقدم**؛ يُراجع ويُصحَّح على النسخة الجديدة.
 
 ## طريقة العمل لكل وحدة
@@ -70,4 +70,4 @@ Section 9 in `ARIBA_HR_System_Documentation.md` (35 questions for the HR officer
 | 9 | نقل البيانات من Supabase | — | ❌ |
 
 ## الأسئلة المفتوحة
-القسم 9 في `ARIBA_HR_System_Documentation.md` (35 سؤال لموظف الموارد البشرية).
+القسم 9 في `10_ARIBA_HR_System_Documentation.md` (35 سؤال لموظف الموارد البشرية).

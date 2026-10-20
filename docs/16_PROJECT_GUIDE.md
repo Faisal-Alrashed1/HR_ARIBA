@@ -71,7 +71,7 @@
 
 ### 3.4 — 8 Oct: moved onto the colleague's database (canonical)
 - The backend runs on the original Supabase schema through `backend/app/routers/canonical.py` (all routes, raw SQL).
-- DB service `Postgres-Q6OM`. Audit in `docs/INTEGRATION_AUDIT.md`.
+- DB service `Postgres-Q6OM`. Audit in `docs/14_INTEGRATION_AUDIT.md`.
 - `backend/tools/create_account.py` creates a login with a temporary password.
 - The app was restyled to the legacy V118 look.
 
@@ -87,7 +87,7 @@
 - **Employees:** saving recomputes stored GOSI/net (legacy `sEmp`); clearer messages; «كل جهات العمل» filter fixed.
 
 ### 3.6 — 11–12 Oct: legacy parity audit (`0f85a93`)
-- Report in `docs/LOGIC_AUDIT.md`. The legacy HTML was run in jsdom and the legacy SQL functions in Postgres, then compared number by number.
+- Report in `docs/15_LOGIC_AUDIT.md`. The legacy HTML was run in jsdom and the legacy SQL functions in Postgres, then compared number by number.
 - **EOS report** uses the recorded award (84/84). Contract end is computed on save. Reactivation on renewal (V101).
 - **Punch (legacy V140):**
   - Polygons, smallest zone first.
@@ -257,8 +257,8 @@
 - `frontend/employee-app/app/(tabs)/*`: app tabs. `frontend/employee-app/src/lib/api.ts`: API client.
 - `frontend/legacy/`: the reference HTML.
 - `docs/`:
-  - `LOGIC_AUDIT.md`: legacy vs ours + decisions.
-  - `INTEGRATION_AUDIT.md`: canonical DB vs our code.
+  - `15_LOGIC_AUDIT.md`: legacy vs ours + decisions.
+  - `14_INTEGRATION_AUDIT.md`: canonical DB vs our code.
   - `db-normalization/`: migration scripts.
   - `HANDOFF_NEXT.md` (local only, superseded by this guide).
   - The other docs are older references.
@@ -342,7 +342,7 @@
 
 ### 3.4 — 8 أكتوبر: الانتقال لقاعدة زميلنا (canonical)
 - الخادم يشتغل على سكيما Supabase الأصلية عبر `backend/app/routers/canonical.py` (كل الـ routes، بأوامر SQL مباشرة).
-- خدمة القاعدة `Postgres-Q6OM`. التقرير في `docs/INTEGRATION_AUDIT.md`.
+- خدمة القاعدة `Postgres-Q6OM`. التقرير في `docs/14_INTEGRATION_AUDIT.md`.
 - `backend/tools/create_account.py` ينشئ حساب دخول بكلمة مرور مؤقتة.
 - التطبيق صار بشكل V118 القديم.
 
@@ -358,7 +358,7 @@
 - **الموظفين:** الحفظ يعيد حساب التأمينات والصافي المخزّن (`sEmp` القديمة)، ورسائل أوضح، وإصلاح فلتر «كل جهات العمل».
 
 ### 3.6 — 11 و12 أكتوبر: تدقيق المطابقة مع القديم (`0f85a93`)
-- التقرير في `docs/LOGIC_AUDIT.md`. شغّلنا الـ HTML القديم في jsdom ودوال SQL القديمة في Postgres، وقارنّا رقم برقم.
+- التقرير في `docs/15_LOGIC_AUDIT.md`. شغّلنا الـ HTML القديم في jsdom ودوال SQL القديمة في Postgres، وقارنّا رقم برقم.
 - **تقرير نهاية الخدمة** يعتمد المكافأة المسجّلة (84/84). نهاية العقد تنحسب عند الحفظ. والإرجاع للنشاط عند التجديد (V101).
 - **البصمة (V140 القديمة):**
   - المضلّعات، والموقع الأصغر أولاً.
@@ -528,8 +528,8 @@
 - `frontend/employee-app/app/(tabs)/*`: تبويبات التطبيق. `frontend/employee-app/src/lib/api.ts`: الاتصال بالـ API.
 - `frontend/legacy/`: الـ HTML المرجعي.
 - `docs/`:
-  - `LOGIC_AUDIT.md`: القديم مقابل حقنا + القرارات.
-  - `INTEGRATION_AUDIT.md`: قاعدة canonical مقابل كودنا.
+  - `15_LOGIC_AUDIT.md`: القديم مقابل حقنا + القرارات.
+  - `14_INTEGRATION_AUDIT.md`: قاعدة canonical مقابل كودنا.
   - `db-normalization/`: سكربتات النقل.
   - `HANDOFF_NEXT.md` (محلي بس، وهذا الدليل يغني عنه).
   - باقي الوثائق مراجع قديمة.

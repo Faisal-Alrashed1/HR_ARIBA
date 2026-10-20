@@ -5,7 +5,7 @@ service years = round2(days / 365.25).
 
     Arts. 84, 74, 74(3), 74(4): e84 = base/2 x min(y, 5) + base x max(0, y - 5)
     Arts. 85, 75 (resignation): < 2 y: 0 · 2 to under 5: 1/3 · 5 to under 10: 2/3 · >= 10: full e84
-    (their React eosByLaw; correction A removed, docs/LOGIC_AUDIT.md section 9)
+    (their React eosByLaw; correction A removed, docs/15_LOGIC_AUDIT.md section 9)
     Art. 77: e84 + max(round(2 x base), round(base/30 x 15 x y))
     Arts. 80, 53: 0
 

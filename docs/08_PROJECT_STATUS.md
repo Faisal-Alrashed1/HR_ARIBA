@@ -16,7 +16,7 @@ Start here. This file says what exists, what has been checked, and what has **no
 Decision: everything on Railway (Postgres + backend + frontend), no Supabase. Sign-in is now built into the
 backend (Argon2id hashes in the `credentials` table, HS256 session tokens with a per-user token version that
 revokes old sessions on every password change). Files go to disk (a Railway Volume in production).
-Steps: [DEPLOY_RAILWAY.md](DEPLOY_RAILWAY.md). Verified on a local PostgreSQL 16 in production mode.
+Steps: [07_DEPLOY_RAILWAY.md](07_DEPLOY_RAILWAY.md). Verified on a local PostgreSQL 16 in production mode.
 
 ### Design match (2026-10-04)
 The frontend now reproduces the V114 prototypes' look exactly (prototype CSS, fonts, logo, wording, markup);
@@ -53,7 +53,7 @@ automatic employee numbers. New endpoints: `GET /dashboard`, `POST /employees/sa
   Arabic RTL and English LTR; light and night themes.
 
 #### Not verified yet (be honest here)
-- Not deployed to Railway yet (needs your Railway account; see DEPLOY_RAILWAY.md).
+- Not deployed to Railway yet (needs your Railway account; see 07_DEPLOY_RAILWAY.md).
 - Mobile layout of the employee app checked only in a narrow browser window, not on a phone.
 - The login rate limiter is in-memory: correct for one backend instance only.
 
@@ -64,10 +64,10 @@ automatic employee numbers. New endpoints: `GET /dashboard`, `POST /employees/sa
 - Approval stages per request type are **data** (`workflow_rules`): leaves/remote/advance → manager → HR → CEO;
   permission/maternity permission/early leave/overtime/mission → manager → HR; forgot punch → HR only.
 
-Open questions found in the prototypes are listed at the end of [BUSINESS_RULES.md](BUSINESS_RULES.md).
+Open questions found in the prototypes are listed at the end of [04_BUSINESS_RULES.md](04_BUSINESS_RULES.md).
 
 ### Next phases (proposed order)
-1. First Railway deploy (see DEPLOY_RAILWAY.md)
+1. First Railway deploy (see 07_DEPLOY_RAILWAY.md)
 2. Leave (ledger, balances, holidays) · requests + approval workflow
 3. Attendance (check-in, geofence, late, remote limit) · punch locations
 4. Payroll + GOSI · payslips
@@ -103,8 +103,8 @@ All under `/api/v1` unless noted. 🔒 = needs a bearer token.
 OpenAPI docs at `/docs` in development only.
 
 ### Doc index
-- [ARCHITECTURE.md](ARCHITECTURE.md) · [SECURITY.md](SECURITY.md) · [DATABASE.md](DATABASE.md) · [BUSINESS_RULES.md](BUSINESS_RULES.md)
-- Features: [FEATURE_auth.md](FEATURE_auth.md) · [FEATURE_employees.md](FEATURE_employees.md)
+- [01_ARCHITECTURE.md](01_ARCHITECTURE.md) · [03_SECURITY.md](03_SECURITY.md) · [02_DATABASE.md](02_DATABASE.md) · [04_BUSINESS_RULES.md](04_BUSINESS_RULES.md)
+- Features: [05_FEATURE_auth.md](05_FEATURE_auth.md) · [06_FEATURE_employees.md](06_FEATURE_employees.md)
 - [backend/README.md](../backend/README.md) · [frontend/hr-web/README.md](../frontend/hr-web/README.md) · [frontend/hr-web/DESIGN.md](../frontend/hr-web/DESIGN.md)
 
 ---
@@ -121,7 +121,7 @@ _آخر تحديث: 2026-10-04 · الفرع `feat/foundation`_
 القرار: كل شيء على Railway (Postgres + الخلفية + الواجهة الأمامية)، بلا Supabase. أصبح تسجيل الدخول مدمجًا في
 الخلفية (تجزئات Argon2id في جدول `credentials`، ورموز جلسة HS256 مع رقم إصدار رمز لكل مستخدم
 يُلغي الجلسات القديمة عند كل تغيير لكلمة المرور). تُحفظ الملفات على القرص (Railway Volume في الإنتاج).
-الخطوات: [DEPLOY_RAILWAY.md](DEPLOY_RAILWAY.md). تم التحقق على PostgreSQL 16 محلية في وضع الإنتاج.
+الخطوات: [07_DEPLOY_RAILWAY.md](07_DEPLOY_RAILWAY.md). تم التحقق على PostgreSQL 16 محلية في وضع الإنتاج.
 
 ### مطابقة التصميم (2026-10-04)
 تعيد الواجهة الأمامية الآن إنتاج مظهر النماذج الأولية V114 بدقة (CSS النموذج الأولي، الخطوط، الشعار، الصياغة، الترميز)؛
@@ -158,7 +158,7 @@ _آخر تحديث: 2026-10-04 · الفرع `feat/foundation`_
   العربية RTL والإنجليزية LTR؛ السمتان الفاتحة والليلية.
 
 #### ما لم يتم التحقق منه بعد (بصراحة)
-- لم يُنشر على Railway بعد (يحتاج إلى حسابك على Railway؛ انظر DEPLOY_RAILWAY.md).
+- لم يُنشر على Railway بعد (يحتاج إلى حسابك على Railway؛ انظر 07_DEPLOY_RAILWAY.md).
 - تخطيط تطبيق الموظف على الجوال فُحص فقط في نافذة متصفح ضيقة، وليس على هاتف.
 - محدِّد معدل الدخول في الذاكرة: صحيح لنسخة خلفية واحدة فقط.
 
@@ -169,10 +169,10 @@ _آخر تحديث: 2026-10-04 · الفرع `feat/foundation`_
 - مراحل الاعتماد لكل نوع طلب هي **بيانات** (`workflow_rules`): الإجازات/العمل عن بُعد/السلفة ← المدير ← الموارد البشرية ← الرئيس التنفيذي؛
   الاستئذان/استئذان الأمومة/الخروج المبكر/العمل الإضافي/مهمة العمل ← المدير ← الموارد البشرية؛ نسيان البصمة ← الموارد البشرية فقط.
 
-الأسئلة المفتوحة المكتشفة في النماذج الأولية مدرجة في نهاية [BUSINESS_RULES.md](BUSINESS_RULES.md).
+الأسئلة المفتوحة المكتشفة في النماذج الأولية مدرجة في نهاية [04_BUSINESS_RULES.md](04_BUSINESS_RULES.md).
 
 ### المراحل التالية (الترتيب المقترح)
-1. أول نشر على Railway (انظر DEPLOY_RAILWAY.md)
+1. أول نشر على Railway (انظر 07_DEPLOY_RAILWAY.md)
 2. الإجازات (الدفتر، الأرصدة، العطل) · الطلبات + سير عمل الاعتماد
 3. الحضور (تسجيل الحضور، السياج الجغرافي، التأخير، حد العمل عن بُعد) · مواقع البصمة
 4. الرواتب + التأمينات (GOSI) · قسائم الرواتب
@@ -208,6 +208,6 @@ _آخر تحديث: 2026-10-04 · الفرع `feat/foundation`_
 توثيق OpenAPI على `/docs` في بيئة التطوير فقط.
 
 ### فهرس المستندات
-- [ARCHITECTURE.md](ARCHITECTURE.md) · [SECURITY.md](SECURITY.md) · [DATABASE.md](DATABASE.md) · [BUSINESS_RULES.md](BUSINESS_RULES.md)
-- الميزات: [FEATURE_auth.md](FEATURE_auth.md) · [FEATURE_employees.md](FEATURE_employees.md)
+- [01_ARCHITECTURE.md](01_ARCHITECTURE.md) · [03_SECURITY.md](03_SECURITY.md) · [02_DATABASE.md](02_DATABASE.md) · [04_BUSINESS_RULES.md](04_BUSINESS_RULES.md)
+- الميزات: [05_FEATURE_auth.md](05_FEATURE_auth.md) · [06_FEATURE_employees.md](06_FEATURE_employees.md)
 - [backend/README.md](../backend/README.md) · [frontend/hr-web/README.md](../frontend/hr-web/README.md) · [frontend/hr-web/DESIGN.md](../frontend/hr-web/DESIGN.md)
