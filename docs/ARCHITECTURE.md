@@ -1,4 +1,12 @@
-# Architecture
+# Architecture — البنية المعمارية
+
+> English first, then the full Arabic version (same content).
+
+---
+
+# English
+
+## Architecture
 
 ```
 Browser ──HTTPS/JSON──▶ FastAPI (/api/v1) ──SQLAlchemy──▶ Postgres on Railway (RLS on, no policies)
@@ -8,7 +16,7 @@ Browser ──HTTPS/JSON──▶ FastAPI (/api/v1) ──SQLAlchemy──▶ Po
 Hosting: Railway — services `backend`, `hr-web` (frontend/hr-web), `Postgres`; the employee app (frontend/employee-app) ships to the App Store / Google Play (docs/DEPLOY_RAILWAY.md)
 ```
 
-## Principles
+### Principles
 1. **The backend owns everything that matters**: state, rules, calculations and permissions.
    The frontend renders data and sends user actions. A native mobile app can use the same API later.
 2. **One place per concern.** Thin routers (HTTP only) → services (business logic, pure where possible)
@@ -17,7 +25,7 @@ Hosting: Railway — services `backend`, `hr-web` (frontend/hr-web), `Postgres`;
    employee app computed leave differently.
 4. **Normalized data.** One column per fact, no JSON blobs, no aliased field names, files in Storage.
 
-## Backend (`backend/app`)
+### Backend (`backend/app`)
 | Path | Role |
 |---|---|
 | `main.py` | app factory: CORS, security headers, request ids, error handlers, routers |
@@ -36,7 +44,7 @@ Hosting: Railway — services `backend`, `hr-web` (frontend/hr-web), `Postgres`;
 **Identity.** Built into the backend: Argon2id password hashes in `credentials`, HS256 session tokens with a
 per-user token version (core/identity.py). Usernames are employee numbers.
 
-## HR web (`frontend/hr-web/src`)
+### HR web (`frontend/hr-web/src`)
 | Path | Role |
 |---|---|
 | `proxy.ts` | Next 16's replacement for `middleware.ts`: redirects by session and role (mirror only) |
@@ -53,3 +61,63 @@ Language and theme are cookies read in the root layout, so the first paint alrea
 **Changes from the original brief:** hosting moved from Supabase to Railway (decision 2026-10-04), so auth and
 storage are built in; the frontend never needed a Supabase client. The UI reproduces the V114 prototypes
 verbatim (see frontend/hr-web/DESIGN.md), which is why Tailwind is not used.
+
+---
+
+# العربي
+
+## البنية المعمارية
+
+```
+Browser ──HTTPS/JSON──▶ FastAPI (/api/v1) ──SQLAlchemy──▶ Postgres on Railway (RLS on, no policies)
+   │                         │
+   │ Next.js pages           └── files ──▶ Railway Volume (/data), streamed after a scope check
+   │ proxy.ts (route mirror)
+Hosting: Railway — services `backend`, `hr-web` (frontend/hr-web), `Postgres`; the employee app (frontend/employee-app) ships to the App Store / Google Play (docs/DEPLOY_RAILWAY.md)
+```
+
+### المبادئ
+1. **الخلفية تملك كل ما هو مهم**: الحالة والقواعد والحسابات والصلاحيات.
+   الواجهة الأمامية تعرض البيانات وترسل إجراءات المستخدم. ويمكن لتطبيق جوال أصلي استخدام نفس الواجهة البرمجية لاحقًا.
+2. **مكان واحد لكل مسؤولية.** موجّهات رفيعة (HTTP فقط) ← خدمات (منطق الأعمال، نقية حيثما أمكن)
+   ← نماذج. كل استدعاءات `fetch` موجودة في `frontend/hr-web/src/lib/api.ts` (تطبيق الموظف: `frontend/employee-app/src/lib/api.ts`).
+3. **حساب واحد لكل قاعدة**، يستخدمه كلا التطبيقين. وهذا يصلح النموذج الأولي، حيث كانت بوابة الموارد البشرية و
+   تطبيق الموظف يحسبان الإجازات بشكل مختلف.
+4. **بيانات مُطبَّعة.** عمود واحد لكل معلومة، لا كتل JSON، لا أسماء حقول مستعارة، والملفات في التخزين.
+
+### الخلفية (`backend/app`)
+| المسار | الدور |
+|---|---|
+| `main.py` | مصنع التطبيق: CORS، ترويسات الأمان، معرّفات الطلبات، معالجات الأخطاء، الموجّهات |
+| `config.py` | الإعدادات من `.env`، يُتحقَّق منها عند البدء (الإنتاج يرفض SQLite / مفاتيح Supabase المفقودة) |
+| `database.py` | المحرك + الجلسة؛ Postgres عبر psycopg 3، وSQLite للاختبارات السريعة |
+| `models.py` / `schemas.py` | كل جدول + تعداد / كل شكل طلب + استجابة |
+| `migrations.py` | مُشغّل Alembic (عند البدء في التطوير، والاختبارات) |
+| `core/` | المصادقة، مزوّد الهوية، الصلاحيات، الأمان، الأخطاء، التدقيق، التخزين، الجدولة، اللغة، الترقيم |
+| `routers/` | ملف واحد لكل مورد |
+| `services/` | منطق الأعمال؛ والقوالب المبدئية توثّق المراحل القادمة |
+
+**دورة حياة الطلب**: وسيط ترويسات الأمان يعيّن معرّف طلب ← CORS ← اعتمادية الموجّه
+`get_current_user` تتحقق من JWT وتحمّل صف `users` (نشط؟ يجب تغيير كلمة المرور؟) ←
+`require_roles(...)` ← تطبّق الخدمة نطاق البيانات ← يُضاف إدخال التدقيق في نفس المعاملة ← الإيداع.
+
+**الهوية.** مدمجة في الخلفية: تجزئات كلمات مرور Argon2id في `credentials`، ورموز جلسة HS256 مع
+إصدار رمز لكل مستخدم (core/identity.py). أسماء المستخدمين هي أرقام الموظفين.
+
+### واجهة الموارد البشرية (`frontend/hr-web/src`)
+| المسار | الدور |
+|---|---|
+| `proxy.ts` | بديل Next 16 لـ `middleware.ts`: يعيد التوجيه حسب الجلسة والدور (عكس فقط) |
+| `app/` | مجلد واحد لكل مسار؛ صفحات الموارد البشرية في المستوى الأعلى، وتطبيق الموظف تحت `me/` |
+| `components/` | عناصر `ui/` الأساسية، وأغلفة `nav/` (الشريط الجانبي للموارد البشرية، والتنقل السفلي للموظف)، ومكوّنات الميزات |
+| `lib/api.ts` | استدعاء `fetch` الوحيد؛ كل أنواع الواجهة البرمجية؛ التحديث عند 401؛ `ApiError` |
+| `lib/<area>.ts` | مساعدات مُنمَّطة لكل مجال (`auth.ts`، `employees.ts`) |
+| `lib/i18n/` | `ar.ts` (مصدر المفاتيح)، `en.ts`، `locale.tsx` |
+| `lib/session.ts` | رموز الوصول/التحديث في ملفات تعريف ارتباط من الطرف الأول حتى يتمكن `proxy.ts` من قراءة الدور |
+
+اللغة والسمة ملفات تعريف ارتباط تُقرأ في التخطيط الجذري، لذا يحمل العرض الأول بالفعل القيم الصحيحة لـ
+`lang` و`dir` و`data-theme`.
+
+**تغييرات عن الموجز الأصلي:** انتقلت الاستضافة من Supabase إلى Railway (قرار 2026-10-04)، لذا أصبحت المصادقة و
+التخزين مدمجين؛ ولم تحتج الواجهة الأمامية قط إلى عميل Supabase. تعيد الواجهة إنتاج نماذج V114 الأولية
+حرفيًا (انظر frontend/hr-web/DESIGN.md)، ولهذا لا يُستخدم Tailwind.
