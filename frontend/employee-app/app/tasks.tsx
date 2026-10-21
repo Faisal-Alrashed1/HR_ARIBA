@@ -72,7 +72,7 @@ export default function TasksScreen() {
           + (x.location ? " • " + x.location : "")}
       </T>
       {x.details ? <T size={12.5}>{x.details}</T> : null}
-      {x.response_note ? <T size={12} color={t.mu}>{x.response_note}</T> : null}
+      {x.response_note ? <T size={11.5} color={t.mu}>{x.response_note}</T> : null}
       {isIn && x.status === "open" ? (
         <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
           {x.kind === "meeting"
@@ -112,7 +112,7 @@ export default function TasksScreen() {
                 <T size={16}>{sel[e.id] ? "☑" : "☐"}</T>
                 <View style={{ flex: 1 }}>
                   <T weight={700}>{e.name}</T>
-                  <T size={12} color={t.mu}>{[e.job, e.dept].filter(Boolean).join(" • ")}</T>
+                  <T size={11.5} color={t.mu}>{[e.job, e.dept].filter(Boolean).join(" • ")}</T>
                   {s.cur ? <T size={12} color={t.mu}>{`من ${fmt(s.cur.from)} إلى ${fmt(s.cur.to)} — ${s.cur.days} يوم (${LT[s.cur.types[0]] ?? s.cur.types[0]}) • يعود للعمل: ${fmt(nextWork(s.cur.to))}`}</T>
                     : s.nxt ? <T size={12} color={t.mu}>{`إجازته القادمة: من ${fmt(s.nxt.from)} إلى ${fmt(s.nxt.to)} — ${s.nxt.days} يوم (${LT[s.nxt.types[0]] ?? s.nxt.types[0]})`}</T> : null}
                 </View>

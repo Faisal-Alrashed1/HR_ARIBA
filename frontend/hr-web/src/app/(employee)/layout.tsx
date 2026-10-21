@@ -15,11 +15,7 @@ export const metadata: Metadata = {
   icons: { icon: "/brand/ariba-logo.png" },
 };
 
-// Edge to edge (the CSS pads the bars with env(safe-area-inset-*)); the status-bar colour follows the app's own day / night.
-export async function generateViewport(): Promise<Viewport> {
-  const night = (await cookies()).get(EMP_THEME_COOKIE)?.value === "dark";
-  return { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: night ? "#013D31" : "#FFFDF8" };
-}
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#014D3D" };
 
 // Employee app root layout. Like its prototype it opens in day mode and turns left-to-right in English.
 export default async function EmployeeRootLayout({ children }: { children: React.ReactNode }) {

@@ -75,7 +75,7 @@ export default function IbanChange() {
   return (
     <Screen title="🏦 طلب تغيير الآيبان">
       <Card>
-        <T size={12} color={t.mu} style={{ lineHeight: 19 }}>الخطاب الرسمي جاهز على ورق الشركة — اكتب بياناتك البنكية الجديدة ووقّع وأرفق الشهادة. يصل المدير المباشر والموارد البشرية، وعند الاعتماد تُحدَّث بياناتك تلقائياً.</T>
+        <T size={11} color={t.mu} style={{ lineHeight: 19 }}>الخطاب الرسمي جاهز على ورق الشركة — اكتب بياناتك البنكية الجديدة ووقّع وأرفق الشهادة. يصل المدير المباشر والموارد البشرية، وعند الاعتماد تُحدَّث بياناتك تلقائياً.</T>
         <Input label="اسم البنك الجديد" value={bank} onChangeText={setBank} />
         <Input label="رقم الحساب" value={account} onChangeText={setAccount} keyboardType="number-pad" style={{ textAlign: "left" }} />
         <Input label="IBAN" value={iban} onChangeText={setIban} autoCapitalize="characters" placeholder="SA…" style={{ textAlign: "left" }} />

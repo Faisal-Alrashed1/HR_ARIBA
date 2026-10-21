@@ -1,6 +1,6 @@
 // Building blocks with the legacy employee app's final look (css/02-styles.css + V118 js/core-ui/030 overrides):
 // .card, .card-title, .btn(-success|-danger|-primary), .b badges, label/input, .hr-pay-row, .profile-info, toast.
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator, Animated, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
   type StyleProp, type TextInputProps, type TextStyle, type ViewStyle, RefreshControl,
@@ -12,8 +12,6 @@ import { T } from "./text";
 
 export { T };
 import { shadow } from "@/lib/shadow";
-import { haptic } from "@/lib/haptics";
-import { useReducedMotion } from "@/lib/motion";
 
 export function Page({ children, onRefresh }: { children: ReactNode; onRefresh?: () => Promise<unknown> }) {
   const t = useTheme();
@@ -55,8 +53,8 @@ export function CardTitle({ children, icon }: { children: ReactNode; icon?: Reac
 }
 
 type BtnKind = "success" | "danger" | "primary" | "ghost" | "teal";
-export function Btn({ title, onPress, kind = "primary", busy, disabled, icon, style, label }: {
-  title: string; label?: string; onPress: () => void; kind?: BtnKind; busy?: boolean; disabled?: boolean; icon?: ReactNode | IconName; style?: StyleProp<ViewStyle>;
+export function Btn({ title, onPress, kind = "primary", busy, disabled, icon, style }: {
+  title: string; onPress: () => void; kind?: BtnKind; busy?: boolean; disabled?: boolean; icon?: ReactNode | IconName; style?: StyleProp<ViewStyle>;
 }) {
   const t = useTheme();
   const bg = { success: t.gr, danger: t.rd, primary: t.dark ? "#29B35E" : "#014D3D", ghost: t.c2, teal: "#014D3D" }[kind];
@@ -65,9 +63,6 @@ export function Btn({ title, onPress, kind = "primary", busy, disabled, icon, st
     <Pressable
       onPress={onPress}
       disabled={busy || disabled}
-      accessibilityRole="button"
-      accessibilityLabel={label ?? title}
-      accessibilityState={{ disabled: !!(busy || disabled), busy: !!busy }}
       style={({ pressed }) => [styles.btn, { backgroundColor: bg, opacity: disabled ? 0.5 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
         kind === "ghost" && { borderWidth: 1, borderColor: t.bd, ...shadow("#000", 0, 0, 0, 0) }, style]}
     >
@@ -81,7 +76,7 @@ export function Badge({ text, tone }: { text: string; tone: "bg" | "br" | "ba" |
   const map = { bg: ["rgba(16,185,129,.15)", t.gr], br: ["rgba(239,68,68,.15)", t.rd], ba: ["rgba(245,158,11,.15)", t.am], bk: ["rgba(100,116,139,.15)", t.mu] }[tone];
   return (
     <View style={{ backgroundColor: map[0], borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 }}>
-      <T size={12} weight={600} color={map[1]}>{text}</T>
+      <T size={11} weight={600} color={map[1]}>{text}</T>
     </View>
   );
 }
@@ -105,7 +100,7 @@ export function InfoBox({ label, value }: { label: string; value?: ReactNode }) 
   const t = useTheme();
   return (
     <View style={{ flexBasis: "48%", flexGrow: 1, padding: 10, borderWidth: 1, borderColor: t.bd, borderRadius: 10, backgroundColor: t.c2 }}>
-      <T size={12} color={t.mu}>{label}</T>
+      <T size={10} color={t.mu}>{label}</T>
       <T size={12} weight={700} style={{ marginTop: 3 }}>{value || "—"}</T>
     </View>
   );
@@ -113,7 +108,7 @@ export function InfoBox({ label, value }: { label: string; value?: ReactNode }) 
 
 export function Label({ children }: { children: ReactNode }) {
   const t = useTheme();
-  return <T size={12} weight={600} color={t.mu} style={{ marginTop: 8, marginBottom: 4 }}>{children}</T>;
+  return <T size={11} weight={600} color={t.mu} style={{ marginTop: 8, marginBottom: 4 }}>{children}</T>;
 }
 
 export function Input(props: TextInputProps & { label?: string }) {
@@ -184,7 +179,6 @@ export function Empty({ text }: { text: string }) {
 
 // White modal card of the legacy patches (forgot punch, change password): not themed, Tahoma-like look.
 export function Sheet({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: ReactNode }) {
-  useEffect(() => { if (visible) haptic.select(); }, [visible]);
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
@@ -199,40 +193,29 @@ export function Sheet({ visible, onClose, children }: { visible: boolean; onClos
 }
 
 // --------------------------------------------------------------------------- toast (top, centred, 3 s)
-type ToastKind = "ok" | "err" | "warn" | "info";
+type ToastKind = "ok" | "err" | "info";
 const ToastCtx = createContext<(msg: string, kind?: ToastKind) => void>(() => {});
 export const useToast = () => useContext(ToastCtx);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const t = useTheme();
-  const reduced = useReducedMotion();
   const [msg, setMsg] = useState<{ text: string; kind: ToastKind } | null>(null);
   const fade = useRef(new Animated.Value(0)).current;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const show = useCallback((text: string, kind: ToastKind = "info") => {
     setMsg({ text, kind });
-    if (kind === "ok") haptic.ok(); else if (kind === "err") haptic.err(); else if (kind === "warn") haptic.warn();
-    fade.stopAnimation();
     fade.setValue(0);
     Animated.timing(fade, { toValue: 1, duration: 200, useNativeDriver: true }).start();
     if (timer.current) clearTimeout(timer.current);
-    // Longer messages stay longer (about 60 ms a character, between 3 and 6 seconds), then fade out.
-    const ms = Math.min(6000, Math.max(3000, text.length * 60));
-    timer.current = setTimeout(() => {
-      Animated.timing(fade, { toValue: 0, duration: reduced ? 0 : 160, useNativeDriver: true }).start(({ finished }) => finished && setMsg(null));
-    }, ms);
-  }, [fade, reduced]);
-  const border = msg?.kind === "err" ? t.rd : msg?.kind === "ok" ? t.gr : msg?.kind === "warn" ? t.am : t.bd;
+    timer.current = setTimeout(() => setMsg(null), 3000);
+  }, [fade]);
   return (
     <ToastCtx.Provider value={show}>
       {children}
       {msg ? (
-        <Animated.View accessibilityLiveRegion="polite" accessibilityRole="alert"
-          style={[{ pointerEvents: "none" }, styles.toast, { opacity: fade, backgroundColor: t.c, borderColor: border,
-            transform: reduced ? undefined : [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) }] }]}>
+        <Animated.View style={[{ pointerEvents: "none" }, styles.toast, { opacity: fade, backgroundColor: t.c, borderColor: msg.kind === "err" ? t.rd : msg.kind === "ok" ? t.gr : t.bd }]}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 }}>
-            {msg.kind !== "info" ? <Icon name={msg.kind === "err" ? "xCircle" : msg.kind === "warn" ? "alert" : "checkCircle"} size={18}
-              color={msg.kind === "err" ? t.rd : msg.kind === "warn" ? t.am : t.gr} stroke={2} /> : null}
+            {msg.kind !== "info" ? <Icon name={msg.kind === "err" ? "xCircle" : "checkCircle"} size={18} color={msg.kind === "err" ? t.rd : t.gr} stroke={2} /> : null}
             <T size={13} center style={{ flexShrink: 1 }}>{msg.text}</T>
           </View>
         </Animated.View>
@@ -246,7 +229,7 @@ const styles = StyleSheet.create({
   btn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, marginTop: 10,
     ...shadow("#014D3D", 0.14, 8, 0, 6, 2) },
   payRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10, paddingHorizontal: 2, borderBottomWidth: 1 },
-  input: { borderWidth: 1, borderRadius: 8, padding: 9, fontSize: 13, minHeight: 44, textAlign: "right" },
+  input: { borderWidth: 1, borderRadius: 8, padding: 9, fontSize: 13, minHeight: 40, textAlign: "right" },
   pickOverlay: { flex: 1, backgroundColor: "rgba(1,32,26,.55)", alignItems: "center", justifyContent: "center", padding: 18 },
   overlay: { flex: 1, backgroundColor: "rgba(15,23,42,.72)", alignItems: "center", justifyContent: "center", padding: 16 },
   sheet: { backgroundColor: "#fff", borderRadius: 14, padding: 20, width: "100%", maxWidth: 400, maxHeight: "92%" },

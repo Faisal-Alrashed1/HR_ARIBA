@@ -37,7 +37,7 @@ export default function Profile() {
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
           <T size={16} weight={800} color="#fff" numberOfLines={2} style={{ flexShrink: 1, lineHeight: 24 }}>{e?.name_ar ?? ""}</T>
-          {e?.name_en ? <T size={12} color="#D0D9D5" numberOfLines={1} style={{ flexShrink: 1, marginTop: 2 }}>{e.name_en}</T> : null}
+          {e?.name_en ? <T size={11} color="#D0D9D5" numberOfLines={1} style={{ flexShrink: 1, marginTop: 2 }}>{e.name_en}</T> : null}
           {e?.job_title ? <T size={12} weight={700} color="#E4E4BC" numberOfLines={1} style={{ marginTop: 6 }}>{e.job_title}</T> : null}
         </View>
       </View>
@@ -93,16 +93,16 @@ export default function Profile() {
       <Card>
         <CardTitle>📎 وثائقي</CardTitle>
         <Btn kind="ghost" title="📤 رفع مستند للمراجعة" onPress={() => router.push("/upload-document")} style={{ marginTop: 0, marginBottom: 8 }} />
-        {!docs.length ? <T size={12} color={t.mu} center>لا توجد وثائق مرفوعة</T> : null}
+        {!docs.length ? <T size={11} color={t.mu} center>لا توجد وثائق مرفوعة</T> : null}
         {docs.map((d) => (
           <View key={d.id} style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: t.bd }}>
             <View style={{ flex: 1 }}>
               <T size={12} weight={700}>{docLabel(d.type)}</T>
-              <T size={12} color={t.mu}>{d.file_name}</T>
+              <T size={10} color={t.mu}>{d.file_name}</T>
             </View>
             <Pressable disabled={opening === d.id} onPress={async () => { setOpening(d.id); try { await openDocument(d.id, d.file_name); } catch { toast("تعذر تحميل الوثيقة", "err"); } setOpening(""); }}
               style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: t.bd, backgroundColor: t.c2 }}>
-              <T size={12} weight={700}>⬇ فتح</T>
+              <T size={11} weight={700}>⬇ فتح</T>
             </Pressable>
           </View>
         ))}

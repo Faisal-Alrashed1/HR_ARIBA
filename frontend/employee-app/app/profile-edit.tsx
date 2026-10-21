@@ -42,7 +42,7 @@ export default function ProfileEdit() {
   return (
     <Screen title="✏️ طلب تعديل بياناتي">
       <Card>
-        <T size={12} color={t.mu}>التعديل لا يُطبَّق إلا بعد موافقة الموارد البشرية.</T>
+        <T size={11} color={t.mu}>التعديل لا يُطبَّق إلا بعد موافقة الموارد البشرية.</T>
         {FIELDS.map(([k, label, kb]) => (
           <Input key={k} label={label} value={v[k]} keyboardType={kb} autoCapitalize="none" onChangeText={(x) => setV((p) => ({ ...p, [k]: x }))} />
         ))}

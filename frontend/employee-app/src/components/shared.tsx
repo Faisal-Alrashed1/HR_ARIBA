@@ -96,7 +96,7 @@ export function LocationsCard() {
         <T size={12} color={t.mu}>جهة العمل:</T>
         <T size={13} weight={700}>{employee?.workplace?.name_ar ?? "—"}</T>
       </View>
-      {!locs.length ? <T size={12} color={t.mu}>لا يوجد موقع عمل</T> : null}
+      {!locs.length ? <T size={11} color={t.mu}>لا يوجد موقع عمل</T> : null}
       {locs.map((l, i) => {
         const zero = Number(l.latitude) === 0 && Number(l.longitude) === 0;
         let st = { txt: `نصف القطر ${l.radius_m || 200} م`, color: t.mu };
@@ -112,11 +112,11 @@ export function LocationsCard() {
             </View>
             <T size={13} weight={800} style={{ flex: 1 }} numberOfLines={1}>{l.name}</T>
             <View style={{ backgroundColor: t.dark ? "rgba(228,228,188,.14)" : "rgba(1,77,61,.1)", borderRadius: 999, paddingHorizontal: 9, paddingVertical: 2 }}>
-              <T size={12} weight={700} color={t.dark ? "#E4E4BC" : "#014D3D"}>{l.type === "hq" ? "مقر رئيسي" : "مشروع"}</T>
+              <T size={10} weight={700} color={t.dark ? "#E4E4BC" : "#014D3D"}>{l.type === "hq" ? "مقر رئيسي" : "مشروع"}</T>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
               {st.txt === "داخل النطاق" ? <Icon name="check" size={13} color={st.color} stroke={2.4} /> : null}
-              <T size={12} weight={700} color={st.color}>{st.txt}</T>
+              <T size={11} weight={700} color={st.color}>{st.txt}</T>
             </View>
           </View>
         );

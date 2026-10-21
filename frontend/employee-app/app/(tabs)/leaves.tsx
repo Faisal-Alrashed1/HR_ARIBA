@@ -96,7 +96,7 @@ export default function Leaves() {
       <DelegationCard />
       <Card>
         <CardTitle>إرسال طلب جديد</CardTitle>
-        <T size={12} color={t.mu} style={{ marginBottom: 8 }}>
+        <T size={11} color={t.mu} style={{ marginBottom: 8 }}>
           {twoStage ? "مسار الاعتماد: المدير المباشر → الموارد البشرية (اعتماد نهائي). يصلك إشعار وإيميل عند كل خطوة."
             : "مسار الاعتماد: المدير المباشر → الموارد البشرية → الرئيس التنفيذي."}
         </T>
@@ -105,7 +105,7 @@ export default function Leaves() {
             <T size={12} weight={700} color={t.bl} style={{ marginBottom: 6 }}>🗓️ إجازات رسمية قادمة</T>
             {upcoming.map((h, i) => (
               <View key={i} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 }}>
-                <T size={12}>{h.name}</T><T size={12} color={t.mu}>{`${h.date}${h.days ? ` (${h.days} يوم)` : ""}`}</T>
+                <T size={11}>{h.name}</T><T size={11} color={t.mu}>{`${h.date}${h.days ? ` (${h.days} يوم)` : ""}`}</T>
               </View>
             ))}
           </View>
@@ -116,7 +116,7 @@ export default function Leaves() {
             return (
               <Pressable key={k} onPress={() => pick(k)}
                 style={{ width: "23.3%", borderWidth: 2, borderColor: on ? t.bl : t.bd, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 4, backgroundColor: t.c2 }}>
-                <T size={12} center weight={on ? 700 : 500}>{label}</T>
+                <T size={11} center weight={on ? 700 : 500}>{label}</T>
               </Pressable>
             );
           })}
@@ -138,7 +138,7 @@ export default function Leaves() {
         )}
         <Input label={twoStage ? "السبب" : "ملاحظات"} value={notes} onChangeText={setNotes} placeholder={twoStage ? "مطلوب" : "اختياري"} multiline />
         <Btn kind="ghost" title={file ? `📎 ${file.name}` : "📎 مرفق الطلب (اختياري)"} onPress={file ? () => setFile(null) : attach} style={{ marginTop: 8 }} />
-        <T size={12} color={t.mu} style={{ marginTop: 4 }}>يمكن إرسال الطلب بدون مرفق. الحد الأقصى 12 MB.{file ? " — اضغط لإزالته" : ""}</T>
+        <T size={10} color={t.mu} style={{ marginTop: 4 }}>يمكن إرسال الطلب بدون مرفق. الحد الأقصى 12 MB.{file ? " — اضغط لإزالته" : ""}</T>
         <Btn kind="primary" title="إرسال الطلب" icon={<Icon name="send" size={16} color={t.dark ? "#013D31" : "#fff"} />} onPress={submit} busy={busy} />
       </Card>
       <ForgotPunchSheet visible={forgot} onClose={() => setForgot(false)} />

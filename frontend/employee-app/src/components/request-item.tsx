@@ -34,12 +34,12 @@ export function RequestItem({ r, onDelete }: { r: MyRequest; onDelete?: (r: MyRe
           ) : null}
         </View>
       </View>
-      <T size={12} color={t.mu} style={{ marginTop: 4 }}>{requestDetail(r)}</T>
-      {r.notes ? <T size={12} color={t.dm} style={{ marginTop: 3 }}>{r.notes}</T> : null}
-      {r.payload?.submitted_by_manager ? <T size={12} color={t.bl} style={{ marginTop: 3 }}>👤 قدّمه عنك مديرك: {r.payload.submitted_by_name ?? ""}</T> : null}
-      {r.payload?.escalated_from && r.status === "pending" ? <T size={12} color={t.am} style={{ marginTop: 3 }}>⏱ انتقل للموارد البشرية لانتهاء مهلة الرد</T> : null}
-      {r.payload?.returned && r.status === "pending" ? <T size={12} color={t.am} style={{ marginTop: 3 }}>↩ أعادته الموارد البشرية لمديرك: {r.payload.return_note ?? ""}</T> : null}
-      {r.rejection_reason ? <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 }}><Icon name="xCircle" size={13} color={t.rd} stroke={2} /><T size={12} color={t.rd} style={{ flexShrink: 1 }}>سبب الرفض: {r.rejection_reason}</T></View> : null}
+      <T size={11} color={t.mu} style={{ marginTop: 4 }}>{requestDetail(r)}</T>
+      {r.notes ? <T size={10} color={t.dm} style={{ marginTop: 3 }}>{r.notes}</T> : null}
+      {r.payload?.submitted_by_manager ? <T size={10} color={t.bl} style={{ marginTop: 3 }}>👤 قدّمه عنك مديرك: {r.payload.submitted_by_name ?? ""}</T> : null}
+      {r.payload?.escalated_from && r.status === "pending" ? <T size={10} color={t.am} style={{ marginTop: 3 }}>⏱ انتقل للموارد البشرية لانتهاء مهلة الرد</T> : null}
+      {r.payload?.returned && r.status === "pending" ? <T size={10} color={t.am} style={{ marginTop: 3 }}>↩ أعادته الموارد البشرية لمديرك: {r.payload.return_note ?? ""}</T> : null}
+      {r.rejection_reason ? <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 }}><Icon name="xCircle" size={13} color={t.rd} stroke={2} /><T size={11} color={t.rd} style={{ flexShrink: 1 }}>سبب الرفض: {r.rejection_reason}</T></View> : null}
     </View>
   );
 }
