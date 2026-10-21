@@ -28,6 +28,7 @@ const TABS: { name: string; title: string; label: string; icon: Parameters<typeo
   { name: "overtime", title: "عمل إضافي", label: "عمل إضافي", icon: "stopwatch" },
   { name: "documents", title: "المستندات", label: "مستندات", icon: "file" },
   { name: "approvals", title: "الموافقات", label: "الموافقات", icon: "checks" },
+  { name: "more", title: "المزيد", label: "المزيد", icon: "more" },
 ];
 const APPROVERS = ["manager", "hr", "ceo", "admin", "admin_manager", "chairman"];
 
@@ -154,7 +155,7 @@ const DOCK: { name: string; label: string; icon: Parameters<typeof Icon>[0]["nam
   { name: "index", label: "الرئيسية", icon: "home" },
   { name: "leaves", label: "طلباتي", icon: "clipboard" },
   { name: "salary", label: "الراتب", icon: "wallet" },
-  { name: "profile", label: "ملفي", icon: "user" },
+  { name: "more", label: "المزيد", icon: "more" },
 ];
 
 function BottomNav({ state, navigation }: BottomTabBarProps) {
@@ -163,9 +164,9 @@ function BottomNav({ state, navigation }: BottomTabBarProps) {
   const { open } = useComposer();
   const { approvals, letters } = useData();
   const current = state.routes[state.index]?.name;
-  const badge = (name: string) => (name === "profile" ? letters.filter((l) => l.status === "pending").length + approvals.length : 0);
+  const badge = (name: string) => (name === "more" ? letters.filter((l) => l.status === "pending").length + approvals.length : 0);
   const item = (d: (typeof DOCK)[number]) => {
-    const on = current === d.name;
+    const on = current === d.name || (d.name === "more" && !!current && !["index", "leaves", "salary"].includes(current));
     const color = on ? (t.dark ? "#29B35E" : "#014D3D") : t.mu;
     const n = badge(d.name);
     return (

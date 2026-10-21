@@ -121,12 +121,12 @@ function Hero({ onForgot }: { onForgot: () => void }) {
             <Stop offset="0.55" stopColor="#014D3D" />
             <Stop offset="1" stopColor="#0B6B4F" />
           </LinearGradient>
-          <LinearGradient id="band1" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#29B35E" stopOpacity="0" /><Stop offset="1" stopColor="#29B35E" stopOpacity="0.4" /></LinearGradient>
-          <LinearGradient id="band2" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#E4E4BC" stopOpacity="0" /><Stop offset="1" stopColor="#E4E4BC" stopOpacity="0.2" /></LinearGradient>
+          <LinearGradient id="band1" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#29B35E" stopOpacity="0" /><Stop offset="1" stopColor="#29B35E" stopOpacity="0.16" /></LinearGradient>
+          <LinearGradient id="band2" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#E4E4BC" stopOpacity="0" /><Stop offset="1" stopColor="#E4E4BC" stopOpacity="0.1" /></LinearGradient>
         </Defs>
         <Rect x="0" y="0" width="100" height="100" fill="url(#heroBg)" />
-        <Polygon points="0,26 100,4 100,17 0,39" fill="url(#band1)" />
-        <Polygon points="0,84 100,66 100,74 0,92" fill="url(#band2)" />
+        <Polygon points="0,100 0,66 100,48 100,100" fill="url(#band1)" />
+        <Polygon points="100,0 100,22 58,0" fill="url(#band2)" />
       </Svg>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 11 }}>
         <View style={styles.avatar}>
@@ -273,7 +273,7 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  hero: { borderRadius: 30, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 18, overflow: "hidden", marginBottom: 14, ...shadow("#014D3D", 0.3, 16, 0, 14, 6) },
+  hero: { backgroundColor: "#014D3D", borderRadius: 30, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 18, overflow: "hidden", marginBottom: 14, ...shadow("#014D3D", 0.3, 16, 0, 14, 6) },
   avatar: { width: 46, height: 46, backgroundColor: "rgba(255,255,255,.14)", borderRadius: 16, alignItems: "center", justifyContent: "center", transform: [{ skewX: "-8deg" }] },
   chips: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 7, marginTop: 6 },
   back: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "center", marginTop: 10, borderWidth: 1.5, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 14, borderColor: "#fff" },
