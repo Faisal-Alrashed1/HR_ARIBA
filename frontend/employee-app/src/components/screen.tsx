@@ -7,7 +7,7 @@ import { Icon } from "./icons";
 import { T } from "./ui";
 import { useTheme } from "@/theme";
 
-export function Screen({ title, children, scroll = true }: { title: string; children: ReactNode; scroll?: boolean }) {
+export function Screen({ title, children, scroll = true, scrollEnabled = true }: { title: string; children: ReactNode; scroll?: boolean; scrollEnabled?: boolean }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   return (
@@ -20,7 +20,7 @@ export function Screen({ title, children, scroll = true }: { title: string; chil
         </Pressable>
         <T size={22} weight={800} style={{ flex: 1, letterSpacing: -0.4 }} numberOfLines={1}>{title}</T>
       </View>
-      {scroll ? <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: insets.bottom + 30 }} keyboardShouldPersistTaps="handled">{children}</ScrollView> : children}
+      {scroll ? <ScrollView scrollEnabled={scrollEnabled} contentContainerStyle={{ padding: 14, paddingBottom: insets.bottom + 30 }} keyboardShouldPersistTaps="handled">{children}</ScrollView> : children}
     </View>
   );
 }

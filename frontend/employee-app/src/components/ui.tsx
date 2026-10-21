@@ -179,13 +179,13 @@ export function Empty({ text }: { text: string }) {
 }
 
 // White modal card of the legacy patches (forgot punch, change password): not themed, Tahoma-like look.
-export function Sheet({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: ReactNode }) {
+export function Sheet({ visible, onClose, children, scrollEnabled = true }: { visible: boolean; onClose: () => void; children: ReactNode; scrollEnabled?: boolean }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <Pressable style={styles.overlay} onPress={onClose}>
           <Pressable style={styles.sheet} onPress={Keyboard.dismiss}>
-            <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">{children}</ScrollView>
+            <ScrollView scrollEnabled={scrollEnabled} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">{children}</ScrollView>
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>

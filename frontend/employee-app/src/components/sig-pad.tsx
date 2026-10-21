@@ -15,7 +15,7 @@ export function toSvgDataUrl(paths: string[]): string {
   return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
 }
 
-export function SigPad({ onChange }: { onChange: (dataUrl: string) => void }) {
+export function SigPad({ onChange, onDrawing }: { onChange: (dataUrl: string) => void; onDrawing?: (active: boolean) => void }) {
   const [paths, setPaths] = useState<string[]>([]);
   const pathsRef = useRef<string[]>([]);
   const cur = useRef("");
@@ -30,10 +30,11 @@ export function SigPad({ onChange }: { onChange: (dataUrl: string) => void }) {
     // the sheet around the pad scrolls: keep the stroke instead of handing the finger to the scroll view
     onPanResponderTerminationRequest: () => false,
     onShouldBlockNativeResponder: () => true,
-    onPanResponderGrant: (e) => { cur.current = "M" + pt(e.nativeEvent.locationX, e.nativeEvent.locationY); setLive(cur.current); },
+    onPanResponderGrant: (e) => { onDrawing?.(true); cur.current = "M" + pt(e.nativeEvent.locationX, e.nativeEvent.locationY); setLive(cur.current); },
     onPanResponderMove: (e) => { cur.current += " L" + pt(e.nativeEvent.locationX, e.nativeEvent.locationY); setLive(cur.current); },
-    onPanResponderTerminate: () => { cur.current = ""; setLive(""); },
+    onPanResponderTerminate: () => { cur.current = ""; setLive(""); onDrawing?.(false); },
     onPanResponderRelease: () => {
+      onDrawing?.(false);
       const done = cur.current;
       cur.current = "";
       setLive("");
@@ -48,7 +49,7 @@ export function SigPad({ onChange }: { onChange: (dataUrl: string) => void }) {
   return (
     <View>
       <View onLayout={onLayout} {...pan.panHandlers}
-        style={{ height: 160, borderWidth: 1, borderStyle: "dashed", borderColor: "#888", borderRadius: 8, backgroundColor: "#fff" }}>
+        style={{ height: 160, borderWidth: 1, borderStyle: "dashed", borderColor: "#888", borderRadius: 8, backgroundColor: "#fff", touchAction: "none", userSelect: "none" }}>
         {/* touches land on the pad, never on a stroke: locationX/Y are then relative to the pad, not to the stroke under the finger */}
         <Svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} style={{ pointerEvents: "none" }}>
           {[...paths, live].filter(Boolean).map((d, i) => (

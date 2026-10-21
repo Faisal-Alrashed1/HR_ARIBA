@@ -42,7 +42,9 @@ function IconBtn({ children, onPress, label }: { children: React.ReactNode; onPr
   );
 }
 
-function Header({ title }: { title: string }) {
+const FROM_MORE = ["attendance", "team", "goals", "overtime", "documents", "approvals", "profile"];
+
+function Header({ title, route }: { title: string; route: string }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const { refresh } = useData();
@@ -71,7 +73,12 @@ function Header({ title }: { title: string }) {
   // large title on the page's own background (no bar, no divider): where am I is the first thing read
   return (
     <View style={[styles.hdr, { paddingTop: insets.top + 12, backgroundColor: t.bg }]}>
-      <T size={28} weight={800} style={{ flexShrink: 1, letterSpacing: -0.6, lineHeight: 36 }} numberOfLines={1}>{title}</T>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1 }}>
+        {FROM_MORE.includes(route) ? (
+          <IconBtn label="إغلاق والعودة إلى المزيد" onPress={() => router.navigate("/(tabs)/more" as never)}><Icon name="x" size={20} color={t.tx} stroke={2.2} /></IconBtn>
+        ) : null}
+        <T size={FROM_MORE.includes(route) ? 24 : 28} weight={800} style={{ flexShrink: 1, letterSpacing: -0.6, lineHeight: 36 }} numberOfLines={1}>{title}</T>
+      </View>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         <IconBtn label="تحديث البيانات" onPress={manualRefresh}>
           <Animated.View style={{ transform: [{ rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] }) }] }}>
@@ -224,7 +231,7 @@ export default function TabsLayout() {
       <ComposerProvider>
       <BioAsk />
       <Tabs tabBar={(p) => <BottomNav {...(p as unknown as BottomTabBarProps)} />} screenOptions={({ route }) => ({
-        header: () => <Header title={TABS.find((x) => x.name === route.name)?.title ?? ""} />,
+        header: () => <Header title={TABS.find((x) => x.name === route.name)?.title ?? ""} route={route.name} />,
       })}>
         {TABS.map((x) => <Tabs.Screen key={x.name} name={x.name} options={{ title: x.title }} />)}
       </Tabs>

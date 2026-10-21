@@ -42,6 +42,7 @@ export default function IbanChange() {
   const [iban, setIban] = useState("");
   const [cert, setCert] = useState<Picked | null>(null);
   const [sig, setSig] = useState("");
+  const [drawing, setDrawing] = useState(false); // the page stays still while signing
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState(false);
   useEffect(() => { brandInfo().then((b) => setCompany(b.names.coAr ?? "")).catch(() => {}); }, []);
@@ -73,7 +74,7 @@ export default function IbanChange() {
   }
   if (pending) return <Screen title="🏦 طلب تغيير الآيبان"><Card><T>لديك طلب تغيير آيبان قيد المراجعة بالفعل.</T></Card></Screen>;
   return (
-    <Screen title="🏦 طلب تغيير الآيبان">
+    <Screen title="🏦 طلب تغيير الآيبان" scrollEnabled={!drawing}>
       <Card>
         <T size={11} color={t.mu} style={{ lineHeight: 19 }}>الخطاب الرسمي جاهز على ورق الشركة — اكتب بياناتك البنكية الجديدة ووقّع وأرفق الشهادة. يصل المدير المباشر والموارد البشرية، وعند الاعتماد تُحدَّث بياناتك تلقائياً.</T>
         <Input label="اسم البنك الجديد" value={bank} onChangeText={setBank} />
@@ -82,7 +83,7 @@ export default function IbanChange() {
         <Btn kind="ghost" title={cert ? `📎 ${cert.name}` : "شهادة الآيبان (PDF / صورة)"} style={{ marginTop: 10 }}
           onPress={async () => { try { setCert(await pickFile(["application/pdf", "image/*"])); } catch (x) { toast(x instanceof Error ? x.message : "تعذر قراءة الملف", "err"); } }} />
         <Label>التوقيع</Label>
-        <SigPad onChange={setSig} />
+        <SigPad onChange={setSig} onDrawing={setDrawing} />
         <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>
           <Btn title="إرسال الطلب" onPress={go} busy={busy} style={{ flex: 1 }} />
           <Btn kind="ghost" title="معاينة الخطاب" onPress={() => setPreview(true)} style={{ flex: 1 }} />

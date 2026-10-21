@@ -10,6 +10,7 @@ export function SigManager({ owner, visible, onClose, onSaved }: { owner: string
   const toast = useToast();
   const [cur, setCur] = useState(() => getSig(owner));
   const [draw, setDraw] = useState("");
+  const [drawing, setDrawing] = useState(false); // the sheet stays still while a stroke is being drawn
   const [mode, setMode] = useState<"view" | "draw">(cur ? "view" : "draw");
   function save(d: string) {
     if (!isSigData(d)) return toast("التوقيع غير صالح أو كبير الحجم", "err");
@@ -19,7 +20,7 @@ export function SigManager({ owner, visible, onClose, onSaved }: { owner: string
     onSaved?.(d);
   }
   return (
-    <Sheet visible={visible} onClose={onClose}>
+    <Sheet visible={visible} onClose={onClose} scrollEnabled={!drawing}>
       <T weight={800} size={16}>✍️ توقيعي</T>
       <T size={11.5} color="#555" style={{ lineHeight: 19, marginVertical: 6 }}>🔒 يُحفظ توقيعك داخل هذا التطبيق فقط ولا يظهر للموارد البشرية ولا لأي جهة. يُدرج تلقائياً في المستند عند اختيار «موافق مع التوقيع».</T>
       {mode === "view" && cur ? (
@@ -34,7 +35,7 @@ export function SigManager({ owner, visible, onClose, onSaved }: { owner: string
         </>
       ) : (
         <>
-          <SigPad onChange={setDraw} />
+          <SigPad onChange={setDraw} onDrawing={setDrawing} />
           <Btn title="حفظ التوقيع" disabled={!draw} onPress={() => save(draw)} />
         </>
       )}
