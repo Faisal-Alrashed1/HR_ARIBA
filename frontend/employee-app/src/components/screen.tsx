@@ -12,13 +12,13 @@ export function Screen({ title, children, scroll = true }: { title: string; chil
   const insets = useSafeAreaInsets();
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingTop: insets.top + 10, paddingBottom: 10, paddingHorizontal: 14,
-        backgroundColor: t.c, borderBottomWidth: 1, borderBottomColor: t.bd }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingTop: insets.top + 12, paddingBottom: 8, paddingHorizontal: 18,
+        backgroundColor: t.bg }}>
         <Pressable onPress={() => router.back()} accessibilityLabel="رجوع"
-          style={{ width: 36, height: 36, borderRadius: 12, borderWidth: 1, borderColor: t.bd, backgroundColor: t.c2, alignItems: "center", justifyContent: "center" }}>
+          style={{ width: 44, height: 44, borderRadius: 15, backgroundColor: t.c, alignItems: "center", justifyContent: "center" }}>
           <Icon name="back" size={18} color={t.tx} />
         </Pressable>
-        <T size={16} weight={800} style={{ flex: 1 }} numberOfLines={1}>{title}</T>
+        <T size={22} weight={800} style={{ flex: 1, letterSpacing: -0.4 }} numberOfLines={1}>{title}</T>
       </View>
       {scroll ? <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: insets.bottom + 30 }} keyboardShouldPersistTaps="handled">{children}</ScrollView> : children}
     </View>

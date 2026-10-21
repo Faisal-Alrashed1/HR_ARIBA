@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Text, type StyleProp, type TextStyle } from "react-native";
 import { fonts, useTheme } from "@/theme";
 
-export function T({ children, size = 13, weight = 500, color, style, numberOfLines, center }: {
+export function T({ children, size = 14, weight = 500, color, style, numberOfLines, center }: {
   children: ReactNode; size?: number; weight?: 300 | 500 | 600 | 700 | 800 | 900; color?: string; style?: StyleProp<TextStyle>;
   numberOfLines?: number; center?: boolean;
 }) {

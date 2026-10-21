@@ -9,7 +9,9 @@ import { PasswordSheet } from "@/components/password-sheet";
 import { dmy, LocationsCard, sar } from "@/components/shared";
 import { Btn, Card, CardTitle, InfoBox, Page, PayRow, T, useToast } from "@/components/ui";
 import { useData } from "@/lib/data";
-import { useTheme } from "@/theme";
+import { useAuth } from "@/lib/auth";
+import { useTheme, useThemeMode, type Choice } from "@/theme";
+import { select } from "@/lib/haptics";
 import { docLabel } from "@/lib/labels";
 import { shadow } from "@/lib/shadow";
 
@@ -18,6 +20,8 @@ export default function Profile() {
   const toast = useToast();
   const { employee: e, refresh } = useData();
   const [pw, setPw] = useState(false);
+  const { signOut } = useAuth();
+  const { choice, setChoice } = useThemeMode();
   const { leave, requests } = useData();
   const [docs, setDocs] = useState<{ id: string; type: string; file_name: string }[]>([]);
   const [opening, setOpening] = useState("");
@@ -108,10 +112,24 @@ export default function Profile() {
         ))}
       </Card>
       <Card>
+        <CardTitle>المظهر</CardTitle>
+        <View style={{ flexDirection: "row", backgroundColor: t.c2, borderRadius: 14, padding: 4 }}>
+          {([["auto", "تلقائي"], ["light", "فاتح"], ["dark", "ليلي"]] as [Choice, string][]).map(([k, l]) => (
+            <Pressable key={k} accessibilityRole="button" accessibilityState={{ selected: choice === k }} onPress={() => { select(); setChoice(k); }}
+              style={{ flex: 1, minHeight: 44, alignItems: "center", justifyContent: "center", borderRadius: 11, backgroundColor: choice === k ? "#014D3D" : "transparent" }}>
+              <T size={13} weight={700} color={choice === k ? "#fff" : t.mu}>{l}</T>
+            </Pressable>
+          ))}
+        </View>
+        <T size={11.5} color={t.mu} style={{ marginTop: 6 }}>«تلقائي» يتبع إعداد جهازك.</T>
+      </Card>
+      <Card>
         <CardTitle icon="lock">الأمان</CardTitle>
-        <Btn kind="teal" title="تغيير كلمة المرور" icon="key" onPress={() => setPw(true)} style={{ borderRadius: 10, marginTop: 0 }} />
+        <Btn kind="teal" title="تغيير كلمة المرور" icon="key" onPress={() => setPw(true)} style={{ marginTop: 0 }} />
       </Card>
       <LocationsCard />
+      {/* the risky action sits alone at the bottom, away from the everyday ones */}
+      <Btn kind="danger" title="تسجيل الخروج" icon="logout" onPress={signOut} style={{ marginTop: 8, marginBottom: 6 }} />
       <PasswordSheet visible={pw} onClose={() => setPw(false)} onDone={() => toast("تم تغيير كلمة المرور", "ok")} />
     </Page>
   );
