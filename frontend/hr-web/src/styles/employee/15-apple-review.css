@@ -1,0 +1,20 @@
+/* Apple-design review (2026-10-21): the platform layer of the mobile web employee app. Ours, after their files. */
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body{overscroll-behavior:none}
+button,a,[role="button"],select,label,.bni,.tab{touch-action:manipulation}
+/* iOS zooms the page when an input under 16px gets focus. */
+input,textarea,select{font-size:16px}
+/* Edge to edge (viewport-fit=cover): pad the fixed bars away from the notch and the home indicator. */
+.hdr{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+.bnav{padding-bottom:env(safe-area-inset-bottom,0px)}
+.toast-wrap{top:calc(20px + env(safe-area-inset-top,0px))}
+/* Translucent bars: content scrolls under a frosted layer. */
+.bnav{background:color-mix(in srgb,var(--c) 82%,transparent);-webkit-backdrop-filter:blur(16px) saturate(180%);backdrop-filter:blur(16px) saturate(180%)}
+.hdr{-webkit-backdrop-filter:blur(16px) saturate(180%);backdrop-filter:blur(16px) saturate(180%)}
+:where(a,button,[role="button"],[tabindex],select,input,textarea,summary):focus-visible{outline:2px solid #29B35E;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+@media (prefers-reduced-transparency:reduce){
+  .bnav,.hdr{background:var(--c);-webkit-backdrop-filter:none;backdrop-filter:none}
+}

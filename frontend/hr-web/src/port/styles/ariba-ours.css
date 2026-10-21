@@ -34,3 +34,18 @@ html[data-ariba-theme] #a9Panel .a9-ic.template{background:rgba(1,77,61,.12);col
 html[data-ariba-theme] #a9Panel .a9-ic.request{background:rgba(228,228,188,.3);color:var(--ar-warm)!important}
 html[data-ariba-theme] #a9Panel .a9-ic.ok{background:rgba(40,179,93,.15);color:var(--ar-a)!important}
 .ti-emo{color:var(--ar-acc)}
+
+/* Apple-design review (2026-10-21). Added here so their CSS stays byte-for-byte theirs. */
+/* Touch: no grey flash on tap, no double-tap-zoom delay on controls. */
+html{-webkit-tap-highlight-color:transparent}
+button,a,[role="button"],select,summary,label,input[type="checkbox"],input[type="radio"]{touch-action:manipulation}
+/* Keyboard users keep a visible ring even where their CSS removed the outline (outline:none on inputs / buttons). */
+:where(a,button,[role="button"],[tabindex],select,input,textarea,summary):focus-visible{outline:2px solid var(--ar-a)!important;outline-offset:2px}
+/* «تقليل الحركة»: no sliding / spinning / looping; state changes stay (colour, opacity) but are instant. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+/* «تقليل الشفافية»: frosted surfaces become solid. */
+@media (prefers-reduced-transparency:reduce){
+  *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+}
