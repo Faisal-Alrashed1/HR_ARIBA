@@ -21,7 +21,7 @@ export function SigManager({ owner, visible, onClose, onSaved }: { owner: string
   return (
     <Sheet visible={visible} onClose={onClose}>
       <T weight={800} size={16}>✍️ توقيعي</T>
-      <T size={11.5} color="#555" style={{ lineHeight: 19, marginVertical: 6 }}>🔒 يُحفظ توقيعك داخل هذا التطبيق فقط ولا يظهر للموارد البشرية ولا لأي جهة. يُدرج تلقائياً في المستند عند اختيار «موافق مع التوقيع».</T>
+      <T size={12} color="#555" style={{ lineHeight: 19, marginVertical: 6 }}>🔒 يُحفظ توقيعك داخل هذا التطبيق فقط ولا يظهر للموارد البشرية ولا لأي جهة. يُدرج تلقائياً في المستند عند اختيار «موافق مع التوقيع».</T>
       {mode === "view" && cur ? (
         <>
           <View style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 8, backgroundColor: "#fff", alignItems: "center" }}>

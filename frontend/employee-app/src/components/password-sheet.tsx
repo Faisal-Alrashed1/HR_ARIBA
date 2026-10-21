@@ -12,7 +12,7 @@ function PwInput({ value, onChange, placeholder }: { value: string; onChange: (v
   const [show, setShow] = useState(false);
   return (
     <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#ccc", borderRadius: 8, marginBottom: 8, backgroundColor: "#fff" }}>
-      <Pressable onPress={() => setShow((s) => !s)} style={{ width: 34, alignItems: "center" }}>
+      <Pressable onPress={() => setShow((s) => !s)} accessibilityRole="button" accessibilityLabel={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} hitSlop={6} style={{ width: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
         <Icon name="eye" size={18} color={show ? "#29B35E" : "#8a94a0"} />
       </Pressable>
       <TextInput value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor="#999" secureTextEntry={!show}

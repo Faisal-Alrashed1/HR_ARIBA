@@ -1,7 +1,7 @@
 // Colours of the legacy employee app (frontend/legacy/employee-portal/css/08-ariba-employee-theme-v12.css): body.ariba-light
 // (default) / body.ariba-dark. Same variable names as the prototype so screens can be compared side by side.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { AppState } from "react-native";
+import { AppState, useColorScheme } from "react-native";
 import { brandInfo } from "@/lib/port";
 import { store } from "@/lib/store";
 
@@ -26,8 +26,9 @@ export const fonts = { light: "AribaTwoLight", medium: "AribaTwoMedium", bold: "
 const KEY = "ariba_employee_theme";
 const BRAND_KEY = "ariba_employee_brand";
 type Mode = "light" | "dark";
+type Pref = "system" | Mode; // the choice: follow the device, or force day / night
 type Brand = { p: string; a?: string; s?: string } | null;
-const Ctx = createContext<{ mode: Mode; toggle: () => void; brand: Brand }>({ mode: "light", toggle: () => {}, brand: null });
+const Ctx = createContext<{ mode: Mode; pref: Pref; toggle: () => void; brand: Brand }>({ mode: "light", pref: "system", toggle: () => {}, brand: null });
 
 // The company colours HR sets (their employee brand.js): the ARIBA colours of the palette are swapped for the
 // company's primary (P, with shades), accent (A) and light background (S).
@@ -43,10 +44,12 @@ function conv(b: NonNullable<Brand>): (c: string) => string {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<Mode>("light"); // the prototype defaults to day mode
+  const [pref, setPref] = useState<Pref>("system"); // follows the device until the user picks day / night
+  const system = useColorScheme();
+  const mode: Mode = pref === "system" ? (system === "dark" ? "dark" : "light") : pref;
   const [brand, setBrand] = useState<Brand>(null);
   useEffect(() => {
-    store.get(KEY).then((v) => v === "dark" && setMode("dark")).catch(() => {});
+    store.get(KEY).then((v) => (v === "dark" || v === "light") && setPref(v)).catch(() => {});
     store.get(BRAND_KEY).then((v) => { try { const b = v ? JSON.parse(v) : null; if (b && h2r(b.p)) setBrand(b); } catch { /* ignore */ } }).catch(() => {});
     const pull = () => brandInfo().then((r) => {
       const v = r.brand;
@@ -58,14 +61,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const sub = AppState.addEventListener("change", (st) => st === "active" && pull());
     return () => sub.remove();
   }, []);
+  // system → day → night → system
   const toggle = useCallback(() => {
-    setMode((m) => {
-      const next = m === "dark" ? "light" : "dark";
-      store.set(KEY, next).catch(() => {});
+    setPref((p) => {
+      const next: Pref = p === "system" ? "light" : p === "light" ? "dark" : "system";
+      (next === "system" ? store.del(KEY) : store.set(KEY, next)).catch(() => {});
       return next;
     });
   }, []);
-  return <Ctx.Provider value={{ mode, toggle, brand }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ mode, pref, toggle, brand }}>{children}</Ctx.Provider>;
 }
 
 export const useThemeMode = () => useContext(Ctx);

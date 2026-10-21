@@ -39,13 +39,13 @@ export default function UploadDocument() {
   return (
     <Screen title="📤 رفع مستند">
       <Card>
-        <T size={11} color={t.mu}>يُراجَع من الموارد البشرية، وعند الاعتماد يُحفظ تلقائياً في ملفك ووثائقي.</T>
+        <T size={12} color={t.mu}>يُراجَع من الموارد البشرية، وعند الاعتماد يُحفظ تلقائياً في ملفك ووثائقي.</T>
         <Label>نوع المستند</Label>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
           {DOC_TYPES.map(([k, l]) => (
             <Pressable key={k} onPress={() => setType(k)} style={{ paddingVertical: 7, paddingHorizontal: 10, borderRadius: 10, borderWidth: 2,
               borderColor: k === type ? t.bl : t.bd, backgroundColor: t.c2 }}>
-              <T size={11} weight={k === type ? 700 : 500}>{l}</T>
+              <T size={12} weight={k === type ? 700 : 500}>{l}</T>
             </Pressable>
           ))}
         </View>

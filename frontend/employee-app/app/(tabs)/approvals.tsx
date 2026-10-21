@@ -35,13 +35,13 @@ function Item({ r, onDone }: { r: MyRequest; onDone: () => Promise<void> }) {
         <T weight={700} style={{ flex: 1 }}>{r.employee_name}</T>
         <Badge text={NAME[r.type] ?? r.type} tone="ba" />
       </View>
-      <T size={11} color={t.mu} style={{ marginTop: 4 }}>{requestDetail(r)}</T>
-      {r.payload?.submitted_by_manager ? <T size={11} color={t.bl} style={{ marginTop: 2 }}>👤 قدّمه المدير بالنيابة: {r.payload.submitted_by_name ?? ""}</T> : null}
-      {r.payload?.returned ? <T size={11} color={t.am} style={{ marginTop: 2 }}>↩ أعادته الموارد البشرية: {r.payload.return_note ?? ""}</T> : null}
-      {r.notes ? <T size={11} color={t.dm} style={{ marginTop: 2 }}>{r.notes}</T> : null}
+      <T size={12} color={t.mu} style={{ marginTop: 4 }}>{requestDetail(r)}</T>
+      {r.payload?.submitted_by_manager ? <T size={12} color={t.bl} style={{ marginTop: 2 }}>👤 قدّمه المدير بالنيابة: {r.payload.submitted_by_name ?? ""}</T> : null}
+      {r.payload?.returned ? <T size={12} color={t.am} style={{ marginTop: 2 }}>↩ أعادته الموارد البشرية: {r.payload.return_note ?? ""}</T> : null}
+      {r.notes ? <T size={12} color={t.dm} style={{ marginTop: 2 }}>{r.notes}</T> : null}
       {(r.attachments ?? []).map((a) => (
         <View key={a.id} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 5 }}>
-          <T size={11} style={{ flex: 1 }}>{`${docLabel(a.document_type)} — ${a.file_name}`}</T>
+          <T size={12} style={{ flex: 1 }}>{`${docLabel(a.document_type)} — ${a.file_name}`}</T>
           <Btn kind="ghost" title="⬇ فتح" onPress={() => openDocument(a.id, a.file_name).catch(() => toast("تعذر فتح المرفق", "err"))} style={{ marginTop: 0, paddingVertical: 4 }} />
         </View>
       ))}
@@ -68,7 +68,7 @@ export default function Approvals() {
         {approvals.map((r) => <Item key={r.id} r={r} onDone={refresh} />)}
       </Card>
       <Card>
-        <T size={11} color={t.mu}>الموظف → المدير المباشر → الموارد البشرية → الرئيس التنفيذي → الموظف</T>
+        <T size={12} color={t.mu}>الموظف → المدير المباشر → الموارد البشرية → الرئيس التنفيذي → الموظف</T>
       </Card>
     </Page>
   );

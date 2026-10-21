@@ -22,7 +22,7 @@ function Doc({ x, onDone, state, owner, name, needSig }: { x: Letter; onDone: ()
   const [busy, setBusy] = useState(false);
   function signApprove() {
     const sig = getSig(owner);
-    if (!sig) { needSig(); toast("أضف توقيعك أولاً ثم اضغط «موافق مع التوقيع»", "ok"); return; }
+    if (!sig) { needSig(); toast("أضف توقيعك أولاً ثم اضغط «موافق مع التوقيع»", "warn"); return; }
     Alert.alert("موافق مع التوقيع", "سيُضاف توقيعك على المستند في مكان توقيع الموظف ويُرسل للمسؤول. متأكد؟", [
       { text: "إلغاء", style: "cancel" },
       { text: "متابعة", onPress: async () => {
@@ -58,7 +58,7 @@ function Doc({ x, onDone, state, owner, name, needSig }: { x: Letter; onDone: ()
         <Icon name="file" size={18} color={t.tx} />
         <View style={{ flex: 1 }}>
           <T size={13} weight={700}>{x.title}</T>
-          <T size={10.5} color={t.mu}>{dmy(x.created_at)}</T>
+          <T size={12} color={t.mu}>{dmy(x.created_at)}</T>
         </View>
         {x.status !== "pending" ? <Badge text={x.status === "approved" ? "موافق" : "مرفوض"} tone={x.status === "approved" ? "bg" : "br"} /> : null}
       </View>
@@ -81,7 +81,7 @@ function Doc({ x, onDone, state, owner, name, needSig }: { x: Letter; onDone: ()
             </>
           ) : null}
         </>
-      ) : x.rejection_reason ? <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 }}><Icon name="xCircle" size={13} color={t.rd} stroke={2} /><T size={11} color={t.rd} style={{ flexShrink: 1 }}>سبب الرفض: {x.rejection_reason}</T></View> : null}
+      ) : x.rejection_reason ? <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 }}><Icon name="xCircle" size={13} color={t.rd} stroke={2} /><T size={12} color={t.rd} style={{ flexShrink: 1 }}>سبب الرفض: {x.rejection_reason}</T></View> : null}
     </Card>
   );
 }
@@ -124,7 +124,7 @@ function ManagerSign({ owner, name, needSig }: { owner: string; name: string; ne
   if (!list.length) return null;
   async function sign(x: ManagerPending) {
     const sig = getSig(owner);
-    if (!sig) { needSig(); return toast("أضف توقيعك أولاً", "ok"); }
+    if (!sig) { needSig(); return toast("أضف توقيعك أولاً", "warn"); }
     setBusy(x.request_id);
     try {
       const d = await docs.content(x.document_id);
@@ -151,7 +151,7 @@ function ManagerSign({ owner, name, needSig }: { owner: string; name: string; ne
       {list.map((x) => (
         <View key={x.request_id} style={{ backgroundColor: t.c2, borderWidth: 1, borderColor: t.bd, borderRadius: 12, padding: 12, marginBottom: 10 }}>
           <T weight={700}>{x.employee_name || x.employee_id}</T>
-          <T size={10.5} color={t.mu}>وقّعه الموظف {dmy(x.emp_signed_at)}</T>
+          <T size={12} color={t.mu}>وقّعه الموظف {dmy(x.emp_signed_at)}</T>
           <Btn kind="ghost" title="عرض المستند" onPress={() => router.push({ pathname: "/document/[id]", params: { id: x.document_id, title: x.employee_name } })} />
           <View style={{ flexDirection: "row", gap: 6 }}>
             <Btn kind="success" title="✍️ وقّع واعتمد" busy={busy === x.request_id} onPress={() => sign(x)} style={{ flex: 1 }} />

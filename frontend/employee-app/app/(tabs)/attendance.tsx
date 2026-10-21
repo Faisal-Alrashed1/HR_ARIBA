@@ -101,7 +101,7 @@ export default function Attendance() {
         ) : open ? (
           <>
             <Status kind="in" icon="checkCircle" text={`حضور — ${rows[0].time_in}${rows.length > 1 ? ` (جلسة حالية من ${open.time_in})` : ""}`} />
-            {lastOut && rows.length > 1 ? <T size={11} color={t.mu} center style={{ marginVertical: 4 }}>رجعت للعمل بعد انصراف الساعة {lastOut}</T> : null}
+            {lastOut && rows.length > 1 ? <T size={12} color={t.mu} center style={{ marginVertical: 4 }}>رجعت للعمل بعد انصراف الساعة {lastOut}</T> : null}
             <Btn kind="danger" title="تسجيل الانصراف" icon="logout" onPress={() => punch("out")} busy={busy} />
           </>
         ) : (
@@ -111,7 +111,7 @@ export default function Attendance() {
           </>
         )}
         {rows.length > 1 ? (
-          <T size={11} color={t.mu} style={{ marginTop: 8 }}>جلسات اليوم: {rows.map((r) => `${r.time_in} → ${r.time_out ?? "…"}`).join("  |  ")}</T>
+          <T size={12} color={t.mu} style={{ marginTop: 8 }}>جلسات اليوم: {rows.map((r) => `${r.time_in} → ${r.time_out ?? "…"}`).join("  |  ")}</T>
         ) : null}
         <Btn kind="ghost" title="نسيت البصمة" icon="alert" onPress={() => setForgot(true)} style={{ marginTop: 8, paddingVertical: 8 }} />
       </Card>
@@ -124,9 +124,9 @@ export default function Attendance() {
           const last = rs[rs.length - 1];
           return (
             <View key={d} style={{ flexDirection: "row", justifyContent: "space-between", gap: 6, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: t.bd }}>
-              <T size={11}>{d}</T>
-              <T size={11}>{`${rs[0].time_in} → ${last.time_out ?? "…"}${rs.length > 1 ? ` (×${rs.length})` : ""}`}</T>
-              <T size={11}>{STATUS[rs[0].status] ?? rs[0].status}</T>
+              <T size={12}>{d}</T>
+              <T size={12}>{`${rs[0].time_in} → ${last.time_out ?? "…"}${rs.length > 1 ? ` (×${rs.length})` : ""}`}</T>
+              <T size={12}>{STATUS[rs[0].status] ?? rs[0].status}</T>
             </View>
           );
         })}
@@ -142,10 +142,10 @@ export default function Attendance() {
         {found && !found.length ? <Empty text="لا يوجد سجل" /> : null}
         {(found ?? []).map((r) => (
           <View key={r.id} style={{ flexDirection: "row", justifyContent: "space-between", gap: 6, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: t.bd }}>
-            <T size={11}>{r.work_date}</T>
-            <T size={11}>{`${r.time_in ?? "—"} → ${r.time_out ?? "—"}`}</T>
-            <T size={11}>{hours(r)}</T>
-            <T size={11} color={r.status === "late" ? "#B54A4A" : "#1F8D49"}>{r.status === "late" ? "متأخر" : "حاضر"}</T>
+            <T size={12}>{r.work_date}</T>
+            <T size={12}>{`${r.time_in ?? "—"} → ${r.time_out ?? "—"}`}</T>
+            <T size={12}>{hours(r)}</T>
+            <T size={12} color={r.status === "late" ? "#B54A4A" : "#1F8D49"}>{r.status === "late" ? "متأخر" : "حاضر"}</T>
           </View>
         ))}
       </Card>

@@ -1,5 +1,7 @@
 // الرئيسية — legacy V118 home (js/core-ui/030 hero + tiles + quick actions) over 018.renderHome (بياناتي، آخر راتب معتمد)
 // and V122 «جهة العمل ومواقع العمل».
+import { haptic } from "@/lib/haptics";
+import { useReducedMotion } from "@/lib/motion";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
@@ -35,12 +37,13 @@ const R = 82;
 function Dial({ state, progress, onPress, busy }: { state: "in" | "out" | "done"; progress: number; onPress: () => void; busy: boolean }) {
   const t = useTheme();
   const pulse = useRef(new Animated.Value(0)).current;
+  const reduced = useReducedMotion();
   useEffect(() => {
-    if (state === "done" || busy) return;
+    if (state === "done" || busy || reduced) return;
     const loop = Animated.loop(Animated.timing(pulse, { toValue: 1, duration: 2200, useNativeDriver: true }));
     loop.start();
     return () => loop.stop();
-  }, [state, busy, pulse]);
+  }, [state, busy, reduced, pulse]);
   const grad = { in: ["#4bdc86", "#29B35E", "#1d9a4c"], out: ["#dc7777", "#B54A4A", "#9a3b3b"], done: ["#7fb3a3", "#4f8c7a", "#3f7565"] }[state];
   const label = { in: "سجّل حضورك", out: "سجّل انصرافك", done: "تم الانصراف" }[state];
   const icon = { in: "fingerprint", out: "exit", done: "checkCircle" }[state] as "fingerprint" | "exit" | "checkCircle";
@@ -53,11 +56,13 @@ function Dial({ state, progress, onPress, busy }: { state: "in" | "out" | "done"
         <Circle cx={DIAL / 2} cy={DIAL / 2} r={R} stroke="#29B35E" strokeWidth={6} fill="none" strokeLinecap="round"
           strokeDasharray={`${c * Math.min(1, progress)} ${c}`} transform={`rotate(-90 ${DIAL / 2} ${DIAL / 2})`} />
       </Svg>
-      {state !== "done" && !busy ? (
+      {state !== "done" && !busy && !reduced ? (
         <Animated.View style={{ pointerEvents: "none", position: "absolute", width: inner, height: inner, borderRadius: inner / 2, borderWidth: 3, borderColor: grad[1],
           opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] }) }] }} />
       ) : null}
-      <Pressable onPress={onPress} disabled={busy || state === "done"} style={({ pressed }) => [{ width: inner, height: inner, borderRadius: inner / 2, overflow: "hidden",
+      <Pressable onPress={() => { haptic.light(); onPress(); }} disabled={busy || state === "done"} accessibilityRole="button" accessibilityLabel={label}
+        accessibilityState={{ disabled: busy || state === "done", busy }}
+        style={({ pressed }) => [{ width: inner, height: inner, borderRadius: inner / 2, overflow: "hidden",
         alignItems: "center", justifyContent: "center", transform: [{ scale: pressed ? 0.96 : 1 }],
         ...shadow("#014D3D", 0.32, 14, 0, 12, 8) }]}>
         <Svg width={inner} height={inner} style={StyleSheet.absoluteFill}>
@@ -90,7 +95,7 @@ function Chip({ text, tone, icon }: { text: string; tone?: "ok" | "bad"; icon: "
     <View style={{ flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 11, backgroundColor: bg, borderWidth: 1, borderColor: border }}>
       <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: tone === "ok" ? "#29B35E" : tone === "bad" ? "#d96b6b" : "#E4E4BC" }} />
       <Icon name={icon} size={13} color={color} stroke={2} />
-      <T size={11.5} weight={700} color={color}>{text}</T>
+      <T size={12} weight={700} color={color}>{text}</T>
     </View>
   );
 }
@@ -160,7 +165,7 @@ function Hero({ onForgot }: { onForgot: () => void }) {
         <View style={[styles.chips, { marginTop: 8 }]}>
           {rows.map((s, i) => (
             <View key={i} style={{ backgroundColor: t.dark ? "rgba(228,228,188,.1)" : "rgba(1,77,61,.08)", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
-              <T size={11.5} weight={700} color={fg}>{`${s.time_in} → ${s.time_out ?? "…"}`}</T>
+              <T size={12} weight={700} color={fg}>{`${s.time_in} → ${s.time_out ?? "…"}`}</T>
             </View>
           ))}
         </View>
@@ -171,8 +176,8 @@ function Hero({ onForgot }: { onForgot: () => void }) {
           <T size={12.5} weight={800} color={fg}>رجوع للعمل — تسجيل حضور مرة أخرى</T>
         </Pressable>
       ) : null}
-      {lastOut && open && rows.length > 1 ? <T size={11} color={fg} center style={{ marginTop: 6, opacity: 0.8 }}>رجعت للعمل بعد انصراف الساعة {lastOut}</T> : null}
-      <Pressable onPress={onForgot} style={{ alignSelf: "center", marginTop: 8 }}><T size={11} color={fg} style={{ opacity: 0.7 }}>نسيت البصمة؟</T></Pressable>
+      {lastOut && open && rows.length > 1 ? <T size={12} color={fg} center style={{ marginTop: 6, opacity: 0.8 }}>رجعت للعمل بعد انصراف الساعة {lastOut}</T> : null}
+      <Pressable onPress={onForgot} style={{ alignSelf: "center", marginTop: 8 }}><T size={12} color={fg} style={{ opacity: 0.7 }}>نسيت البصمة؟</T></Pressable>
     </View>
   );
 }
@@ -183,7 +188,7 @@ function Tile({ value, label, icon }: { value: string; label: string; icon: "bui
     <View style={[styles.tile, { backgroundColor: t.c }]}>
       <View style={styles.tileIcon}><Icon name={icon} size={18} color="#29B35E" /></View>
       <T size={22} weight={800}>{value}</T>
-      <T size={10.5} color={t.mu} center>{label}</T>
+      <T size={12} color={t.mu} center>{label}</T>
     </View>
   );
 }
@@ -195,7 +200,7 @@ function Quick({ label, icon, onPress }: { label: string; icon: "calendar" | "fi
       <View style={[styles.qaIcon, { backgroundColor: t.dark ? "rgba(41,179,94,.18)" : "rgba(1,77,61,.09)" }]}>
         <Icon name={icon} size={20} color={t.dark ? "#29B35E" : "#014D3D"} />
       </View>
-      <T size={11} weight={800} center>{label}</T>
+      <T size={12} weight={800} center>{label}</T>
     </Pressable>
   );
 }
@@ -204,7 +209,7 @@ function Mini({ label, value }: { label: string; value?: string | null }) {
   const t = useTheme();
   return (
     <View style={{ flexBasis: "48%", flexGrow: 1, backgroundColor: t.c2, borderRadius: 8, padding: 8 }}>
-      <T size={10} color={t.mu}>{label}</T>
+      <T size={12} color={t.mu}>{label}</T>
       <T size={12} weight={700} style={{ marginTop: 2 }} numberOfLines={1}>{value || "—"}</T>
     </View>
   );

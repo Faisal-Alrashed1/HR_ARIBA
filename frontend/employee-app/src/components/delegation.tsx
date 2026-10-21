@@ -30,7 +30,7 @@ export function DelegationCard() {
   return (
     <Card>
       <CardTitle>🤝 تفويض المدير المباشر</CardTitle>
-      <T size={11.5} color={t.mu} style={{ lineHeight: 20 }}>
+      <T size={12} color={t.mu} style={{ lineHeight: 20 }}>
         {`عند التفعيل يستطيع ${who} تقديم الإجازات وطلباتك نيابةً عنك. تصل الموارد البشرية معلومة أنه قُدِّم بالنيابة وتعتمد أو ترفض، ويصلك إشعار وإيميل.`}
       </T>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10 }}>

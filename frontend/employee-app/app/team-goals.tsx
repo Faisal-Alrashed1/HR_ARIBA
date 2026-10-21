@@ -17,15 +17,15 @@ function PeriodPick({ type, keyv, onChange }: { type: PeriodType; keyv: string; 
     <View style={{ gap: 6, marginBottom: 10 }}>
       <View style={{ flexDirection: "row", gap: 6 }}>
         {(Object.keys(PT) as PeriodType[]).map((k) => (
-          <Pressable key={k} onPress={() => onChange(k, curKey(k))} style={{ flex: 1, padding: 7, borderRadius: 9, borderWidth: 2, borderColor: k === type ? t.bl : t.bd, backgroundColor: t.c2 }}>
+          <Pressable key={k} onPress={() => onChange(k, curKey(k))} accessibilityRole="tab" accessibilityState={{ selected: k === type }} style={{ flex: 1, padding: 7, minHeight: 44, justifyContent: "center", borderRadius: 9, borderWidth: 2, borderColor: k === type ? t.bl : t.bd, backgroundColor: t.c2 }}>
             <T size={12} center weight={k === type ? 700 : 500}>{PT[k]}</T>
           </Pressable>
         ))}
       </View>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Btn kind="ghost" title="›" onPress={() => onChange(type, shiftKey(type, keyv, -1))} style={{ marginTop: 0, paddingHorizontal: 14 }} />
+        <Btn kind="ghost" title="›" label="الفترة السابقة" onPress={() => onChange(type, shiftKey(type, keyv, -1))} style={{ marginTop: 0, paddingHorizontal: 14 }} />
         <T weight={700} center style={{ flex: 1 }}>{keyLabel(type, keyv)}</T>
-        <Btn kind="ghost" title="‹" onPress={() => onChange(type, shiftKey(type, keyv, 1))} style={{ marginTop: 0, paddingHorizontal: 14 }} />
+        <Btn kind="ghost" title="‹" label="الفترة التالية" onPress={() => onChange(type, shiftKey(type, keyv, 1))} style={{ marginTop: 0, paddingHorizontal: 14 }} />
       </View>
     </View>
   );
@@ -89,10 +89,10 @@ function Targets({ id, name, type, keyv }: { id: string; name: string; type: Per
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <T weight={700} style={{ flex: 1 }}>{x.title}</T>
             {x.status === "done" ? <Badge text="منجز" tone="bg" /> : null}
-            {p != null ? <T size={11}>{p}%</T> : null}
+            {p != null ? <T size={12}>{p}%</T> : null}
           </View>
-          {x.description ? <T size={11} color={t.mu}>{x.description}</T> : null}
-          <T size={11} color={t.mu}>{`المطلوب: ${x.target_value ?? "—"} ${x.unit ?? ""} · المنجز: ${x.actual_value ?? 0} · الوزن ${x.weight}`}</T>
+          {x.description ? <T size={12} color={t.mu}>{x.description}</T> : null}
+          <T size={12} color={t.mu}>{`المطلوب: ${x.target_value ?? "—"} ${x.unit ?? ""} · المنجز: ${x.actual_value ?? 0} · الوزن ${x.weight}`}</T>
           <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
             <Btn kind="ghost" title="تعديل" style={{ flex: 1, marginTop: 0 }} onPress={() => setForm({ id: x.id, title: x.title, description: x.description ?? "", unit: x.unit ?? "",
               target_value: x.target_value == null ? "" : String(x.target_value), actual_value: x.actual_value == null ? "" : String(x.actual_value), weight: String(x.weight), status: x.status })} />
@@ -169,7 +169,7 @@ function EvalForm({ id, type, keyv }: { id: string; type: PeriodType; keyv: stri
       {items.map((it, i) => (
         <View key={i} style={{ borderWidth: 1, borderColor: t.bd, borderRadius: 10, padding: 10, marginBottom: 8 }}>
           {it.manual ? <Input placeholder="عنوان البند" value={String(it.title)} editable={!locked} onChangeText={(v) => up(i, "title", v)} /> : <T weight={700}>{it.title}</T>}
-          {!it.manual ? <T size={11} color={t.mu}>{`المطلوب ${it.target ?? "—"} ${it.unit ?? ""} · المنجز ${it.actual ?? 0}`}</T> : null}
+          {!it.manual ? <T size={12} color={t.mu}>{`المطلوب ${it.target ?? "—"} ${it.unit ?? ""} · المنجز ${it.actual ?? 0}`}</T> : null}
           <View style={{ flexDirection: "row", gap: 6 }}>
             <Input label="الدرجة %" value={String(it.score)} editable={!locked} keyboardType="decimal-pad" onChangeText={(v) => up(i, "score", v)} />
             <Input label="الوزن" value={String(it.weight)} editable={!locked && !!it.manual} keyboardType="decimal-pad" onChangeText={(v) => up(i, "weight", v)} />

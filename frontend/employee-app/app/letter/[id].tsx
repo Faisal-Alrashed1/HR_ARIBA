@@ -22,7 +22,7 @@ export default function LetterScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingTop: insets.top + 10, paddingBottom: 10, paddingHorizontal: 14, backgroundColor: t.c, borderBottomWidth: 1, borderBottomColor: t.bd }}>
-        <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, borderWidth: 1, borderColor: t.bd, backgroundColor: t.c2, alignItems: "center", justifyContent: "center" }}>
+        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="رجوع" hitSlop={4} style={{ width: 36, height: 36, borderRadius: 12, borderWidth: 1, borderColor: t.bd, backgroundColor: t.c2, alignItems: "center", justifyContent: "center" }}>
           <Icon name="back" size={18} color={t.tx} />
         </Pressable>
         <T size={16} weight={800} style={{ flex: 1 }} numberOfLines={1}>{title ?? "المستند"}</T>

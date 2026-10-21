@@ -41,7 +41,7 @@ export function Calendar({ title, value, onPick, maximumDate }: { title?: string
 
   return (
     <View style={[styles.panel, { backgroundColor: t.c, borderColor: t.bd }]}>
-      {title ? <T size={11} weight={700} color={t.mu} center style={{ marginBottom: 4 }}>{title}</T> : null}
+      {title ? <T size={12} weight={700} color={t.mu} center style={{ marginBottom: 4 }}>{title}</T> : null}
       <View style={styles.head}>
         <Pressable onPress={() => move(-1)} hitSlop={10} style={styles.nav}><Icon name="chevronRight" size={20} color={accent} stroke={2.2} /></Pressable>
         <Pressable onPress={() => { setPage(view.y - 7); setMode(mode === "days" ? "years" : "days"); }} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
@@ -57,7 +57,7 @@ export function Calendar({ title, value, onPick, maximumDate }: { title?: string
       ) : (
         <>
           <View style={styles.row}>
-            {DAYS.map((d) => <T key={d} size={9.5} weight={700} color={t.mu} center style={styles.cell}>{d}</T>)}
+            {DAYS.map((d) => <T key={d} size={12} weight={700} color={t.mu} center style={styles.cell}>{d}</T>)}
           </View>
           {Array.from({ length: cells.length / 7 }, (_, r) => (
             <View key={r} style={styles.row}>
@@ -67,7 +67,7 @@ export function Calendar({ title, value, onPick, maximumDate }: { title?: string
                 const on = iso === sel;
                 const off = max !== null && iso > max;
                 return (
-                  <Pressable key={i} disabled={off} onPress={() => onPick(iso)} style={styles.cell}>
+                  <Pressable key={i} disabled={off} onPress={() => onPick(iso)} accessibilityRole="button" accessibilityLabel={iso} style={styles.cell}>
                     <View style={[styles.day, on && { backgroundColor: accent }, !on && iso === today && { borderWidth: 1.5, borderColor: accent }]}>
                       <T size={13} weight={on ? 800 : 600} color={on ? (t.dark ? brand.dark : "#fff") : off ? t.bd : t.tx}>{d}</T>
                     </View>
@@ -98,12 +98,12 @@ export function TimeGrid({ title, value, onPick, onDone }: { title?: string; val
   );
   return (
     <View style={[styles.panel, { backgroundColor: t.c, borderColor: t.bd }]}>
-      {title ? <T size={11} weight={700} color={t.mu} center>{title}</T> : null}
+      {title ? <T size={12} weight={700} color={t.mu} center>{title}</T> : null}
       <T size={26} weight={900} color={accent} center>{`${pad(h)}:${pad(m)}`}</T>
-      <T size={11} color={t.mu} center style={{ marginTop: -4, marginBottom: 6 }}>{`${h % 12 || 12}:${pad(m)} ${h < 12 ? "صباحاً" : "مساءً"}`}</T>
-      <T size={11} weight={700} color={t.mu} style={{ marginBottom: 4 }}>الساعة</T>
+      <T size={12} color={t.mu} center style={{ marginTop: -4, marginBottom: 6 }}>{`${h % 12 || 12}:${pad(m)} ${h < 12 ? "صباحاً" : "مساءً"}`}</T>
+      <T size={12} weight={700} color={t.mu} style={{ marginBottom: 4 }}>الساعة</T>
       <View style={styles.grid}>{Array.from({ length: 24 }, (_, i) => chip(pad(i), i === h, () => set(i, m), i))}</View>
-      <T size={11} weight={700} color={t.mu} style={{ marginTop: 8, marginBottom: 4 }}>الدقيقة</T>
+      <T size={12} weight={700} color={t.mu} style={{ marginTop: 8, marginBottom: 4 }}>الدقيقة</T>
       <View style={styles.grid}>{Array.from({ length: 12 }, (_, i) => chip(pad(i * 5), i * 5 === m, () => set(h, i * 5), i))}</View>
       <View style={[styles.row, { gap: 8, marginTop: 8 }]}>
         {chip("− دقيقة", false, () => set(h, m - 1), "minus")}
@@ -121,9 +121,9 @@ const styles = StyleSheet.create({
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6, paddingHorizontal: 4 },
   nav: { padding: 4 },
   row: { flexDirection: "row" },
-  cell: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 3 },
+  cell: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 5 },
   day: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
-  todayBtn: { alignSelf: "center", marginTop: 8, borderWidth: 1.5, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 22 },
+  todayBtn: { alignSelf: "center", marginTop: 8, borderWidth: 1.5, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 22, minHeight: 44, justifyContent: "center" },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   chip3: { flexBasis: "30%", flexGrow: 1, borderWidth: 1, borderRadius: 9, paddingVertical: 12, alignItems: "center" },
   chip: { minWidth: 44, flexGrow: 1, flexBasis: "14%", borderWidth: 1, borderRadius: 9, paddingVertical: 8, alignItems: "center" },

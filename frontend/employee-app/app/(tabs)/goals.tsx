@@ -31,10 +31,10 @@ export default function Goals() {
                 <View key={x.id} style={{ paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: t.bd }}>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
                     <T size={12} weight={700} style={{ flex: 1 }}>{x.title}</T>
-                    {p != null ? <T size={11}>{p}%</T> : null}
+                    {p != null ? <T size={12}>{p}%</T> : null}
                   </View>
-                  {x.description ? <T size={11} color={t.mu}>{x.description}</T> : null}
-                  <T size={11} color={t.mu}>{`المطلوب ${x.target_value ?? "—"} ${x.unit ?? ""} · المنجز ${x.actual_value ?? 0}`}</T>
+                  {x.description ? <T size={12} color={t.mu}>{x.description}</T> : null}
+                  <T size={12} color={t.mu}>{`المطلوب ${x.target_value ?? "—"} ${x.unit ?? ""} · المنجز ${x.actual_value ?? 0}`}</T>
                   {p != null ? (
                     <View style={{ height: 6, backgroundColor: "rgba(120,140,160,.25)", borderRadius: 4, overflow: "hidden", marginTop: 4 }}>
                       <View style={{ width: `${p}%`, height: "100%", backgroundColor: p >= 90 ? "#28B35D" : p >= 60 ? t.am : t.rd }} />
@@ -55,8 +55,8 @@ export default function Goals() {
               <T weight={800}>{e.overall}%</T>
               {e.rating ? <Badge text={e.rating} tone="bg" /> : null}
             </View>
-            {(e.items ?? []).map((i, j) => <T key={j} size={11} color={t.mu}>{`• ${i.title}: ${i.score}%${(i as { comment?: string }).comment ? " — " + (i as { comment?: string }).comment : ""}`}</T>)}
-            {e.comments ? <T size={11} style={{ marginTop: 4 }}>📝 {e.comments}</T> : null}
+            {(e.items ?? []).map((i, j) => <T key={j} size={12} color={t.mu}>{`• ${i.title}: ${i.score}%${(i as { comment?: string }).comment ? " — " + (i as { comment?: string }).comment : ""}`}</T>)}
+            {e.comments ? <T size={12} style={{ marginTop: 4 }}>📝 {e.comments}</T> : null}
           </View>
         ))}
       </Card>

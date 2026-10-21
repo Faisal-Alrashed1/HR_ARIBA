@@ -80,9 +80,9 @@ export default function Login() {
           <T size={36} weight={900} color={t.bl} style={{ letterSpacing: 3, marginBottom: 4 }}>ARIBA</T>
           <T size={13} color={t.mu}>تطبيق الموظف</T>
         </View>
-        <T size={11} weight={600} color={t.mu} style={{ marginBottom: 4 }}>اسم المستخدم</T>
+        <T size={12} weight={600} color={t.mu} style={{ marginBottom: 4 }}>اسم المستخدم</T>
         <TextInput value={username} onChangeText={setUsername} placeholder="EMPxxx" placeholderTextColor={t.dm} autoCapitalize="none" autoCorrect={false} style={input} />
-        <T size={11} weight={600} color={t.mu} style={{ marginBottom: 4 }}>كلمة المرور</T>
+        <T size={12} weight={600} color={t.mu} style={{ marginBottom: 4 }}>كلمة المرور</T>
         <View>
           <TextInput value={password} onChangeText={setPassword} placeholder="****" placeholderTextColor={t.dm} secureTextEntry={!show}
             onSubmitEditing={submit} style={[input, { paddingLeft: 40 }]} />
@@ -104,7 +104,7 @@ export default function Login() {
         </Pressable>
         {rm || bio ? (
           <Pressable onPress={forget} style={{ marginTop: 8, alignItems: "center" }}>
-            <T size={11} color={t.mu}>نسيان هذا الجهاز (حذف البيانات المحفوظة)</T>
+            <T size={12} color={t.mu}>نسيان هذا الجهاز (حذف البيانات المحفوظة)</T>
           </Pressable>
         ) : null}
         {msg ? <T size={12} center color={msg.good ? t.bl : t.am} style={{ marginTop: 8 }}>{msg.t}</T> : null}

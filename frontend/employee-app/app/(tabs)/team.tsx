@@ -56,23 +56,23 @@ export default function Team() {
               </View>
               <View style={{ flex: 1 }}>
                 <T size={12} weight={700}>{m.name_ar}</T>
-                <T size={10} color={t.mu}>{m.job_title ?? ""}</T>
+                <T size={12} color={t.mu}>{m.job_title ?? ""}</T>
               </View>
               {m.delegated ? <Badge text="فوّضك" tone="bg" /> : null}
               <T color={t.mu}>{open === m.id ? "▴" : "▾"}</T>
             </Pressable>
             {open === m.id ? (
               <View style={{ paddingBottom: 10, gap: 3 }}>
-                {P?.view_team_data ? <T size={11.5} color={t.mu}>{`الجنسية: ${m.nationality ?? "—"} | تاريخ المباشرة: ${m.join_date ?? "—"} | انتهاء العقد: ${m.contract_end ?? "—"} | انتهاء الإقامة: ${m.iqama_expiry ?? "—"}`}</T> : null}
-                {m.leave_balance != null ? <T size={11.5} color={t.mu}>رصيد الإجازة: {String(m.leave_balance)}</T> : null}
-                {P?.view_team_salary ? <T size={11.5} color={t.mu}>إجمالي الراتب: {m.salary_total != null ? Number(m.salary_total).toLocaleString("en-US") : "—"}</T> : null}
-                {m.leaves ? (m.leaves.length ? m.leaves.map((l) => <T key={l.id} size={11.5} color={t.mu}>{`• ${NAME[l.type] ?? l.type} ${l.from} ← ${l.to} (${l.days} يوم) — ${l.status}`}</T>) : <T size={11.5} color={t.mu}>لا إجازات خلال 12 شهراً</T>) : null}
+                {P?.view_team_data ? <T size={12} color={t.mu}>{`الجنسية: ${m.nationality ?? "—"} | تاريخ المباشرة: ${m.join_date ?? "—"} | انتهاء العقد: ${m.contract_end ?? "—"} | انتهاء الإقامة: ${m.iqama_expiry ?? "—"}`}</T> : null}
+                {m.leave_balance != null ? <T size={12} color={t.mu}>رصيد الإجازة: {String(m.leave_balance)}</T> : null}
+                {P?.view_team_salary ? <T size={12} color={t.mu}>إجمالي الراتب: {m.salary_total != null ? Number(m.salary_total).toLocaleString("en-US") : "—"}</T> : null}
+                {m.leaves ? (m.leaves.length ? m.leaves.map((l) => <T key={l.id} size={12} color={t.mu}>{`• ${NAME[l.type] ?? l.type} ${l.from} ← ${l.to} (${l.days} يوم) — ${l.status}`}</T>) : <T size={12} color={t.mu}>لا إجازات خلال 12 شهراً</T>) : null}
                 <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
                   {P?.manage_targets ? <Btn kind="ghost" title="🎯 المستهدفات" style={{ marginTop: 0 }} onPress={() => router.push({ pathname: "/team-goals", params: { id: m.id, name: m.name_ar, mode: "goals" } })} /> : null}
                   {P?.evaluate_team ? <Btn kind="ghost" title="⭐ التقييم" style={{ marginTop: 0 }} onPress={() => router.push({ pathname: "/team-goals", params: { id: m.id, name: m.name_ar, mode: "eval" } })} /> : null}
                 </View>
                 {P?.submit_for_team && m.delegated ? <Btn title="📝 تقديم طلب نيابةً عنه" onPress={() => router.push({ pathname: "/submit-for", params: { id: m.id, name: m.name_ar } })} /> : null}
-                {P?.submit_for_team && !m.delegated ? <T size={10} color={t.mu}>لم يفعّل الموظف «تفويض المدير المباشر» بعد.</T> : null}
+                {P?.submit_for_team && !m.delegated ? <T size={12} color={t.mu}>لم يفعّل الموظف «تفويض المدير المباشر» بعد.</T> : null}
               </View>
             ) : null}
           </View>
@@ -90,8 +90,8 @@ export default function Team() {
                 <T size={12} weight={700} style={{ flex: 1 }}>{`${r.employee_name ?? ""} — ${NAME[r.request_type] ?? r.request_type}`}</T>
                 <Badge text={st[0]} tone={st[1]} />
               </View>
-              <T size={11} color={t.mu}>{detail(r)}</T>
-              {r.status === "rejected" && r.reject_reason ? <T size={11} color={t.rd}>❌ {r.reject_reason}</T> : null}
+              <T size={12} color={t.mu}>{detail(r)}</T>
+              {r.status === "rejected" && r.reject_reason ? <T size={12} color={t.rd}>❌ {r.reject_reason}</T> : null}
             </View>); })}
         </Card>
       ) : null}

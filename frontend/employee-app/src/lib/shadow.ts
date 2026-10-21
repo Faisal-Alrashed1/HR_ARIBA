@@ -1,7 +1,7 @@
 // Cross-platform shadow: react-native-web deprecated the shadow* props (use boxShadow there), the phone keeps the native props.
 import { Platform, type ViewStyle } from "react-native";
 
-function rgba(color: string, a: number): string {
+export function rgba(color: string, a: number): string {
   const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color);
   if (!m) return color;
   const h = m[1].length === 3 ? m[1].split("").map((c) => c + c).join("") : m[1];
