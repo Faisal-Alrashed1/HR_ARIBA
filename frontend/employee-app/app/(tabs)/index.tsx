@@ -87,6 +87,7 @@ function Chip({ text, tone, icon }: { text: string; tone?: "ok" | "bad"; icon: "
 }
 
 function Hero({ onForgot }: { onForgot: () => void }) {
+  const [box, setBox] = useState({ w: 0, h: 0 });
   const now = useNow();
   const { employee, att } = useData();
   const { loc, punch, busy } = usePunch();
@@ -113,21 +114,24 @@ function Hero({ onForgot }: { onForgot: () => void }) {
   })();
 
   return (
-    <View style={styles.hero}>
-      <Svg style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]} width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 100 100">
-        <Defs>
-          <LinearGradient id="heroBg" x1="0.2" y1="0" x2="0.8" y2="1">
-            <Stop offset="0" stopColor="#01392D" />
-            <Stop offset="0.55" stopColor="#014D3D" />
-            <Stop offset="1" stopColor="#0B6B4F" />
-          </LinearGradient>
-          <LinearGradient id="band1" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#29B35E" stopOpacity="0" /><Stop offset="1" stopColor="#29B35E" stopOpacity="0.16" /></LinearGradient>
-          <LinearGradient id="band2" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#E4E4BC" stopOpacity="0" /><Stop offset="1" stopColor="#E4E4BC" stopOpacity="0.1" /></LinearGradient>
-        </Defs>
-        <Rect x="0" y="0" width="100" height="100" fill="url(#heroBg)" />
-        <Polygon points="0,100 0,66 100,48 100,100" fill="url(#band1)" />
-        <Polygon points="100,0 100,22 58,0" fill="url(#band2)" />
-      </Svg>
+    <View style={styles.hero} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+      {/* the artwork (gradient + slanted ribbons) is the only green: drawn at the card's measured size (not "100%") so it covers the whole card and all its text, however tall the content grows */}
+      {box.w > 0 ? (
+        <Svg style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]} width={box.w} height={box.h} viewBox={`0 0 ${box.w} ${box.h}`}>
+          <Defs>
+            <LinearGradient id="heroBg" x1="0.2" y1="0" x2="0.8" y2="1">
+              <Stop offset="0" stopColor="#01392D" />
+              <Stop offset="0.55" stopColor="#014D3D" />
+              <Stop offset="1" stopColor="#0B6B4F" />
+            </LinearGradient>
+            <LinearGradient id="band1" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#29B35E" stopOpacity="0" /><Stop offset="1" stopColor="#29B35E" stopOpacity="0.4" /></LinearGradient>
+            <LinearGradient id="band2" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#E4E4BC" stopOpacity="0" /><Stop offset="1" stopColor="#E4E4BC" stopOpacity="0.2" /></LinearGradient>
+          </Defs>
+          <Rect x="0" y="0" width={box.w} height={box.h} fill="url(#heroBg)" />
+          <Polygon points={`0,${box.h * 0.26} ${box.w},${box.h * 0.04} ${box.w},${box.h * 0.17} 0,${box.h * 0.39}`} fill="url(#band1)" />
+          <Polygon points={`0,${box.h * 0.84} ${box.w},${box.h * 0.66} ${box.w},${box.h * 0.74} 0,${box.h * 0.92}`} fill="url(#band2)" />
+        </Svg>
+      ) : null}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 11 }}>
         <View style={styles.avatar}>
           <T size={19} weight={800} color="#E4E4BC">{name.charAt(0)}</T>
@@ -273,7 +277,7 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  hero: { backgroundColor: "#014D3D", borderRadius: 30, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 18, overflow: "hidden", marginBottom: 14, ...shadow("#014D3D", 0.3, 16, 0, 14, 6) },
+  hero: { borderRadius: 30, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 18, overflow: "hidden", marginBottom: 14, ...shadow("#014D3D", 0.3, 16, 0, 14, 6) },
   avatar: { width: 46, height: 46, backgroundColor: "rgba(255,255,255,.14)", borderRadius: 16, alignItems: "center", justifyContent: "center", transform: [{ skewX: "-8deg" }] },
   chips: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 7, marginTop: 6 },
   back: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "center", marginTop: 10, borderWidth: 1.5, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 14, borderColor: "#fff" },
