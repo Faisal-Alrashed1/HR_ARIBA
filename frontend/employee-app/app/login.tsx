@@ -9,6 +9,7 @@ import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { biometricAvailable, biometricEnabled, forgetDevice, remember, remembered } from "@/lib/biometric";
 import { fonts, useTheme } from "@/theme";
+import { shadow } from "@/lib/shadow";
 
 export default function Login() {
   const t = useTheme();
@@ -159,7 +160,7 @@ function ForgotSheet({ onClose }: { onClose: () => void }) {
 
 const styles = StyleSheet.create({
   box: { width: "100%", maxWidth: 360, borderRadius: 20, paddingVertical: 36, paddingHorizontal: 28, borderWidth: 1, borderColor: "rgba(59,130,246,.2)",
-    shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 32, shadowOffset: { width: 0, height: 24 }, elevation: 12 },
+    ...shadow("#000", 0.25, 32, 0, 24, 12) },
   input: { borderWidth: 1, borderRadius: 10, paddingVertical: 11, paddingHorizontal: 14, fontSize: 14, marginBottom: 12, textAlign: "right" },
   eye: { position: "absolute", left: 0, top: 0, bottom: 12, width: 40, alignItems: "center", justifyContent: "center" },
   btn: { borderRadius: 12, padding: 13, alignItems: "center", marginTop: 4 },

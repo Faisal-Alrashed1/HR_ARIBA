@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { brand, useTheme } from "@/theme";
 import { Icon } from "./icons";
-import { T } from "./ui";
+import { T } from "./text";
+import { shadow } from "@/lib/shadow";
 
 const MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 const DAYS = ["أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"]; // Sunday first
@@ -116,7 +117,7 @@ export function TimeGrid({ title, value, onPick, onDone }: { title?: string; val
 }
 
 const styles = StyleSheet.create({
-  panel: { borderWidth: 1, borderRadius: 16, padding: 12, shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
+  panel: { borderWidth: 1, borderRadius: 16, padding: 12, ...shadow("#000", 0.18, 18, 0, 8, 8) },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6, paddingHorizontal: 4 },
   nav: { padding: 4 },
   row: { flexDirection: "row" },

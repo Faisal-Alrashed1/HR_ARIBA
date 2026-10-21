@@ -6,7 +6,7 @@ import { NAME } from "@/components/request-item";
 import { Badge, Btn, Card, CardTitle, Empty, Input, Page, T, useToast } from "@/components/ui";
 import { ApiError, requests, type MyRequest } from "@/lib/api";
 import { useData } from "@/lib/data";
-import { requestDetail } from "@/lib/labels";
+import { docLabel, requestDetail } from "@/lib/labels";
 import { openDocument } from "@/lib/open-doc";
 import { useTheme } from "@/theme";
 
@@ -41,7 +41,7 @@ function Item({ r, onDone }: { r: MyRequest; onDone: () => Promise<void> }) {
       {r.notes ? <T size={11} color={t.dm} style={{ marginTop: 2 }}>{r.notes}</T> : null}
       {(r.attachments ?? []).map((a) => (
         <View key={a.id} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 5 }}>
-          <T size={11} style={{ flex: 1 }}>{`${a.document_type} — ${a.file_name}`}</T>
+          <T size={11} style={{ flex: 1 }}>{`${docLabel(a.document_type)} — ${a.file_name}`}</T>
           <Btn kind="ghost" title="⬇ فتح" onPress={() => openDocument(a.id, a.file_name).catch(() => toast("تعذر فتح المرفق", "err"))} style={{ marginTop: 0, paddingVertical: 4 }} />
         </View>
       ))}

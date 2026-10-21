@@ -14,6 +14,9 @@ export const LVL = {
   iban_change: { ar: 'تغيير الآيبان', en: 'IBAN Change', icon: 'ti-building-bank', color: '#0ea5e9' }, profile_edit: { ar: 'تعديل بيانات', en: 'Profile Edit', icon: 'ti-user-edit', color: '#8b5cf6' }, document: { ar: 'رفع مستند', en: 'Document Upload', icon: 'ti-file-upload', color: '#64748b' },
   advance: { ar: 'سلفة', en: 'Advance', icon: 'ti-cash', color: '#29B35E' }, overtime: { ar: 'عمل إضافي', en: 'Overtime', icon: 'ti-clock-plus', color: '#014D3D' },
 };
+// request_type values the server stores for the hourly requests (HOURLY_TYPES) -> their LVL keys, so the screens never show the raw key
+export const REQ_ALIAS = { permission: 'perm', maternity_permission: 'perm_mat' };
+export const lvl = (t) => LVL[t] || LVL[REQ_ALIAS[t]];
 export const HR_LEAVE_TYPES = ['annual', 'sick', 'emergency', 'death', 'marriage', 'paternity', 'maternity', 'umrah', 'hajj', 'remote', 'unpaid'];
 /** الأنواع التي يرفعها الموظف كطلب ولا تظهر في شاشة «طلب جديد» لـ HR */
 export const EMP_REQ_TYPES = ['unpaid', 'salary_advance'];

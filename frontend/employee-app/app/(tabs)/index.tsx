@@ -11,6 +11,7 @@ import { useData } from "@/lib/data";
 import { distanceText } from "@/lib/geo";
 import { riyadhParts, todaySessions, usePunch, workedMinutes } from "@/lib/punch";
 import { useTheme } from "@/theme";
+import { shadow } from "@/lib/shadow";
 
 function useNow() {
   const [now, setNow] = useState(() => new Date());
@@ -53,12 +54,12 @@ function Dial({ state, progress, onPress, busy }: { state: "in" | "out" | "done"
           strokeDasharray={`${c * Math.min(1, progress)} ${c}`} transform={`rotate(-90 ${DIAL / 2} ${DIAL / 2})`} />
       </Svg>
       {state !== "done" && !busy ? (
-        <Animated.View pointerEvents="none" style={{ position: "absolute", width: inner, height: inner, borderRadius: inner / 2, borderWidth: 3, borderColor: grad[1],
+        <Animated.View style={{ pointerEvents: "none", position: "absolute", width: inner, height: inner, borderRadius: inner / 2, borderWidth: 3, borderColor: grad[1],
           opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] }) }] }} />
       ) : null}
       <Pressable onPress={onPress} disabled={busy || state === "done"} style={({ pressed }) => [{ width: inner, height: inner, borderRadius: inner / 2, overflow: "hidden",
         alignItems: "center", justifyContent: "center", transform: [{ scale: pressed ? 0.96 : 1 }],
-        shadowColor: "#014D3D", shadowOpacity: 0.32, shadowRadius: 14, shadowOffset: { width: 0, height: 12 }, elevation: 8 }]}>
+        ...shadow("#014D3D", 0.32, 14, 0, 12, 8) }]}>
         <Svg width={inner} height={inner} style={StyleSheet.absoluteFill}>
           <Defs>
             <RadialGradient id="dialFill" cx="30%" cy="24%" r="90%">
@@ -123,7 +124,7 @@ function Hero({ onForgot }: { onForgot: () => void }) {
 
   return (
     <View style={[styles.hero, t.dark ? { backgroundColor: "#075444", borderColor: "rgba(228,228,188,.16)" } : { backgroundColor: "#F6F2E4", borderColor: "rgba(1,77,61,.12)" }]}>
-      <Svg pointerEvents="none" style={StyleSheet.absoluteFill} width="100%" height="100%">
+      <Svg style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]} width="100%" height="100%">
         <Defs>
           <LinearGradient id="hero" x1="0.35" y1="0" x2="0.65" y2="1">
             <Stop offset="0" stopColor={t.dark ? "#075444" : "#FBF8EF"} />
@@ -132,7 +133,7 @@ function Hero({ onForgot }: { onForgot: () => void }) {
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#hero)" />
       </Svg>
-      <View pointerEvents="none" style={{ position: "absolute", alignSelf: "center", top: 120 }}>
+      <View style={{ pointerEvents: "none", position: "absolute", alignSelf: "center", top: 120 }}>
         <AribaMark width={250} height={262} top={t.dark ? "#E4E4BC" : "#014D3D"} bottom={t.dark ? "#E4E4BC" : "#29B35E"} opacity={t.dark ? 0.15 : 0.22} />
       </View>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 11 }}>
@@ -255,15 +256,15 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   hero: { borderRadius: 30, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 18, overflow: "hidden", borderWidth: 1, marginBottom: 14,
-    shadowColor: "#014D3D", shadowOpacity: 0.12, shadowRadius: 17, shadowOffset: { width: 0, height: 14 }, elevation: 3 },
+    ...shadow("#014D3D", 0.12, 17, 0, 14, 3) },
   avatar: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   chips: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 7, marginTop: 6 },
   back: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "center", marginTop: 10, borderWidth: 1.5, borderRadius: 999, paddingVertical: 7, paddingHorizontal: 14 },
   tiles: { flexDirection: "row", gap: 10, marginBottom: 14 },
   tile: { flex: 1, borderRadius: 20, paddingVertical: 12, paddingHorizontal: 8, alignItems: "center", gap: 4,
-    shadowColor: "#014D3D", shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+    ...shadow("#014D3D", 0.07, 12, 0, 8, 2) },
   tileIcon: { width: 34, height: 34, borderRadius: 12, backgroundColor: "rgba(41,179,94,.14)", alignItems: "center", justifyContent: "center" },
   qa: { flex: 1, borderRadius: 20, paddingTop: 12, paddingBottom: 10, paddingHorizontal: 4, alignItems: "center", gap: 6,
-    shadowColor: "#014D3D", shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+    ...shadow("#014D3D", 0.07, 12, 0, 8, 2) },
   qaIcon: { width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center" },
 });

@@ -5,7 +5,7 @@ import { fD } from '../../lib/util.js';
 import { toast } from '../../components/Toast.jsx';
 import PromptModal from '../../components/PromptModal.jsx';
 import { Av } from '../employees/EmpList.jsx';
-import { LVL, fetchQueue, wfApprove, wfFinalApprove, wfReject, wfHrReject, wfReturnToManager, recordLeave, downloadDoc } from '../../lib/leaves.js';
+import { LVL, lvl, fetchQueue, wfApprove, wfFinalApprove, wfReject, wfHrReject, wfReturnToManager, recordLeave, downloadDoc } from '../../lib/leaves.js';
 import { leaveRequestDays, overlapWithAnnual } from '../../engines/leave.js';
 const IntNote = ({ eid, type, from, to }) => { let o = { days: 0 }; try { o = overlapWithAnnual(eid, type, from, to); } catch { /* ignore */ } return o.days ? <div style={{ fontSize: 11, color: '#0a7a3f', marginTop: 3, fontWeight: 700 }}>⤺ داخل إجازة سنوية معتمدة — عند الاعتماد يرجع {o.days} يوم لرصيد السنوية</div> : null; };
 
@@ -55,9 +55,9 @@ export default function Pending({ onCount }) {
               : r.request_type === 'profile_edit' ? Object.keys(p.changes || {}).map((k) => `${k}: ${(p.old || {})[k] || '—'} ← ${p.changes[k]}`).join(' | ')
               : r.request_type === 'document' ? (p.doc_label || '')
               : String(r.request_type || '').startsWith('template:') ? (h ? 'Accepted by the employee — open the signed copy below' : 'وافق عليه الموظف — المستند الموقّع في المرفقات')
-              : p.from ? `${p.from} ← ${p.to} | ${p.days || 0} ${h ? 'days' : 'يوم'}` : `${p.date || ''}${p.time ? ' ' + p.time : ''}${p.hours ? ' | ' + p.hours + (h ? ' h' : ' ساعة') : ''}${p.amount ? ' | ' + Number(p.amount).toLocaleString('en-US') + ' SAR' : ''}`;
+              : p.from ? `${p.from} ← ${p.to} | ${p.days || 0} ${h ? 'days' : 'يوم'}` : `${p.date || ''}${p.time ? ' ' + p.time : ''}${(p.hours || p.dur) ? ' | ' + (p.hours || p.dur) + (h ? ' h' : ' ساعة') : ''}${p.amount ? ' | ' + Number(p.amount).toLocaleString('en-US') + ' SAR' : ''}`;
             const st = STAGE[r.current_stage] || ['Completed', 'مكتمل'];
-            const lt = LVL[r.request_type];
+            const lt = lvl(r.request_type);
             return (
               <div key={r.id} style={{ padding: '12px 14px', borderBottom: '1px solid rgba(36,48,68,.5)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>

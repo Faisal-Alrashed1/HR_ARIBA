@@ -14,6 +14,7 @@ import { useData } from "@/lib/data";
 import { useBell } from "@/lib/notifications";
 import { PunchProvider } from "@/lib/punch";
 import { brand, useTheme, useThemeMode } from "@/theme";
+import { shadow } from "@/lib/shadow";
 
 const TABS: { name: string; title: string; label: string; icon: Parameters<typeof Icon>[0]["name"] }[] = [
   { name: "index", title: "الرئيسية", label: "الرئيسية", icon: "home" },
@@ -216,17 +217,17 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   hdr: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, paddingHorizontal: 14, paddingBottom: 10, borderBottomWidth: 1,
-    shadowColor: "#014D3D", shadowOpacity: 0.06, shadowRadius: 7, shadowOffset: { width: 0, height: 2 }, elevation: 2, zIndex: 10 },
+    ...shadow("#014D3D", 0.06, 7, 0, 2, 2), zIndex: 10 },
   ib: { width: 36, height: 36, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   badge: { position: "absolute", top: -6, right: -6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: "#B54A4A", alignItems: "center", justifyContent: "center", paddingHorizontal: 4, borderWidth: 2 },
   mode: { height: 36, minWidth: 36, paddingHorizontal: 10, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   refresh: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   bnav: { position: "absolute", left: 10, right: 10, borderRadius: 24, borderWidth: 1, paddingVertical: 6,
-    shadowColor: "#014D3D", shadowOpacity: 0.18, shadowRadius: 17, shadowOffset: { width: 0, height: 12 }, elevation: 8 },
+    ...shadow("#014D3D", 0.18, 17, 0, 12, 8) },
   bni: { minWidth: 62, alignItems: "center", gap: 3, paddingTop: 7, paddingBottom: 6, paddingHorizontal: 4, borderRadius: 18 },
   navBadge: { position: "absolute", top: 2, right: 12, minWidth: 16, height: 16, borderRadius: 8, alignItems: "center", justifyContent: "center", paddingHorizontal: 3 },
   panel: { position: "absolute", left: 8, right: 8, maxHeight: "76%", borderWidth: 1, borderRadius: 18, overflow: "hidden",
-    shadowColor: "#000", shadowOpacity: 0.28, shadowRadius: 25, shadowOffset: { width: 0, height: 18 }, elevation: 10 },
+    ...shadow("#000", 0.28, 25, 0, 18, 10) },
   panelHead: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: 1 },
   newPill: { backgroundColor: "rgba(214,69,69,.13)", borderRadius: 999, paddingHorizontal: 9, paddingVertical: 2 },
   item: { flexDirection: "row", gap: 10, paddingVertical: 11, paddingHorizontal: 14, borderBottomWidth: 1, alignItems: "flex-start" },

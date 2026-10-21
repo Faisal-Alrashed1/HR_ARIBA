@@ -10,6 +10,8 @@ import { dmy, LocationsCard, sar } from "@/components/shared";
 import { Btn, Card, CardTitle, InfoBox, Page, PayRow, T, useToast } from "@/components/ui";
 import { useData } from "@/lib/data";
 import { useTheme } from "@/theme";
+import { docLabel } from "@/lib/labels";
+import { shadow } from "@/lib/shadow";
 
 export default function Profile() {
   const t = useTheme();
@@ -29,7 +31,7 @@ export default function Profile() {
       {/* the hero fills its card (a solid brand colour, not an SVG that may not stretch); long names wrap */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 14, marginBottom: 12, overflow: "hidden",
         backgroundColor: t.dark ? "#013D31" : "#014D3D",
-        shadowColor: t.dark ? "#000" : "#014D3D", shadowOpacity: t.dark ? 0.2 : 0.16, shadowRadius: 15, shadowOffset: { width: 0, height: 12 }, elevation: 3 }}>
+        ...shadow(t.dark ? "#000" : "#014D3D", t.dark ? 0.2 : 0.16, 15, 0, 12, 3) }}>
         <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "rgba(255,255,255,.16)", alignItems: "center", justifyContent: "center" }}>
           <T size={28} weight={800} color="#fff">{e?.name_ar?.charAt(0) ?? ""}</T>
         </View>
@@ -95,7 +97,7 @@ export default function Profile() {
         {docs.map((d) => (
           <View key={d.id} style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: t.bd }}>
             <View style={{ flex: 1 }}>
-              <T size={12} weight={700}>{DOCL[d.type] ?? d.type}</T>
+              <T size={12} weight={700}>{docLabel(d.type)}</T>
               <T size={10} color={t.mu}>{d.file_name}</T>
             </View>
             <Pressable disabled={opening === d.id} onPress={async () => { setOpening(d.id); try { await openDocument(d.id, d.file_name); } catch { toast("تعذر تحميل الوثيقة", "err"); } setOpening(""); }}
@@ -115,6 +117,3 @@ export default function Profile() {
   );
 }
 
-const DOCL: Record<string, string> = { identity: "الهوية / الإقامة", id: "الهوية / الإقامة", passport: "جواز السفر", degree: "شهادة التخرج", graduation: "شهادة التخرج",
-  experience: "شهادة خبرة", cv: "السيرة الذاتية", national_address: "العنوان الوطني", contract: "العقد", social_insurance: "شهادة التأمينات",
-  profile_edit: "مرفق تعديل بيانات", iban_certificate: "شهادة الآيبان", letter: "نموذج", signed_document: "مستند موقّع", photo: "صورة شخصية", other: "مستند آخر" };

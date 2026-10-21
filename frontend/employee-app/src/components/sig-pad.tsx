@@ -17,6 +17,7 @@ export function toSvgDataUrl(paths: string[]): string {
 
 export function SigPad({ onChange }: { onChange: (dataUrl: string) => void }) {
   const [paths, setPaths] = useState<string[]>([]);
+  const pathsRef = useRef<string[]>([]);
   const cur = useRef("");
   const box = useRef({ w: 1, h: 1 });
   const [live, setLive] = useState("");
@@ -36,11 +37,11 @@ export function SigPad({ onChange }: { onChange: (dataUrl: string) => void }) {
       const done = cur.current;
       cur.current = "";
       setLive("");
-      setPaths((p) => {
-        const n = done ? [...p, done] : p;
-        onChange(toSvgDataUrl(n));
-        return n;
-      });
+      // onChange updates the parent: call it here, not inside the setState updater (React: "Cannot update a component while rendering a different one")
+      const n = done ? [...pathsRef.current, done] : pathsRef.current;
+      pathsRef.current = n;
+      setPaths(n);
+      onChange(toSvgDataUrl(n));
     },
   })).current;
   const onLayout = (e: LayoutChangeEvent) => { box.current = { w: e.nativeEvent.layout.width || 1, h: e.nativeEvent.layout.height || 1 }; };
@@ -49,13 +50,13 @@ export function SigPad({ onChange }: { onChange: (dataUrl: string) => void }) {
       <View onLayout={onLayout} {...pan.panHandlers}
         style={{ height: 160, borderWidth: 1, borderStyle: "dashed", borderColor: "#888", borderRadius: 8, backgroundColor: "#fff" }}>
         {/* touches land on the pad, never on a stroke: locationX/Y are then relative to the pad, not to the stroke under the finger */}
-        <Svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} pointerEvents="none">
+        <Svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} style={{ pointerEvents: "none" }}>
           {[...paths, live].filter(Boolean).map((d, i) => (
             <Path key={i} d={d} fill="none" stroke="#111" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
           ))}
         </Svg>
       </View>
-      <Btn kind="ghost" title="مسح التوقيع" onPress={() => { setPaths([]); onChange(""); }} style={{ marginTop: 6 }} />
+      <Btn kind="ghost" title="مسح التوقيع" onPress={() => { pathsRef.current = []; setPaths([]); onChange(""); }} style={{ marginTop: 6 }} />
     </View>
   );
 }

@@ -36,6 +36,8 @@ export default function TeamGoals() {
   const [type, setType] = useState<PeriodType>("quarterly");
   const [key, setKey] = useState(curKey("quarterly"));
   const onPeriod = (t: PeriodType, k: string) => { setType(t); setKey(k); };
+  // opened without an employee (e.g. a typed URL): nothing to load, and the server would answer 403 for employee_id=undefined
+  if (!id) return <Screen title="🎯 المستهدفات"><Card><T>اختر موظفاً من «فريقي» أولاً.</T></Card></Screen>;
   return (
     <Screen title={(mode === "eval" ? "⭐ تقييم " : "🎯 مستهدفات ") + (name ?? "")}>
       <Card>

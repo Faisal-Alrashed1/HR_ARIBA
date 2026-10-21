@@ -8,7 +8,7 @@ import PromptModal from '../../components/PromptModal.jsx';
 import { isLeaveWorkday } from '../../engines/holidays.js';
 import { leaveEmployeeId, leaveDateValue } from '../../engines/leave.js';
 
-const LT = { annual: ['سنوية', 'Annual'], sick: ['مرضية', 'Sick'], emergency: ['طارئة', 'Emergency'], death: ['وفاة', 'Bereavement'], marriage: ['زواج', 'Marriage'], maternity: ['وضع', 'Maternity'], paternity: ['أبوة', 'Paternity'], umrah: ['عمرة', 'Umrah'], hajj: ['حج', 'Hajj'], remote: ['عمل عن بعد', 'Remote'] };
+const LT = { annual: ['سنوية', 'Annual'], sick: ['مرضية', 'Sick'], emergency: ['طارئة', 'Emergency'], death: ['وفاة', 'Bereavement'], marriage: ['زواج', 'Marriage'], maternity: ['وضع', 'Maternity'], paternity: ['أبوة', 'Paternity'], umrah: ['عمرة', 'Umrah'], hajj: ['حج', 'Hajj'], remote: ['عمل عن بعد', 'Remote'], unpaid: ['بدون راتب', 'Unpaid'], mission: ['مهمة خارجية', 'Mission'], perm: ['استئذان', 'Permission'], permission: ['استئذان', 'Permission'] };
 const D = (s) => { const p = String(s).slice(0, 10).split('-'); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])); };
 const iso = (d) => d.toISOString().slice(0, 10);
 const addD = (s, n) => { const d = D(s); d.setUTCDate(d.getUTCDate() + n); return iso(d); };

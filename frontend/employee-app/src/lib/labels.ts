@@ -51,3 +51,13 @@ export function requestDetail(r: MyRequest): string {
   if (r.amount) return `${Number(r.amount).toLocaleString("en-US")} ر.س`;
   return `${r.on_date ?? ""}${r.time_from ? ` ${r.time_from}` : ""}${r.hours ? ` (${Number(r.hours)}س)` : ""}`;
 }
+
+// Document type keys (ariba_documents.document_type) -> Arabic label; docLabel() never shows the raw English key.
+export const DOCL: Record<string, string> = {
+  identity: "الهوية / الإقامة", id: "الهوية / الإقامة", passport: "جواز السفر", degree: "شهادة التخرج", graduation: "شهادة التخرج",
+  certificate: "شهادة", experience: "شهادة خبرة", cv: "السيرة الذاتية", national_address: "العنوان الوطني", contract: "العقد",
+  social_insurance: "شهادة التأمينات", insurance: "التأمين", profile_edit: "مرفق تعديل بيانات", iban_certificate: "شهادة الآيبان",
+  iban_letter: "خطاب تغيير الآيبان", employee_upload: "مستند مرفوع من الموظف", letter: "نموذج", signed_document: "مستند موقّع",
+  photo: "صورة شخصية", other: "مستند آخر",
+};
+export const docLabel = (t?: string | null): string => (t && DOCL[t]) || "مستند";
