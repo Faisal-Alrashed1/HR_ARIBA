@@ -1,7 +1,8 @@
 // One date / time picker for the whole app (replaces the OS pickers, which followed the device calendar —
 // e.g. Hijri — and showed grey, unreadable time wheels in dark mode). Gregorian, Arabic labels, brand colours.
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { brand, useTheme } from "@/theme";
 import { Icon } from "./icons";
 import { T } from "./text";
@@ -136,8 +137,37 @@ const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = Array.from({ length: 60 }, (_, i) => pad(i));
 const PERIODS = ["ص", "م"];
 
-/** Time picker: three scroll wheels (hour 1-12, minute 00-59, AM/PM). The value stays "HH:MM" in 24 hours. */
-export function TimeGrid({ title, value, onPick, onDone }: { title?: string; value: string; onPick: (v: string) => void; onDone: () => void }) {
+/** On a phone / tablet: the system's own spinner (hour, minute, AM/PM wheels), which scrolls and snaps natively. */
+function NativeTime({ title, value, onPick, onDone }: { title?: string; value: string; onPick: (v: string) => void; onDone: () => void }) {
+  const t = useTheme();
+  const accent = t.dark ? brand.green : brand.dark;
+  const [h, m] = (value || hhmm(new Date())).split(":").map(Number);
+  const d = new Date(); d.setHours(h, m, 0, 0);
+  const change = (e: DateTimePickerEvent, picked?: Date) => {
+    if (Platform.OS === "android") { if (e.type === "set" && picked) onPick(hhmm(picked)); onDone(); return; } // Android shows its own dialog
+    if (picked) onPick(hhmm(picked));
+  };
+  return (
+    <View style={[styles.panel, { backgroundColor: t.c, borderColor: t.bd }]}>
+      {title ? <T size={12} weight={700} color={t.mu} center style={{ marginBottom: 6 }}>{title}</T> : null}
+      <DateTimePicker
+        value={d} mode="time" display="spinner" is24Hour={false} locale="en-US"
+        themeVariant={t.dark ? "dark" : "light"} textColor={t.tx} onChange={change}
+        style={{ alignSelf: "center", height: 200, width: "100%" }}
+      />
+      <Pressable onPress={onDone} style={[styles.todayBtn, { borderColor: accent, backgroundColor: accent }]}>
+        <T size={13} weight={800} color={t.dark ? brand.dark : "#fff"}>تم</T>
+      </Pressable>
+    </View>
+  );
+}
+
+/** Time picker: system wheels on a device, three scroll wheels (hour 1-12, minute 00-59, AM/PM) on the web preview. The value stays "HH:MM" in 24 hours. */
+export function TimeGrid(props: { title?: string; value: string; onPick: (v: string) => void; onDone: () => void }) {
+  return Platform.OS === "web" ? <WheelTime {...props} /> : <NativeTime {...props} />;
+}
+
+function WheelTime({ title, value, onPick, onDone }: { title?: string; value: string; onPick: (v: string) => void; onDone: () => void }) {
   const t = useTheme();
   const accent = t.dark ? brand.green : brand.dark;
   const [h, m] = (value || hhmm(new Date())).split(":").map(Number);
