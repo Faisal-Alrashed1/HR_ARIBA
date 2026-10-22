@@ -15,6 +15,8 @@ import { pickFile, type Picked } from "@/lib/files";
 import { calendarDays, submitRequest } from "@/lib/port";
 import { useData } from "@/lib/data";
 import { shadow } from "@/lib/shadow";
+import { useTileWidth } from "@/lib/grid";
+import { useLayout } from "@/lib/responsive";
 import { error as hapticError, select, success, tap } from "@/lib/haptics";
 import { useTheme } from "@/theme";
 
@@ -80,6 +82,8 @@ function ComposerSheet({ visible, first, onClose, onForgot }: { visible: boolean
   const [file, setFile] = useState<Picked | null>(null);
   const [shown, setShown] = useState(false);
   const y = useRef(new Animated.Value(height)).current;
+  const L = useLayout();
+  const grid = useTileWidth(L.cols, 8);
   const twoStage = type === "unpaid" || type === "salary_advance";
   const today = todayISO();
   const upcoming = (leave?.upcoming_holidays ?? []).filter((h) => h.date >= today).slice(0, 4);
@@ -163,8 +167,8 @@ function ComposerSheet({ visible, first, onClose, onForgot }: { visible: boolean
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="إغلاق">
           <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(1,26,21,.55)", opacity: y.interpolate({ inputRange: [0, height], outputRange: [1, 0], extrapolate: "clamp" }) }]} />
         </Pressable>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, justifyContent: "flex-end", pointerEvents: "box-none" }}>
-          <Animated.View style={[styles.sheet, { backgroundColor: t.c, paddingBottom: Math.max(16, insets.bottom), maxHeight: height * 0.9, transform: [{ translateY: y }] }]}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", pointerEvents: "box-none" }}>
+          <Animated.View style={[styles.sheet, { backgroundColor: t.c, width: "100%", maxWidth: L.sheetMax, paddingBottom: Math.max(16, insets.bottom), maxHeight: height * 0.9, transform: [{ translateY: y }] }]}>
             <View {...pan.panHandlers} style={styles.grab} accessibilityLabel="اسحب للأسفل للإغلاق"><View style={[styles.grabBar, { backgroundColor: t.bd }]} /></View>
             <View style={styles.head}>
               {step === 1 ? (
@@ -179,10 +183,10 @@ function ComposerSheet({ visible, first, onClose, onForgot }: { visible: boolean
               {step === 0 ? GROUPS.map((g) => (
                 <View key={g.title} style={{ marginBottom: 14 }}>
                   <T size={12} weight={700} color={t.mu} style={{ marginBottom: 8 }}>{g.title}</T>
-                  <View style={styles.types}>
+                  <View style={styles.types} onLayout={grid.onLayout}>
                     {g.items.map((k) => (
                       <Pressable key={k} onPress={() => pickType(k)} accessibilityRole="button" accessibilityLabel={nameOf(k)}
-                        style={({ pressed }) => [styles.type, { backgroundColor: t.c2, transform: [{ scale: pressed ? 0.96 : 1 }] }]}>
+                        style={({ pressed }) => [styles.type, grid.tile ? { width: grid.tile } : null, { backgroundColor: t.c2, transform: [{ scale: pressed ? 0.96 : 1 }] }]}>
                         <View style={[styles.typeIc, { backgroundColor: t.c }]}><Icon name={ICON[k] ?? "file"} size={20} color={t.dark ? "#29B35E" : "#014D3D"} /></View>
                         <T size={12} weight={700} center numberOfLines={2}>{nameOf(k)}</T>
                       </Pressable>

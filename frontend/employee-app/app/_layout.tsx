@@ -1,14 +1,16 @@
 import { useFonts } from "expo-font";
 import { Redirect, Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Platform } from "react-native";
+import { I18nManager, Platform } from "react-native";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { DataProvider } from "@/lib/data";
 import { NotificationsProvider } from "@/lib/notifications";
 import { Loading, ToastProvider } from "@/components/ui";
 import { fonts, ThemeProvider, useTheme } from "@/theme";
 
-// Native builds force RTL (expo-localization forcesRTL); the web dev preview needs the document direction.
+// Native builds force RTL (expo-localization forcesRTL). In Expo Go on a phone set to English the layout would run
+// left-to-right, so ask for RTL here too (it takes effect the next time the app is opened). The web preview needs the document direction.
+if (Platform.OS !== "web" && !I18nManager.isRTL) { I18nManager.allowRTL(true); I18nManager.forceRTL(true); }
 if (Platform.OS === "web" && typeof document !== "undefined") document.documentElement.dir = "rtl";
 
 function Gate() {

@@ -11,6 +11,8 @@ import { Card, Page, T } from "@/components/ui";
 import { RequestItem } from "@/components/request-item";
 import { useData } from "@/lib/data";
 import { useAuth } from "@/lib/auth";
+import { useTileWidth } from "@/lib/grid";
+import { useLayout } from "@/lib/responsive";
 import { distanceText } from "@/lib/geo";
 import { riyadhParts, todaySessions, usePunch, workedMinutes } from "@/lib/punch";
 import { useTheme } from "@/theme";
@@ -189,11 +191,11 @@ function Ledger({ items }: { items: [string, string][] }) {
 }
 
 // Every screen of the app is one tap from here (the dock keeps only five places).
-function Service({ label, icon, onPress, badge, wide }: { label: string; icon: IconName; onPress: () => void; badge?: number; wide?: boolean }) {
+function Service({ label, icon, onPress, badge, wide, width }: { label: string; icon: IconName; onPress: () => void; badge?: number; wide?: boolean; width?: number }) {
   const t = useTheme();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress}
-      style={({ pressed }) => [styles.svc, wide && styles.svcWide, { backgroundColor: t.c, transform: [{ scale: pressed ? 0.98 : 1 }] }]}>
+      style={({ pressed }) => [styles.svc, width ? { width } : null, wide && styles.svcWide, { backgroundColor: t.c, transform: [{ scale: pressed ? 0.98 : 1 }] }]}>
       <View style={[styles.svcIc, { backgroundColor: t.c2 }]}><Icon name={icon} size={21} color={t.dark ? "#29B35E" : "#014D3D"} /></View>
       <T size={12} weight={700} center numberOfLines={2}>{label}</T>
       {badge ? <View style={styles.svcBadge}><T size={10} weight={800} color="#fff">{badge}</T></View> : null}
@@ -234,6 +236,8 @@ export default function Home() {
     { icon: "users", label: "فريقي", onPress: () => go("/(tabs)/team") },
     ...(isApprover ? [{ icon: "checks" as IconName, label: "الموافقات", onPress: () => go("/(tabs)/approvals"), badge: approvals.length }] : []),
   ];
+  const L = useLayout();
+  const grid = useTileWidth(L.cols, 10);
   const running = requests.filter((r) => r.status === "pending").slice(0, 2);
   return (
     <Page onRefresh={refresh}>
@@ -241,8 +245,8 @@ export default function Home() {
       <Ledger items={[[fmt(leave?.current), "رصيد الإجازة (يوم)"], [fmt(leave?.year_end), "رصيد نهاية العام"], [att ? String(Math.max(0, att.remote_limit - att.remote_used)) : "—", "عن بعد المتبقي"]]} />
 
       <T size={16} weight={800} style={styles.sec}>ماذا تحتاج اليوم؟</T>
-      <View style={styles.svcGrid}>
-        {services.map((x, i) => <Service key={x.label} {...x} wide={services.length % 3 === 1 && i === services.length - 1} />)}
+      <View style={styles.svcGrid} onLayout={grid.onLayout}>
+        {services.map((x, i) => <Service key={x.label} {...x} width={grid.tile} wide={services.length % L.cols === 1 && i === services.length - 1} />)}
       </View>
 
       {running.length ? (

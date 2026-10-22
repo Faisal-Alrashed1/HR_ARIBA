@@ -16,6 +16,7 @@ import { PunchProvider } from "@/lib/punch";
 import { useTheme } from "@/theme";
 import { shadow } from "@/lib/shadow";
 import { select, tap } from "@/lib/haptics";
+import { useLayout } from "@/lib/responsive";
 
 const TABS: { name: string; title: string; label: string; icon: Parameters<typeof Icon>[0]["name"] }[] = [
   { name: "index", title: "الرئيسية", label: "الرئيسية", icon: "home" },
@@ -169,6 +170,8 @@ function BottomNav({ state, navigation }: BottomTabBarProps) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const { open } = useComposer();
+  const { width, gutter, dockMax } = useLayout();
+  const dockW = Math.min(dockMax, width - gutter * 2); // tablets: a dock of phone width, centred
   const { approvals, letters } = useData();
   const current = state.routes[state.index]?.name;
   const badge = (name: string) => (name === "more" ? letters.filter((l) => l.status === "pending").length + approvals.length : 0);
@@ -187,7 +190,7 @@ function BottomNav({ state, navigation }: BottomTabBarProps) {
     );
   };
   return (
-    <View style={[styles.bnav, { bottom: Math.max(14, insets.bottom), backgroundColor: t.dark ? "rgba(1,61,49,.94)" : "rgba(255,255,255,.94)", borderColor: t.bd }]}>
+    <View style={[styles.bnav, { left: (width - dockW) / 2, right: (width - dockW) / 2, bottom: Math.max(14, insets.bottom), backgroundColor: t.dark ? "rgba(1,61,49,.94)" : "rgba(255,255,255,.94)", borderColor: t.bd }]}>
       {item(DOCK[0])}{item(DOCK[1])}
       <View style={{ width: 78, alignItems: "center" }}>
         <Pressable accessibilityRole="button" accessibilityLabel="طلب جديد" onPress={() => { tap(); open(); }}

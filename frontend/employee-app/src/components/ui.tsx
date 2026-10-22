@@ -8,6 +8,7 @@ import {
 import { brand, fonts, useTheme } from "@/theme";
 import { Icon, type IconName } from "./icons";
 import { tap } from "@/lib/haptics";
+import { MAX_FONT_SCALE, useLayout } from "@/lib/responsive";
 import { Calendar, TimeGrid } from "./date-time";
 import { T } from "./text";
 
@@ -16,12 +17,13 @@ import { shadow } from "@/lib/shadow";
 
 export function Page({ children, onRefresh }: { children: ReactNode; onRefresh?: () => Promise<unknown> }) {
   const t = useTheme();
+  const L = useLayout();
   const [refreshing, setRefreshing] = useState(false);
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <ScrollView
       style={{ flex: 1, backgroundColor: t.bg }}
-      contentContainerStyle={{ padding: 14, paddingBottom: 110 }}
+      contentContainerStyle={{ padding: L.gutter, paddingBottom: 110, width: "100%", maxWidth: L.contentMax, alignSelf: "center" }}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
       refreshControl={onRefresh ? (
@@ -119,6 +121,7 @@ export function Input(props: TextInputProps & { label?: string }) {
     <View style={{ flex: 1 }}>
       {label ? <Label>{label}</Label> : null}
       <TextInput
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         placeholderTextColor={t.dm}
         {...(props.multiline ? { returnKeyType: "done" as const, submitBehavior: "blurAndSubmit" as const } : null)}
         {...rest}
